@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${form.esNueva()} ? 'Nueva orden de compra' : 'Editar orden')}"></head>
+<body>
+<div class="wok-app">
+  <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+  <div class="wok-main">
+    <header th:replace="~{fragments/layout :: topbar(${form.esNueva()} ? 'Nueva orden de compra' : 'Editar orden', 'Se guarda como borrador hasta enviarla')}"></header>
+    <main class="wok-content">
+      <div th:replace="~{fragments/layout :: mensajes}"></div>
+      <form th:action="@{/compras/ordenes/guardar}" th:object="${form}" method="post" class="wok-card" style="max-width: 1000px" novalidate>
+        <input type="hidden" th:field="*{id}">
+        <div class="wok-card-body">
+          <div class="row g-3">
+            <div class="col-md-6"><label class="form-label" for="proveedorId">Proveedor</label>
+              <select th:field="*{proveedorId}" class="form-select" required>
+                <option value="">Seleccione…</option>
+                <option th:each="p : ${proveedores}" th:value="${p.id}" th:text="${p.nombreComercial} + ' · NIT ' + ${p.nit}">p</option>
+              </select>
+              <div class="form-text" th:if="${proveedores.isEmpty()}">No hay proveedores activos. Regístrelos primero.</div></div>
+            <div class="col-md-3"><label class="form-label" for="fechaEntregaEsperada">Entrega esperada</label>
+              <input th:field="*{fechaEntregaEsperada}" type="date" class="form-control"></div>
+            <div class="col-12"><label class="form-label" for="notas">Notas para el proveedor</label>
+              <input th:field="*{notas}" class="form-control" maxlength="300"></div>
+          </div>
+          <h3 class="wok-form-seccion">Insumos solicitados</h3>
+          <div class="row g-2 small text-suave d-none d-md-flex"><div class="col-md-6">Insumo</div><div class="col-md-2">Cantidad</div><div class="col-md-3">Costo unitario</div></div>
+          <div id="filasOrden">
+            <div class="row g-2 mb-2 align-items-center" data-wok-fila th:each="it, st : *{items}">
+              <div class="col-md-6"><select class="form-select form-select-sm" th:name="|items[${st.index}].insumoId|">
+                <option value="">Seleccione insumo…</option>
+                <option th:each="i : ${insumos}" th:value="${i.id}" th:text="${i.nombre} + ' (' + ${i.unidad} + ') · disp. ' + ${@fmt.numero(i.cantidadDisponible)}" th:selected="${i.id == it.insumoId}">i</option>
+              </select></div>
+              <div class="col-5 col-md-2"><input type="number" step="0.001" min="0" class="form-control form-control-sm" th:name="|items[${st.index}].cantidad|" th:value="${it.cantidad}" placeholder="Cantidad"></div>
+              <div class="col-5 col-md-3"><input type="number" step="0.01" min="0" class="form-control form-control-sm" th:name="|items[${st.index}].costoUnitario|" th:value="${it.costoUnitario}" placeholder="Costo"></div>
+              <div class="col-2 col-md-1 text-end"><button type="button" class="btn btn-sm btn-light" data-wok-quitar-fila><i class="bi bi-x-lg"></i></button></div>
+            </div>
+          </div>
+          <button type="button" class="btn btn-sm btn-wok-outline" data-wok-agregar-fila="#filasOrden" data-wok-plantilla="#plantillaOrden"><i class="bi bi-plus"></i> Agregar insumo</button>
+          <template id="plantillaOrden">
+            <div class="row g-2 mb-2 align-items-center" data-wok-fila>
+              <div class="col-md-6"><select class="form-select form-select-sm" name="items[__i__].insumoId">
+                <option value="">Seleccione insumo…</option>
+                <option th:each="i : ${insumos}" th:value="${i.id}" th:text="${i.nombre} + ' (' + ${i.unidad} + ') · disp. ' + ${@fmt.numero(i.cantidadDisponible)}">i</option>
+              </select></div>
+              <div class="col-5 col-md-2"><input type="number" step="0.001" min="0" class="form-control form-control-sm" name="items[__i__].cantidad" placeholder="Cantidad"></div>
+              <div class="col-5 col-md-3"><input type="number" step="0.01" min="0" class="form-control form-control-sm" name="items[__i__].costoUnitario" placeholder="Costo"></div>
+              <div class="col-2 col-md-1 text-end"><button type="button" class="btn btn-sm btn-light" data-wok-quitar-fila><i class="bi bi-x-lg"></i></button></div>
+            </div>
+          </template>
+        </div>
+        <div class="wok-card-body border-top d-flex gap-2 justify-content-end">
+          <a th:href="@{/compras/ordenes}" class="btn btn-light">Cancelar</a>
+          <button type="submit" class="btn btn-wok"><i class="bi bi-save"></i> Guardar borrador</button>
+        </div>
+      </form>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+  </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Cierre ' + ${c.numero})}"></head>
+<body>
+<div class="wok-app">
+  <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+  <div class="wok-main">
+    <header th:replace="~{fragments/layout :: topbar('Cierre ' + ${c.numero}, ${c.cajeroNombre})}"></header>
+    <main class="wok-content">
+      <div th:replace="~{fragments/layout :: mensajes}"></div>
+      <div class="d-flex gap-2 mb-3 no-imprimir">
+        <a th:href="@{/caja/cierres}" class="btn btn-light btn-sm"><i class="bi bi-arrow-left"></i> Cierres</a>
+        <button type="button" class="btn btn-wok-outline btn-sm" onclick="window.print()"><i class="bi bi-printer"></i> Imprimir</button>
+      </div>
+      <div class="row g-3 mb-3">
+        <div class="col-sm-4"><div class="wok-stat"><div class="wok-stat-icono dorado"><i class="bi bi-cash-stack"></i></div>
+          <div><div class="wok-stat-valor" th:text="${@fmt.dinero(c.totalVentas)}">$</div><div class="wok-stat-etiqueta">Ventas del turno</div></div></div></div>
+        <div class="col-sm-4"><div class="wok-stat"><div class="wok-stat-icono"><i class="bi bi-receipt"></i></div>
+          <div><div class="wok-stat-valor" th:text="${c.comprobantes}">0</div><div class="wok-stat-etiqueta">Comprobantes (<span th:text="${c.anulados}">0</span> anulados)</div></div></div></div>
+        <div class="col-sm-4"><div class="wok-stat"><div class="wok-stat-icono" th:classappend="${c.diferenciaTotal.signum() == 0} ? 'verde' : 'ambar'"><i class="bi bi-scale"></i></div>
+          <div><div class="wok-stat-valor" th:text="${@fmt.dinero(c.diferenciaTotal)}">$</div><div class="wok-stat-etiqueta">Diferencia (contado − sistema)</div></div></div></div>
+      </div>
+      <div class="row g-3">
+        <div class="col-lg-6">
+          <div class="wok-card">
+            <div class="wok-card-header"><h2>Cuadre por método de pago</h2></div>
+            <table class="table table-wok">
+              <thead><tr><th>Método</th><th class="text-end">Sistema</th><th class="text-end">Contado</th><th class="text-end">Diferencia</th></tr></thead>
+              <tbody><tr th:each="m : ${metodos}">
+                <td th:text="${m.etiqueta()}">m</td>
+                <td class="text-end" th:text="${@fmt.dinero(c.sistemaPorMetodo[m.name()])}">$</td>
+                <td class="text-end" th:text="${@fmt.dinero(c.declaradoPorMetodo[m.name()])}">$</td>
+                <td class="text-end" th:classappend="${c.diferenciaPorMetodo[m.name()].signum() != 0} ? 'text-danger fw-semibold'" th:text="${@fmt.dinero(c.diferenciaPorMetodo[m.name()])}">$</td>
+              </tr></tbody>
+            </table>
+            <div class="wok-card-body border-top small">
+              <div>Periodo: <span th:text="${@fmt.fechaHora(c.desde)}">d</span> – <span th:text="${@fmt.fechaHora(c.hasta)}">h</span></div>
+              <div>Descuentos: <span th:text="${@fmt.dinero(c.totalDescuentos)}">$</span> · Impuesto al consumo: <span th:text="${@fmt.dinero(c.totalImpuestos)}">$</span></div>
+              <div th:if="${c.observaciones}">Observaciones: <span th:text="${c.observaciones}">o</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="wok-card">
+            <div class="wok-card-header"><h2>Comprobantes incluidos</h2></div>
+            <div class="table-responsive"><table class="table table-wok table-sm">
+              <thead><tr><th>Número</th><th>Hora</th><th>Mesa</th><th class="text-end">Total</th><th>Estado</th></tr></thead>
+              <tbody><tr th:each="f : ${comprobantes}">
+                <td><a th:href="@{/caja/comprobantes/{id}(id=${f.id})}" class="wok-mono" th:text="${f.numero}">T</a></td>
+                <td class="small" th:text="${@fmt.hora(f.emitidaEn)}">h</td><td th:text="${f.mesaNumero}">1</td>
+                <td class="text-end" th:text="${@fmt.dinero(f.total)}">$</td><td class="small" th:text="${f.estado}">E</td></tr></tbody>
+            </table></div>
+          </div>
+        </div>
+      </div>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+  </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

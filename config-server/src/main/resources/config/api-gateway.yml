@@ -1,0 +1,142 @@
+# Rutas del API Gateway. Todos los clientes (navegador, Swagger, Postman) entran por aquí.
+# lb://<servicio> resuelve la instancia a través de Eureka.
+spring:
+  cloud:
+    gateway:
+      server:
+        webflux:
+          default-filters:
+            - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_FIRST
+          routes:
+            # ---------- API REST ----------
+            - id: usuarios-api
+              uri: lb://usuarios-service
+              predicates:
+                - Path=/api/auth/**,/api/usuarios/**,/api/roles/**,/api/permisos/**,/api/auditoria/**,/api/parametros/**
+            - id: menu-api
+              uri: lb://menu-service
+              predicates:
+                - Path=/api/menu/**
+            - id: pedidos-api
+              uri: lb://pedidos-service
+              predicates:
+                - Path=/api/mesas/**,/api/pedidos/**,/api/cocina/**
+            - id: inventario-api
+              uri: lb://inventario-service
+              predicates:
+                - Path=/api/insumos/**,/api/inventario/**
+            - id: proveedores-api
+              uri: lb://proveedores-service
+              predicates:
+                - Path=/api/proveedores/**,/api/ordenes-compra/**
+            - id: facturacion-api
+              uri: lb://facturacion-service
+              predicates:
+                - Path=/api/facturas/**,/api/cuentas/**,/api/caja/**,/api/descuentos/**
+            - id: reportes-api
+              uri: lb://reportes-service
+              predicates:
+                - Path=/api/reportes/**
+
+            # ---------- Documentación OpenAPI de cada servicio ----------
+            - id: docs-usuarios
+              uri: lb://usuarios-service
+              predicates:
+                - Path=/docs/usuarios/**
+              filters:
+                - RewritePath=/docs/usuarios/(?<resto>.*), /$\{resto}
+            - id: docs-menu
+              uri: lb://menu-service
+              predicates:
+                - Path=/docs/menu/**
+              filters:
+                - RewritePath=/docs/menu/(?<resto>.*), /$\{resto}
+            - id: docs-pedidos
+              uri: lb://pedidos-service
+              predicates:
+                - Path=/docs/pedidos/**
+              filters:
+                - RewritePath=/docs/pedidos/(?<resto>.*), /$\{resto}
+            - id: docs-inventario
+              uri: lb://inventario-service
+              predicates:
+                - Path=/docs/inventario/**
+              filters:
+                - RewritePath=/docs/inventario/(?<resto>.*), /$\{resto}
+            - id: docs-proveedores
+              uri: lb://proveedores-service
+              predicates:
+                - Path=/docs/proveedores/**
+              filters:
+                - RewritePath=/docs/proveedores/(?<resto>.*), /$\{resto}
+            - id: docs-facturacion
+              uri: lb://facturacion-service
+              predicates:
+                - Path=/docs/facturacion/**
+              filters:
+                - RewritePath=/docs/facturacion/(?<resto>.*), /$\{resto}
+            - id: docs-reportes
+              uri: lb://reportes-service
+              predicates:
+                - Path=/docs/reportes/**
+              filters:
+                - RewritePath=/docs/reportes/(?<resto>.*), /$\{resto}
+
+            # ---------- Interfaz web (Thymeleaf servida por cada dominio) ----------
+            - id: usuarios-web
+              uri: lb://usuarios-service
+              predicates:
+                - Path=/login,/logout,/perfil/**,/plataforma/**,/acceso-denegado,/docs-api,/wok-static/**,/webjars/**,/favicon.ico
+            - id: menu-web
+              uri: lb://menu-service
+              predicates:
+                - Path=/menu/**
+            - id: pedidos-web
+              uri: lb://pedidos-service
+              predicates:
+                - Path=/mesas/**,/pedidos/**,/cocina/**
+            - id: inventario-web
+              uri: lb://inventario-service
+              predicates:
+                - Path=/inventario/**
+            - id: proveedores-web
+              uri: lb://proveedores-service
+              predicates:
+                - Path=/proveedores/**,/compras/**,/portal-proveedor/**
+            - id: facturacion-web
+              uri: lb://facturacion-service
+              predicates:
+                - Path=/caja/**
+            - id: reportes-web
+              uri: lb://reportes-service
+              predicates:
+                - Path=/,/dashboard,/reportes/**
+
+wok:
+  cors:
+    # Orígenes permitidos para clientes en otro dominio (separados por coma). La interfaz web
+    # se sirve desde el mismo origen del gateway y no necesita CORS.
+    allowed-origins: ${WOK_CORS_ORIGINS:http://localhost:8080}
+
+springdoc:
+  api-docs:
+    enabled: ${WOK_SWAGGER_ENABLED:true}
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: ${WOK_SWAGGER_ENABLED:true}
+    persist-authorization: true
+    urls:
+      - name: usuarios-service
+        url: /docs/usuarios/v3/api-docs
+      - name: menu-service
+        url: /docs/menu/v3/api-docs
+      - name: pedidos-service
+        url: /docs/pedidos/v3/api-docs
+      - name: inventario-service
+        url: /docs/inventario/v3/api-docs
+      - name: proveedores-service
+        url: /docs/proveedores/v3/api-docs
+      - name: facturacion-service
+        url: /docs/facturacion/v3/api-docs
+      - name: reportes-service
+        url: /docs/reportes/v3/api-docs

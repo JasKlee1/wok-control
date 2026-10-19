@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Orden ' + ${orden.numero})}"></head>
+<body>
+<div class="wok-app">
+  <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+  <div class="wok-main">
+    <header th:replace="~{fragments/layout :: topbar('Orden ' + ${orden.numero}, 'Solicitud de compra del restaurante')}"></header>
+    <main class="wok-content">
+      <div th:replace="~{fragments/layout :: mensajes}"></div>
+      <div class="d-flex gap-2 mb-3 flex-wrap align-items-center">
+        <a th:href="@{/portal-proveedor}" class="btn btn-light btn-sm"><i class="bi bi-arrow-left"></i> Mis órdenes</a>
+        <span class="wok-badge fs-6" th:classappend="${orden.estado.claseCss()}" th:text="${orden.estado.etiqueta()}">E</span>
+        <form th:if="${orden.estado.name() == 'ENVIADA'}" th:action="@{/portal-proveedor/ordenes/{id}/confirmar(id=${orden.id})}" method="post"
+              data-wok-confirmar="Confirma que puede atender esta orden con las cantidades y costos indicados.">
+          <button class="btn btn-wok btn-sm" type="submit"><i class="bi bi-check2-circle"></i> Confirmar orden</button>
+        </form>
+      </div>
+      <div class="row g-3">
+        <div class="col-xl-8">
+          <div class="wok-card">
+            <div class="table-responsive">
+              <table class="table table-wok">
+                <thead><tr><th>Insumo</th><th class="text-end">Cantidad</th><th class="text-end">Costo unitario</th><th class="text-end">Subtotal</th><th class="text-end">Recibido</th></tr></thead>
+                <tbody><tr th:each="i : ${orden.items}">
+                  <td th:text="${i.nombreInsumo}">i</td>
+                  <td class="text-end" th:text="${@fmt.numero(i.cantidad)} + ' ' + ${i.unidad}">0</td>
+                  <td class="text-end" th:text="${@fmt.dinero(i.costoUnitario)}">$</td>
+                  <td class="text-end" th:text="${@fmt.dinero(i.subtotal())}">$</td>
+                  <td class="text-end" th:text="${i.cantidadRecibida != null} ? ${@fmt.numero(i.cantidadRecibida)} : '—'">—</td>
+                </tr></tbody>
+                <tfoot><tr><th colspan="3" class="text-end">Total</th><th class="text-end text-wok" th:text="${@fmt.dinero(orden.total)}">$</th><th></th></tr></tfoot>
+              </table>
+            </div>
+            <div class="wok-card-body border-top small" th:if="${orden.notas}"><i class="bi bi-sticky text-wok"></i> <span th:text="${orden.notas}">n</span></div>
+            <div class="wok-card-body border-top small text-suave">Entrega esperada: <strong th:text="${@fmt.fecha(orden.fechaEntregaEsperada)}">f</strong></div>
+          </div>
+        </div>
+        <div class="col-xl-4">
+          <form th:if="${orden.estado.name() == 'CONFIRMADA'}" th:action="@{/portal-proveedor/ordenes/{id}/entrega(id=${orden.id})}" method="post" class="wok-card mb-3">
+            <div class="wok-card-header"><i class="bi bi-truck text-wok"></i><h2>Registrar entrega</h2></div>
+            <div class="wok-card-body">
+              <div class="mb-2"><label class="form-label" for="fechaEntrega">Fecha de entrega</label><input id="fechaEntrega" name="fechaEntrega" type="date" class="form-control" required></div>
+              <div class="mb-2"><label class="form-label" for="documento">Remisión / factura</label><input id="documento" name="documento" class="form-control" maxlength="60"></div>
+              <div class="mb-3"><label class="form-label" for="observaciones">Observaciones</label><input id="observaciones" name="observaciones" class="form-control" maxlength="300"></div>
+              <button class="btn btn-wok w-100" type="submit">Reportar entrega</button>
+              <div class="form-text">El restaurante verificará la mercancía y confirmará la recepción.</div>
+            </div>
+          </form>
+          <div class="wok-card">
+            <div class="wok-card-header"><i class="bi bi-clock-history text-wok"></i><h2>Seguimiento</h2></div>
+            <ul class="list-group list-group-flush small">
+              <li class="list-group-item" th:each="h : ${orden.historial}">
+                <div class="d-flex justify-content-between"><strong th:text="${h.estado()}">E</strong><span class="text-suave" th:text="${@fmt.fechaHora(h.fecha())}">f</span></div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+  </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

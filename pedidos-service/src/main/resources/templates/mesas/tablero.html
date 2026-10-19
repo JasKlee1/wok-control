@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Mesas')}"></head>
+<body data-wok-recargar="60">
+<div class="wok-app">
+  <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+  <div class="wok-main">
+    <header th:replace="~{fragments/layout :: topbar('Mesas', 'Ocupación del salón en tiempo real')}"></header>
+    <main class="wok-content">
+      <div th:replace="~{fragments/layout :: mensajes}"></div>
+      <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+        <span class="wok-badge exito" th:text="${disponibles} + ' disponibles'">0</span>
+        <span class="wok-badge rojo" th:text="${ocupadas} + ' ocupadas'">0</span>
+        <div class="btn-group btn-group-sm ms-2" role="group" aria-label="Zonas">
+          <a th:href="@{/mesas}" class="btn" th:classappend="${zona == null or zona == ''} ? 'btn-wok' : 'btn-light'">Todas</a>
+          <a th:each="z : ${zonas}" th:href="@{/mesas(zona=${z})}" class="btn" th:classappend="${z == zona} ? 'btn-wok' : 'btn-light'" th:text="${z}">Z</a>
+        </div>
+        <a th:if="${usuarioActual.tiene('MESAS_GESTIONAR')}" th:href="@{/mesas/nueva}" class="btn btn-sm btn-wok-outline ms-auto"><i class="bi bi-plus-lg"></i> Nueva mesa</a>
+      </div>
+
+      <div th:if="${mesas.isEmpty()}" class="wok-card">
+        <div th:replace="~{fragments/layout :: vacio('bi-grid-3x3-gap', 'No hay mesas registradas', 'El administrador debe registrar las mesas del salón para empezar a tomar pedidos.')}"></div>
+      </div>
+
+      <div class="row g-3">
+        <div class="col-6 col-md-4 col-xl-3 col-xxl-2" th:each="m : ${mesas}">
+          <div class="wok-mesa" th:classappend="${m.estado.name() == 'DISPONIBLE'} ? 'disponible' : (${m.estado.name() == 'OCUPADA'} ? 'ocupada' : 'fuera')">
+            <div class="d-flex justify-content-between small text-suave">
+              <span th:text="${m.zona}">Zona</span><span><i class="bi bi-people"></i> <span th:text="${m.capacidad}">4</span></span>
+            </div>
+            <div class="wok-mesa-numero my-2" th:text="${m.numero}">1</div>
+            <div th:switch="${m.estado.name()}" class="mb-2">
+              <span th:case="'DISPONIBLE'" class="wok-badge exito">Disponible</span>
+              <span th:case="'OCUPADA'" class="wok-badge rojo">Ocupada</span>
+              <span th:case="*" class="wok-badge neutro">Fuera de servicio</span>
+            </div>
+            <div class="small" th:if="${m.pedidosActivos > 0}">
+              <span th:text="${m.pedidosActivos} + (${m.pedidosActivos == 1} ? ' pedido' : ' pedidos')">1 pedido</span> ·
+              <strong th:text="${@fmt.dinero(m.consumoActual)}">$</strong>
+              <div class="text-suave" th:if="${m.ocupadaDesde}" th:text="'Desde ' + ${@fmt.hora(m.ocupadaDesde)}">desde</div>
+            </div>
+            <div class="d-grid gap-1 mt-2">
+              <a th:if="${m.estado.name() != 'FUERA_DE_SERVICIO' and usuarioActual.tiene('PEDIDOS_GESTIONAR')}"
+                 th:href="@{/pedidos/nuevo(mesaId=${m.id})}" class="btn btn-sm btn-wok"><i class="bi bi-plus-circle"></i> Pedido</a>
+              <a th:if="${m.pedidosActivos > 0}" th:href="@{/mesas/{id}(id=${m.id})}" class="btn btn-sm btn-light">Ver pedidos</a>
+              <form th:if="${m.estado.name() == 'OCUPADA' and m.pedidosActivos == 0}" th:action="@{/mesas/{id}/liberar(id=${m.id})}" method="post">
+                <button type="submit" class="btn btn-sm btn-outline-success w-100">Liberar</button>
+              </form>
+            </div>
+            <div class="d-flex justify-content-center gap-1 mt-2" th:if="${usuarioActual.tiene('MESAS_GESTIONAR')}">
+              <a th:href="@{/mesas/{id}/editar(id=${m.id})}" class="btn btn-sm btn-link text-suave" title="Editar"><i class="bi bi-pencil"></i></a>
+              <form th:if="${m.pedidosActivos == 0}" th:action="@{/mesas/{id}/servicio(id=${m.id})}" method="post">
+                <input type="hidden" name="fuera" th:value="${m.estado.name() != 'FUERA_DE_SERVICIO'}">
+                <button type="submit" class="btn btn-sm btn-link text-suave" th:title="${m.estado.name() == 'FUERA_DE_SERVICIO'} ? 'Habilitar' : 'Fuera de servicio'">
+                  <i class="bi" th:classappend="${m.estado.name() == 'FUERA_DE_SERVICIO'} ? 'bi-play-circle' : 'bi-slash-circle'"></i></button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+  </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

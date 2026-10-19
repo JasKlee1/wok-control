@@ -1,0 +1,8 @@
+spring:
+  mongodb:
+    database: wok_proveedores
+
+wok:
+  openapi:
+    titulo: "Wok Control · Proveedores y compras"
+    descripcion: "Proveedores, condiciones comerciales, órdenes de compra y recepción de mercancía."

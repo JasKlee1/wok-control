@@ -1,0 +1,23 @@
+# Configuración exclusiva de pruebas: sin config-server, sin Eureka y con un secreto JWT de prueba.
+spring:
+  cloud:
+    config:
+      enabled: false
+    discovery:
+      enabled: false
+  jackson:
+    default-property-inclusion: non_null
+    deserialization:
+      fail-on-null-for-primitives: false
+  mongodb:
+    uri: mongodb://localhost:27017
+    database: wok_test_usuarios
+eureka:
+  client:
+    enabled: false
+wok:
+  security:
+    jwt:
+      secret: clave-de-pruebas-unitarias-wok-control-no-usar-en-produccion
+  auditoria:
+    modo: remoto

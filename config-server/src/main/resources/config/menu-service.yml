@@ -1,0 +1,8 @@
+spring:
+  mongodb:
+    database: wok_menu
+
+wok:
+  openapi:
+    titulo: "Wok Control · Menú"
+    descripcion: "Categorías, platos, combos, recetas, precios y disponibilidad de la carta."

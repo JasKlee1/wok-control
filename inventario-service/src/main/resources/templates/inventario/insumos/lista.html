@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Insumos')}"></head>
+<body>
+<div class="wok-app">
+  <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+  <div class="wok-main">
+    <header th:replace="~{fragments/layout :: topbar('Inventario de insumos', 'Existencias, mínimos y costo promedio')}"></header>
+    <main class="wok-content">
+      <div th:replace="~{fragments/layout :: mensajes}"></div>
+      <div class="row g-3 mb-3">
+        <div class="col-sm-4"><div class="wok-stat"><div class="wok-stat-icono dorado"><i class="bi bi-cash-stack"></i></div>
+          <div><div class="wok-stat-valor" th:text="${@fmt.dinero(valorizacion.valorTotal)}">$</div><div class="wok-stat-etiqueta">Valor del inventario</div></div></div></div>
+        <div class="col-sm-4"><div class="wok-stat"><div class="wok-stat-icono"><i class="bi bi-box-seam"></i></div>
+          <div><div class="wok-stat-valor" th:text="${valorizacion.insumosActivos}">0</div><div class="wok-stat-etiqueta">Insumos activos</div></div></div></div>
+        <div class="col-sm-4"><a th:href="@{/inventario/alertas}" class="text-decoration-none text-reset"><div class="wok-stat"><div class="wok-stat-icono ambar"><i class="bi bi-exclamation-triangle"></i></div>
+          <div><div class="wok-stat-valor" th:text="${valorizacion.insumosBajoStock}">0</div><div class="wok-stat-etiqueta">Con stock bajo</div></div></div></a></div>
+      </div>
+
+      <div class="wok-card">
+        <div class="wok-card-header">
+          <form class="wok-filtros flex-grow-1" method="get" th:action="@{/inventario/insumos}">
+            <div><label class="form-label small mb-1" for="q">Buscar</label>
+              <input id="q" name="q" class="form-control form-control-sm" th:value="${q}" placeholder="Nombre"></div>
+            <div><label class="form-label small mb-1" for="categoria">Categoría</label>
+              <select id="categoria" name="categoria" class="form-select form-select-sm">
+                <option value="">Todas</option>
+                <option th:each="c : ${categorias}" th:value="${c}" th:text="${c}" th:selected="${c == categoriaFiltro}">c</option>
+              </select></div>
+            <div class="form-check mb-1">
+              <input class="form-check-input" type="checkbox" name="bajoStock" value="true" id="bajoStock" th:checked="${bajoStock}">
+              <label class="form-check-label small" for="bajoStock">Solo stock bajo</label>
+            </div>
+            <button class="btn btn-sm btn-wok-outline" type="submit"><i class="bi bi-funnel"></i> Filtrar</button>
+          </form>
+          <a th:if="${usuarioActual.tiene('INVENTARIO_GESTIONAR')}" th:href="@{/inventario/insumos/nuevo}" class="btn btn-wok btn-sm"><i class="bi bi-plus-lg"></i> Nuevo insumo</a>
+        </div>
+        <div th:if="${insumos.isEmpty()}">
+          <div th:replace="~{fragments/layout :: vacio('bi-box-seam', 'Sin insumos', 'Registre los insumos y materias primas que usa la cocina.')}"></div>
+        </div>
+        <div class="table-responsive" th:unless="${insumos.isEmpty()}">
+          <table class="table table-wok table-hover">
+            <thead><tr><th>Insumo</th><th>Categoría</th><th class="text-end">Disponible</th><th class="text-end">Mínimo</th><th class="text-end">Costo prom.</th><th class="text-end">Valor</th><th>Estado</th></tr></thead>
+            <tbody>
+              <tr th:each="i : ${insumos}" th:classappend="${i.bajoStock} ? 'table-warning'">
+                <td><a th:href="@{/inventario/insumos/{id}(id=${i.id})}" class="fw-semibold" th:text="${i.nombre}">i</a>
+                  <i th:if="${i.perecedero}" class="bi bi-hourglass-split text-dorado ms-1" title="Perecedero"></i></td>
+                <td class="small" th:text="${i.categoria}">c</td>
+                <td class="text-end fw-semibold" th:text="${@fmt.numero(i.cantidadDisponible)} + ' ' + ${i.unidad}">0</td>
+                <td class="text-end small" th:text="${@fmt.numero(i.stockMinimo)}">0</td>
+                <td class="text-end small" th:text="${@fmt.dinero(i.costoUnitario)}">$</td>
+                <td class="text-end small" th:text="${@fmt.dinero(i.valorizado)}">$</td>
+                <td>
+                  <span th:if="${i.cantidadDisponible.signum() == 0}" class="wok-badge error">Agotado</span>
+                  <span th:if="${i.bajoStock and i.cantidadDisponible.signum() > 0}" class="wok-badge alerta">Stock bajo</span>
+                  <span th:unless="${i.bajoStock}" class="wok-badge exito">Normal</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+  </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

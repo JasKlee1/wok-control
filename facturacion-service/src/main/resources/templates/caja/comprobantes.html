@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Comprobantes')}"></head>
+<body>
+<div class="wok-app">
+  <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+  <div class="wok-main">
+    <header th:replace="~{fragments/layout :: topbar('Comprobantes de venta', 'Historial de facturación interna')}"></header>
+    <main class="wok-content">
+      <div th:replace="~{fragments/layout :: mensajes}"></div>
+      <div class="wok-card">
+        <div class="wok-card-header">
+          <form class="wok-filtros flex-grow-1" method="get" th:action="@{/caja/comprobantes}">
+            <div><label class="form-label small mb-1" for="desde">Desde</label><input id="desde" name="desde" type="date" class="form-control form-control-sm" th:value="${desde}"></div>
+            <div><label class="form-label small mb-1" for="hasta">Hasta</label><input id="hasta" name="hasta" type="date" class="form-control form-control-sm" th:value="${hasta}"></div>
+            <div><label class="form-label small mb-1" for="estado">Estado</label>
+              <select id="estado" name="estado" class="form-select form-select-sm"><option value="">Todos</option>
+                <option th:each="e : ${estados}" th:value="${e}" th:text="${e}" th:selected="${e == estado}">e</option></select></div>
+            <div><label class="form-label small mb-1" for="cajero">Cajero</label><input id="cajero" name="cajero" class="form-control form-control-sm" th:value="${cajero}"></div>
+            <button class="btn btn-sm btn-wok-outline" type="submit"><i class="bi bi-funnel"></i> Filtrar</button>
+          </form>
+          <div class="text-end"><div class="small text-suave">Total emitido</div><div class="h5 mb-0 text-wok" th:text="${@fmt.dinero(totalEmitido)}">$</div></div>
+        </div>
+        <div th:if="${facturas.isEmpty()}">
+          <div th:replace="~{fragments/layout :: vacio('bi-file-earmark-text', 'Sin comprobantes', 'No hay comprobantes en el periodo seleccionado.')}"></div>
+        </div>
+        <div class="table-responsive" th:unless="${facturas.isEmpty()}">
+          <input class="form-control form-control-sm m-2" style="max-width:260px" placeholder="Buscar en la tabla…" data-wok-buscar="#tablaComprobantes" aria-label="Buscar">
+          <table class="table table-wok table-hover" id="tablaComprobantes">
+            <thead><tr><th>Número</th><th>Fecha</th><th>Mesa</th><th>Cajero</th><th>Métodos</th><th class="text-end">Total</th><th>Estado</th></tr></thead>
+            <tbody>
+              <tr th:each="f : ${facturas}">
+                <td><a th:href="@{/caja/comprobantes/{id}(id=${f.id})}" class="wok-mono fw-semibold" th:text="${f.numero}">TIQ</a></td>
+                <td class="small" th:text="${@fmt.fechaHora(f.emitidaEn)}">f</td>
+                <td th:text="${f.mesaNumero}">1</td>
+                <td class="wok-mono small" th:text="${f.cajero}">c</td>
+                <td class="small"><span th:each="p : ${f.pagos}" class="wok-badge neutro me-1" th:text="${p.metodo.etiqueta()}">m</span></td>
+                <td class="text-end" th:text="${@fmt.dinero(f.total)}">$</td>
+                <td><span class="wok-badge" th:classappend="${f.estado.name() == 'EMITIDA'} ? 'exito' : 'error'" th:text="${f.estado}">E</span>
+                  <i th:if="${f.sincronizacion.name() != 'COMPLETA'}" class="bi bi-arrow-repeat text-warning" title="Pendiente de sincronizar"></i>
+                  <i th:if="${f.cierreId}" class="bi bi-safe text-suave" title="Incluido en cierre de caja"></i></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+  </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

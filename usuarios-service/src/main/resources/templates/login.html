@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Iniciar sesión')}"></head>
+<body>
+<div class="wok-login">
+  <section class="wok-login-hero">
+    <div class="d-flex align-items-center gap-3">
+      <img th:src="@{/wok-static/images/logo.svg}" alt="" width="56" height="56">
+      <div>
+        <div class="wok-marca-nombre text-white" style="font-size:1.5rem">Wok Control</div>
+        <div class="wok-marca-sub">Gestión de restaurante</div>
+      </div>
+    </div>
+
+    <div class="my-4">
+      <h1>Del <span class="acento">wok</span> a la mesa,<br>cada pedido bajo control.</h1>
+      <div class="wok-divisor" style="max-width: 260px"></div>
+      <p class="wok-hero-detalle mb-0" style="max-width: 460px; color: #D9CDB9">
+        Mesas, comandas de cocina, inventario, proveedores y caja en una sola plataforma,
+        con información trazable para cada turno.
+      </p>
+    </div>
+
+    <ul class="list-unstyled wok-hero-detalle small mb-0" style="color:#CDBFA9">
+      <li class="mb-2"><i class="bi bi-fire text-dorado me-2"></i>Comandas ordenadas por llegada, con alergias y nivel de picante</li>
+      <li class="mb-2"><i class="bi bi-box-seam text-dorado me-2"></i>Inventario descontado automáticamente y sin duplicados</li>
+      <li><i class="bi bi-cash-coin text-dorado me-2"></i>Cierres de caja que cuadran contra lo vendido</li>
+    </ul>
+  </section>
+
+  <section class="wok-login-form">
+    <div class="wok-login-caja">
+      <h2 class="h3 mb-1">Bienvenido</h2>
+      <p class="text-suave mb-4">Ingrese con el usuario asignado por el administrador.</p>
+
+      <div th:if="${param.expirada}" class="alert alert-warning wok-alerta" role="alert">
+        <i class="bi bi-clock-history"></i><div>Su sesión expiró. Inicie sesión nuevamente.</div>
+      </div>
+      <div th:if="${param.salir}" class="alert alert-info wok-alerta" role="alert">
+        <i class="bi bi-door-open"></i><div>Cerró sesión correctamente.</div>
+      </div>
+      <div th:if="${error}" class="alert alert-danger wok-alerta" role="alert">
+        <i class="bi bi-x-octagon-fill"></i><div th:text="${error}">Error</div>
+      </div>
+
+      <form th:action="@{/login}" method="post" class="wok-card p-4" novalidate>
+        <input type="hidden" name="continuar" th:value="${continuar}">
+        <div class="mb-3">
+          <label for="username" class="form-label">Usuario</label>
+          <div class="input-group">
+            <span class="input-group-text bg-crema"><i class="bi bi-person"></i></span>
+            <input id="username" name="username" class="form-control" th:value="${username}" required
+                   autocomplete="username" autocapitalize="none" maxlength="60" autofocus>
+          </div>
+        </div>
+        <div class="mb-4">
+          <label for="password" class="form-label">Contraseña</label>
+          <div class="input-group">
+            <span class="input-group-text bg-crema"><i class="bi bi-lock"></i></span>
+            <input id="password" name="password" type="password" class="form-control" required
+                   autocomplete="current-password" maxlength="120">
+          </div>
+        </div>
+        <button type="submit" class="btn btn-wok w-100 py-2"><i class="bi bi-box-arrow-in-right me-1"></i> Ingresar</button>
+      </form>
+      <p class="small text-suave mt-3 mb-0 text-center">
+        <i class="bi bi-shield-lock"></i> Tras 5 intentos fallidos la cuenta se bloquea 15 minutos.
+      </p>
+    </div>
+  </section>
+</div>
+<script th:src="@{/webjars/bootstrap/dist/js/bootstrap.bundle.min.js}"></script>
+</body>
+</html>

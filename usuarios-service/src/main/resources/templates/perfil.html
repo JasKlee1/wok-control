@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Mi perfil')}"></head>
+<body>
+<div class="wok-app">
+  <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+  <div class="wok-main">
+    <header th:replace="~{fragments/layout :: topbar('Mi perfil', 'Datos de la cuenta y seguridad')}"></header>
+    <main class="wok-content">
+      <div th:replace="~{fragments/layout :: mensajes}"></div>
+      <div th:if="${param.cambioObligatorio != null or usuario.debeCambiarPassword}" class="alert alert-warning wok-alerta">
+        <i class="bi bi-key-fill"></i>
+        <div><strong>Debe cambiar su contraseña.</strong> Fue asignada por un administrador; defina una propia antes de continuar.</div>
+      </div>
+
+      <div class="row g-3">
+        <div class="col-lg-5">
+          <div class="wok-card mb-3">
+            <div class="wok-card-body d-flex align-items-center gap-3">
+              <span class="wok-avatar" style="width:64px;height:64px;font-size:1.4rem" th:text="${usuarioActual.iniciales()}">WC</span>
+              <div>
+                <div class="h5 mb-0" th:text="${usuario.nombre}">Nombre</div>
+                <div class="text-suave wok-mono" th:text="'@' + ${usuario.username}">@usuario</div>
+                <div class="mt-1">
+                  <span th:each="r : ${rolesUsuario}" class="wok-badge dorado me-1" th:text="${r.nombre}">Rol</span>
+                </div>
+              </div>
+            </div>
+            <div class="wok-card-body border-top small">
+              <div class="d-flex justify-content-between"><span class="text-suave">Último acceso</span><span th:text="${@fmt.fechaHora(usuario.ultimoAcceso)}">—</span></div>
+              <div class="d-flex justify-content-between"><span class="text-suave">Cuenta creada</span><span th:text="${@fmt.fechaHora(usuario.creadoEn)}">—</span></div>
+              <div class="d-flex justify-content-between" th:if="${usuario.proveedorId}"><span class="text-suave">Proveedor vinculado</span><span class="wok-mono" th:text="${usuario.proveedorId}">id</span></div>
+            </div>
+          </div>
+
+          <div class="wok-card">
+            <div class="wok-card-header"><i class="bi bi-person-vcard text-wok"></i><h2>Datos personales</h2></div>
+            <form th:action="@{/perfil/datos}" method="post" class="wok-card-body">
+              <div class="mb-3">
+                <label class="form-label" for="nombre">Nombre completo</label>
+                <input id="nombre" name="nombre" class="form-control" th:value="${usuario.nombre}" required maxlength="100">
+              </div>
+              <div class="mb-3">
+                <label class="form-label" for="email">Correo electrónico</label>
+                <input id="email" name="email" type="email" class="form-control" th:value="${usuario.email}" maxlength="120">
+              </div>
+              <button class="btn btn-wok-outline" type="submit"><i class="bi bi-save"></i> Guardar datos</button>
+            </form>
+          </div>
+        </div>
+
+        <div class="col-lg-7">
+          <div class="wok-card">
+            <div class="wok-card-header"><i class="bi bi-shield-lock text-wok"></i><h2>Cambiar contraseña</h2></div>
+            <form th:action="@{/perfil/password}" th:object="${cambio}" method="post" class="wok-card-body" novalidate>
+              <div class="mb-3">
+                <label class="form-label" for="actual">Contraseña actual</label>
+                <input id="actual" name="actual" type="password" class="form-control" autocomplete="current-password"
+                       th:classappend="${#fields.hasErrors('actual')} ? 'is-invalid'">
+                <div class="invalid-feedback" th:errors="*{actual}"></div>
+              </div>
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label" for="nueva">Nueva contraseña</label>
+                  <input id="nueva" name="nueva" type="password" class="form-control" autocomplete="new-password"
+                         th:classappend="${#fields.hasErrors('nueva')} ? 'is-invalid'">
+                  <div class="invalid-feedback" th:errors="*{nueva}"></div>
+                  <div class="form-text">Mínimo 8 caracteres, con al menos una letra y un número.</div>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label" for="confirmacion">Confirmación</label>
+                  <input id="confirmacion" name="confirmacion" type="password" class="form-control" autocomplete="new-password"
+                         th:classappend="${#fields.hasErrors('confirmacion')} ? 'is-invalid'">
+                  <div class="invalid-feedback" th:errors="*{confirmacion}"></div>
+                </div>
+              </div>
+              <button class="btn btn-wok mt-3" type="submit"><i class="bi bi-key"></i> Actualizar contraseña</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+  </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

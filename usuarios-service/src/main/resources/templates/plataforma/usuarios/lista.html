@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Usuarios')}"></head>
+<body>
+<div class="wok-app">
+  <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+  <div class="wok-main">
+    <header th:replace="~{fragments/layout :: topbar('Usuarios', 'Cuentas del personal y proveedores')}"></header>
+    <main class="wok-content">
+      <div th:replace="~{fragments/layout :: mensajes}"></div>
+
+      <div class="wok-card">
+        <div class="wok-card-header">
+          <form class="wok-filtros flex-grow-1" method="get" th:action="@{/plataforma/usuarios}">
+            <div>
+              <label class="form-label small mb-1" for="q">Buscar</label>
+              <input id="q" name="q" class="form-control form-control-sm" th:value="${q}" placeholder="Nombre, usuario o correo">
+            </div>
+            <div>
+              <label class="form-label small mb-1" for="rol">Rol</label>
+              <select id="rol" name="rol" class="form-select form-select-sm">
+                <option value="">Todos</option>
+                <option th:each="r : ${roles}" th:value="${r.codigo}" th:text="${r.nombre}" th:selected="${r.codigo == rolFiltro}">Rol</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label small mb-1" for="activo">Estado</label>
+              <select id="activo" name="activo" class="form-select form-select-sm">
+                <option value="">Todos</option>
+                <option value="true" th:selected="${activoFiltro == true}">Activos</option>
+                <option value="false" th:selected="${activoFiltro == false}">Inactivos</option>
+              </select>
+            </div>
+            <button class="btn btn-sm btn-wok-outline" type="submit"><i class="bi bi-funnel"></i> Filtrar</button>
+          </form>
+          <a th:href="@{/plataforma/usuarios/nuevo}" class="btn btn-wok btn-sm"><i class="bi bi-person-plus"></i> Nuevo usuario</a>
+        </div>
+
+        <div th:if="${pagina.empty}">
+          <div th:replace="~{fragments/layout :: vacio('bi-people', 'Sin usuarios', 'No hay usuarios que coincidan con los filtros.')}"></div>
+        </div>
+        <div class="table-responsive" th:unless="${pagina.empty}">
+          <table class="table table-wok table-hover">
+            <thead><tr><th>Usuario</th><th>Nombre</th><th>Roles</th><th>Estado</th><th>Último acceso</th><th class="text-end">Acciones</th></tr></thead>
+            <tbody>
+              <tr th:each="u : ${pagina.content}">
+                <td class="wok-mono" th:text="${u.username}">usuario</td>
+                <td>
+                  <div th:text="${u.nombre}">Nombre</div>
+                  <small class="text-suave" th:text="${u.email}">correo</small>
+                </td>
+                <td><span th:each="r : ${u.roles}" class="wok-badge neutro me-1" th:text="${r}">ROL</span></td>
+                <td>
+                  <span th:if="${u.bloqueadoAhora}" class="wok-badge alerta">Bloqueado</span>
+                  <span th:if="${u.activo}" class="wok-badge exito">Activo</span>
+                  <span th:unless="${u.activo}" class="wok-badge error">Inactivo</span>
+                  <span th:if="${u.debeCambiarPassword}" class="wok-badge dorado" title="Debe cambiar la contraseña">Clave temporal</span>
+                </td>
+                <td class="small" th:text="${@fmt.fechaHora(u.ultimoAcceso)}">—</td>
+                <td>
+                  <div class="wok-acciones">
+                    <a th:href="@{/plataforma/usuarios/{id}/editar(id=${u.id})}" class="btn btn-sm btn-light" title="Editar"><i class="bi bi-pencil"></i></a>
+                    <form th:action="@{/plataforma/usuarios/{id}/estado(id=${u.id})}" method="post"
+                          th:attr="data-wok-confirmar=${u.activo} ? 'Se desactivará la cuenta ' + ${u.username} + '. No podrá iniciar sesión.' : 'Se activará la cuenta ' + ${u.username} + '.'">
+                      <input type="hidden" name="activo" th:value="${!u.activo}">
+                      <button class="btn btn-sm" th:classappend="${u.activo} ? 'btn-outline-danger' : 'btn-outline-success'"
+                              th:title="${u.activo} ? 'Desactivar' : 'Activar'" type="submit">
+                        <i class="bi" th:classappend="${u.activo} ? 'bi-person-dash' : 'bi-person-check'"></i>
+                      </button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <nav th:replace="~{fragments/layout :: paginacion(${pagina}, ${baseUrl})}"></nav>
+      </div>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+  </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

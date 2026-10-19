@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${form.esNuevo()} ? 'Nuevo combo' : 'Editar combo')}"></head>
+<body>
+<div class="wok-app">
+  <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+  <div class="wok-main">
+    <header th:replace="~{fragments/layout :: topbar(${form.esNuevo()} ? 'Nuevo combo' : 'Editar combo', 'Platos incluidos y precio conjunto')}"></header>
+    <main class="wok-content">
+      <div th:replace="~{fragments/layout :: mensajes}"></div>
+      <form th:action="@{/menu/combos/guardar}" th:object="${form}" method="post" class="wok-card" style="max-width: 920px" novalidate>
+        <input type="hidden" th:field="*{id}">
+        <div class="wok-card-body">
+          <div th:replace="~{fragments/layout :: erroresFormulario('form')}"></div>
+          <div class="row g-3">
+            <div class="col-md-8">
+              <label class="form-label" for="nombre">Nombre</label>
+              <input th:field="*{nombre}" class="form-control" th:classappend="${#fields.hasErrors('nombre')} ? 'is-invalid'">
+              <div class="invalid-feedback" th:errors="*{nombre}"></div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label" for="precio">Precio del combo</label>
+              <div class="input-group has-validation"><span class="input-group-text bg-crema">$</span>
+                <input th:field="*{precio}" type="number" step="0.01" min="0" class="form-control" th:classappend="${#fields.hasErrors('precio')} ? 'is-invalid'">
+                <div class="invalid-feedback" th:errors="*{precio}"></div></div>
+            </div>
+            <div class="col-12">
+              <label class="form-label" for="descripcion">Descripción</label>
+              <input th:field="*{descripcion}" class="form-control" maxlength="300">
+            </div>
+            <div class="col-12">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" th:field="*{disponible}">
+                <label class="form-check-label" th:for="${#ids.prev('disponible')}">Disponible para la venta</label>
+              </div>
+            </div>
+          </div>
+          <h3 class="wok-form-seccion">Platos incluidos</h3>
+          <div th:if="${platos.isEmpty()}" class="alert alert-info wok-alerta small"><i class="bi bi-info-circle"></i><div>Registre platos antes de armar combos.</div></div>
+          <div id="filasCombo">
+            <div class="row g-2 mb-2 align-items-center" data-wok-fila th:each="it, st : *{items}">
+              <div class="col-8"><select class="form-select form-select-sm" th:name="|items[${st.index}].platoId|">
+                <option value="">Seleccione plato…</option>
+                <option th:each="p : ${platos}" th:value="${p.id}" th:text="${p.nombre} + ' · ' + ${@fmt.dinero(p.precio)}" th:selected="${p.id == it.platoId}">p</option>
+              </select></div>
+              <div class="col-2"><input type="number" min="1" max="20" class="form-control form-control-sm" th:name="|items[${st.index}].cantidad|" th:value="${it.cantidad}"></div>
+              <div class="col-2 text-end"><button type="button" class="btn btn-sm btn-light" data-wok-quitar-fila><i class="bi bi-x-lg"></i></button></div>
+            </div>
+          </div>
+          <button type="button" class="btn btn-sm btn-wok-outline" data-wok-agregar-fila="#filasCombo" data-wok-plantilla="#plantillaCombo"><i class="bi bi-plus"></i> Agregar plato</button>
+          <template id="plantillaCombo">
+            <div class="row g-2 mb-2 align-items-center" data-wok-fila>
+              <div class="col-8"><select class="form-select form-select-sm" name="items[__i__].platoId">
+                <option value="">Seleccione plato…</option>
+                <option th:each="p : ${platos}" th:value="${p.id}" th:text="${p.nombre} + ' · ' + ${@fmt.dinero(p.precio)}">p</option>
+              </select></div>
+              <div class="col-2"><input type="number" min="1" max="20" value="1" class="form-control form-control-sm" name="items[__i__].cantidad"></div>
+              <div class="col-2 text-end"><button type="button" class="btn btn-sm btn-light" data-wok-quitar-fila><i class="bi bi-x-lg"></i></button></div>
+            </div>
+          </template>
+        </div>
+        <div class="wok-card-body border-top d-flex gap-2 justify-content-end">
+          <a th:href="@{/menu/combos}" class="btn btn-light">Cancelar</a>
+          <button type="submit" class="btn btn-wok"><i class="bi bi-save"></i> Guardar combo</button>
+        </div>
+      </form>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+  </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

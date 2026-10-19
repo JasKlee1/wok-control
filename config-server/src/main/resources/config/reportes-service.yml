@@ -1,0 +1,4 @@
+wok:
+  openapi:
+    titulo: "Wok Control · Reportes"
+    descripcion: "Panel de control e indicadores. No tiene base de datos propia: agrega información consultando las API de los demás servicios con el token del usuario."

@@ -1,0 +1,18 @@
+spring:
+  mongodb:
+    database: wok_usuarios
+
+wok:
+  openapi:
+    titulo: "Wok Control · Usuarios y autenticación"
+    descripcion: "Usuarios, roles, permisos, autenticación JWT, parámetros generales y auditoría central."
+  auditoria:
+    modo: local
+  # Primer administrador de plataforma. Solo se crea si la base de usuarios está vacía
+  # y ambas variables están definidas. Debe cambiar la contraseña al ingresar.
+  bootstrap:
+    admin-username: ${WOK_BOOTSTRAP_ADMIN_USERNAME:}
+    admin-password: ${WOK_BOOTSTRAP_ADMIN_PASSWORD:}
+  login:
+    max-intentos: 5
+    bloqueo-minutos: 15

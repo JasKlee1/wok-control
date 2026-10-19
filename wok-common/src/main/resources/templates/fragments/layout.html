@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<!--/*
+  Fragmentos compartidos por todas las vistas de Wok Control.
+  Uso típico de una página:
+    <head th:replace="~{fragments/layout :: head('Título')}"></head>
+    <body> <div class="wok-app"> <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+      <div class="wok-main"> <header th:replace="~{fragments/layout :: topbar('Título', 'Subtítulo')}"></header>
+        <main class="wok-content"> <div th:replace="~{fragments/layout :: mensajes}"></div> ... </main>
+        <footer th:replace="~{fragments/layout :: footer}"></footer> </div> </div>
+      <th:block th:replace="~{fragments/layout :: scripts}"></th:block> </body>
+*/-->
+
+<head th:fragment="head(titulo)">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#242424">
+  <title th:text="${titulo} + ' · Wok Control'">Wok Control</title>
+  <link rel="icon" type="image/svg+xml" th:href="@{/wok-static/images/logo.svg}">
+  <link rel="stylesheet" th:href="@{/webjars/bootstrap/dist/css/bootstrap.min.css}">
+  <link rel="stylesheet" th:href="@{/webjars/bootstrap-icons/font/bootstrap-icons.min.css}">
+  <link rel="stylesheet" th:href="@{/wok-static/css/wok.css}">
+</head>
+
+<body>
+
+<aside th:fragment="sidebar" class="wok-sidebar" aria-label="Navegación principal">
+  <a class="wok-marca" th:href="@{/dashboard}">
+    <img th:src="@{/wok-static/images/logo.svg}" alt="">
+    <span>
+      <span class="wok-marca-nombre d-block">Wok Control</span>
+      <span class="wok-marca-sub">Restaurante</span>
+    </span>
+  </a>
+  <nav class="wok-nav">
+    <th:block th:each="seccion : ${navegacion}">
+      <div class="wok-nav-seccion" th:text="${seccion.titulo}">Sección</div>
+      <a th:each="item : ${seccion.items}" th:href="@{${item.href}}"
+         th:classappend="${rutaActual != null and (rutaActual == item.href or #strings.startsWith(rutaActual, item.href + '/'))} ? 'activo'"
+         th:attr="aria-current=${rutaActual == item.href} ? 'page' : null">
+        <i class="bi" th:classappend="${item.icono}" aria-hidden="true"></i>
+        <span th:text="${item.etiqueta}">Opción</span>
+      </a>
+    </th:block>
+  </nav>
+  <div class="wok-sidebar-pie">Wok Control · v1.0</div>
+</aside>
+
+<header th:fragment="topbar(titulo, subtitulo)" class="wok-topbar">
+  <button class="wok-menu-toggle" type="button" data-wok-menu aria-label="Abrir menú"><i class="bi bi-list"></i></button>
+  <div>
+    <h1 th:text="${titulo}">Título</h1>
+    <div class="wok-subtitulo" th:if="${subtitulo != null and subtitulo != ''}" th:text="${subtitulo}">Subtítulo</div>
+  </div>
+  <div class="wok-usuario" th:if="${usuarioActual != null}">
+    <a th:href="@{/perfil}" class="d-flex align-items-center gap-2 text-decoration-none text-reset" title="Mi perfil">
+      <span class="wok-avatar" th:text="${usuarioActual.iniciales()}">WC</span>
+      <span class="wok-usuario-texto">
+        <span class="wok-usuario-nombre d-block" th:text="${usuarioActual.nombre}">Nombre</span>
+        <span class="wok-usuario-rol" th:text="${usuarioActual.rolPrincipal()}">Rol</span>
+      </span>
+    </a>
+    <form th:action="@{/logout}" method="post" class="ms-1">
+      <button type="submit" class="btn btn-sm btn-wok-outline" title="Cerrar sesión" aria-label="Cerrar sesión">
+        <i class="bi bi-box-arrow-right"></i>
+      </button>
+    </form>
+  </div>
+</header>
+
+<div th:fragment="mensajes">
+  <div th:if="${exito}" class="alert alert-success wok-alerta alert-dismissible fade show" role="alert" data-auto-cerrar>
+    <i class="bi bi-check-circle-fill"></i><div th:text="${exito}">Operación exitosa</div>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+  </div>
+  <div th:if="${error}" class="alert alert-danger wok-alerta alert-dismissible fade show" role="alert">
+    <i class="bi bi-x-octagon-fill"></i><div th:text="${error}">Error</div>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+  </div>
+  <div th:if="${info}" class="alert alert-info wok-alerta alert-dismissible fade show" role="alert">
+    <i class="bi bi-info-circle-fill"></i><div th:text="${info}">Información</div>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+  </div>
+  <div th:if="${advertencia}" class="alert alert-warning wok-alerta" role="alert">
+    <i class="bi bi-exclamation-triangle-fill"></i><div th:text="${advertencia}">Advertencia</div>
+  </div>
+</div>
+
+<!--/* Errores de validación de un formulario: th:replace="~{fragments/layout :: erroresFormulario('plato')}" */-->
+<div th:fragment="erroresFormulario(objeto)" th:if="${#fields.hasGlobalErrors()}" class="alert alert-danger wok-alerta">
+  <i class="bi bi-x-octagon-fill"></i>
+  <div><div th:each="e : ${#fields.globalErrors()}" th:text="${e}">Error global</div></div>
+</div>
+
+<!--/* Estado vacío reutilizable */-->
+<div th:fragment="vacio(icono, titulo, mensaje)" class="wok-vacio">
+  <div class="wok-vacio-icono"><i class="bi" th:classappend="${icono}"></i></div>
+  <h3 th:text="${titulo}">Sin registros</h3>
+  <p class="mb-0" th:text="${mensaje}">Todavía no hay información registrada.</p>
+</div>
+
+<!--/* Paginación para org.springframework.data.domain.Page. baseUrl ya incluye los filtros. */-->
+<nav th:fragment="paginacion(pagina, baseUrl)" th:if="${pagina != null and pagina.totalPages > 1}"
+     class="d-flex justify-content-between align-items-center px-3 py-2 border-top flex-wrap gap-2" aria-label="Paginación">
+  <small class="text-suave"
+         th:text="|Página ${pagina.number + 1} de ${pagina.totalPages} · ${pagina.totalElements} registros|">Página 1 de 1</small>
+  <ul class="pagination pagination-sm mb-0">
+    <li class="page-item" th:classappend="${pagina.first} ? 'disabled'">
+      <a class="page-link" th:href="${baseUrl + (#strings.contains(baseUrl, '?') ? '&' : '?') + 'page=' + (pagina.number - 1)}">Anterior</a>
+    </li>
+    <li class="page-item" th:classappend="${pagina.last} ? 'disabled'">
+      <a class="page-link" th:href="${baseUrl + (#strings.contains(baseUrl, '?') ? '&' : '?') + 'page=' + (pagina.number + 1)}">Siguiente</a>
+    </li>
+  </ul>
+</nav>
+
+<footer th:fragment="footer" class="wok-footer">
+  <span>© Wok Control — Gestión integral para restaurantes de comida china</span>
+  <span><i class="bi bi-shield-check text-dorado"></i> Sesión protegida con JWT</span>
+</footer>
+
+<th:block th:fragment="scripts">
+  <div class="wok-backdrop"></div>
+  <div class="modal fade" id="wokModalConfirmar" tabindex="-1" aria-hidden="true" aria-labelledby="wokModalTitulo">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content" style="border-radius: var(--wok-radio)">
+        <div class="modal-header">
+          <h5 class="modal-title wok-titulo" id="wokModalTitulo"><i class="bi bi-exclamation-diamond text-wok me-1"></i> Confirmar operación</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body" data-wok-confirmar-texto>¿Desea continuar?</div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-wok" data-wok-confirmar-ok>Confirmar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script th:src="@{/webjars/bootstrap/dist/js/bootstrap.bundle.min.js}"></script>
+  <script th:src="@{/wok-static/js/wok.js}"></script>
+</th:block>
+
+</body>
+</html>

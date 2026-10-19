@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Cuenta mesa ' + ${cuenta.mesaNumero})}"></head>
+<body>
+<div class="wok-app">
+  <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+  <div class="wok-main">
+    <header th:replace="~{fragments/layout :: topbar('Cuenta · Mesa ' + ${cuenta.mesaNumero}, 'Los valores se recalculan en el servidor al cobrar')}"></header>
+    <main class="wok-content">
+      <div th:replace="~{fragments/layout :: mensajes}"></div>
+      <a th:href="@{/caja/cuentas}" class="btn btn-light btn-sm mb-3"><i class="bi bi-arrow-left"></i> Cuentas</a>
+      <div class="alert alert-info wok-alerta" th:if="${cuenta.pedidosEnCurso > 0}">
+        <i class="bi bi-hourglass-split"></i><div>La mesa tiene <strong th:text="${cuenta.pedidosEnCurso}">1</strong> pedido(s) aún en curso que no se pueden cobrar hasta ser entregados.</div>
+      </div>
+      <div th:if="${cuenta.pedidos.isEmpty()}" class="wok-card">
+        <div th:replace="~{fragments/layout :: vacio('bi-receipt', 'Nada por cobrar', 'La mesa no tiene pedidos entregados pendientes de pago.')}"></div>
+      </div>
+      <form th:unless="${cuenta.pedidos.isEmpty()}" th:action="@{/caja/cuentas/{m}/cobrar(m=${cuenta.mesaId})}" th:object="${form}" method="post"
+            id="formCobro" th:attr="data-subtotal=${cuenta.subtotal},data-impuesto=${cuenta.impuestoPorcentaje}"
+            data-wok-confirmar="Se emitirá el comprobante interno y se registrarán los pagos. ¿Confirmar el cobro?" data-wok-confirmar-boton="Cobrar">
+        <input type="hidden" th:field="*{claveIdempotencia}">
+        <div class="row g-3">
+          <div class="col-xl-7">
+            <div class="wok-card mb-3">
+              <div class="wok-card-header"><i class="bi bi-receipt text-wok"></i><h2>Pedidos entregados</h2></div>
+              <ul class="list-group list-group-flush">
+                <li class="list-group-item d-flex justify-content-between align-items-center" th:each="p : ${cuenta.pedidos}">
+                  <label class="d-flex gap-2 align-items-center">
+                    <input type="checkbox" class="form-check-input" name="pedidoIds" th:value="${p.id}" th:checked="${#lists.contains(form.pedidoIds, p.id)}" data-total-pedido th:attr="data-valor=${p.total}">
+                    <span class="wok-mono" th:text="${p.numero}">P</span>
+                  </label>
+                  <span th:text="${@fmt.dinero(p.total)}">$</span>
+                </li>
+              </ul>
+            </div>
+            <div class="wok-card">
+              <div class="table-responsive">
+                <table class="table table-wok table-sm">
+                  <thead><tr><th>Pedido</th><th>Producto</th><th class="text-center">Cant.</th><th class="text-end">Precio</th><th class="text-end">Subtotal</th></tr></thead>
+                  <tbody><tr th:each="l : ${cuenta.lineas}">
+                    <td class="wok-mono small" th:text="${l.pedidoNumero}">P</td><td th:text="${l.descripcion}">d</td>
+                    <td class="text-center" th:text="${l.cantidad}">1</td><td class="text-end" th:text="${@fmt.dinero(l.precioUnitario)}">$</td>
+                    <td class="text-end" th:text="${@fmt.dinero(l.subtotal)}">$</td></tr></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <div class="col-xl-5">
+            <div class="wok-card mb-3">
+              <div class="wok-card-header"><i class="bi bi-percent text-wok"></i><h2>Descuento <small class="text-suave">(opcional)</small></h2></div>
+              <div class="wok-card-body row g-2">
+                <div class="col-4"><label class="form-label" for="descuentoPorcentaje">%</label>
+                  <input th:field="*{descuentoPorcentaje}" type="number" step="0.5" min="0" th:max="${descuentoMaximo}" class="form-control" data-recalcular></div>
+                <div class="col-8" th:if="${puedeDescontarDirecto}"><label class="form-label" for="descuentoMotivo">Motivo</label>
+                  <input th:field="*{descuentoMotivo}" class="form-control" maxlength="200"></div>
+                <div class="col-8" th:unless="${puedeDescontarDirecto}"><label class="form-label" for="codigoAutorizacion">Código de autorización</label>
+                  <input th:field="*{codigoAutorizacion}" class="form-control wok-mono text-uppercase" maxlength="12" placeholder="Lo entrega el administrador"></div>
+              </div>
+            </div>
+            <div class="wok-card mb-3">
+              <div class="wok-card-header"><i class="bi bi-wallet2 text-wok"></i><h2>Pagos</h2></div>
+              <div class="wok-card-body">
+                <div class="row g-2 mb-2" th:each="p, st : *{pagos}">
+                  <div class="col-5"><select class="form-select form-select-sm" th:name="|pagos[${st.index}].metodo|" aria-label="Método de pago">
+                    <option value="">—</option>
+                    <option th:each="m : ${metodos}" th:value="${m}" th:text="${m.etiqueta()}" th:selected="${m == p.metodo}">m</option></select></div>
+                  <div class="col-4"><input type="number" step="1" min="0" class="form-control form-control-sm" th:name="|pagos[${st.index}].monto|" th:value="${p.monto}" placeholder="Monto" data-recalcular data-pago aria-label="Monto"></div>
+                  <div class="col-3"><input class="form-control form-control-sm" maxlength="60" th:name="|pagos[${st.index}].referencia|" th:value="${p.referencia}" placeholder="Ref." aria-label="Referencia"></div>
+                </div>
+                <div class="form-text">Pago mixto: use dos líneas. Solo el efectivo admite cambio.</div>
+              </div>
+            </div>
+            <div class="wok-card">
+              <div class="wok-card-body">
+                <div class="d-flex justify-content-between"><span>Subtotal</span><span id="vSubtotal" th:text="${@fmt.dinero(cuenta.subtotal)}">$</span></div>
+                <div class="d-flex justify-content-between text-suave"><span>Descuento</span><span id="vDescuento">$ 0</span></div>
+                <div class="d-flex justify-content-between text-suave"><span th:text="'Impuesto al consumo (' + ${@fmt.numero(cuenta.impuestoPorcentaje)} + '%)'">INC</span><span id="vImpuesto" th:text="${@fmt.dinero(cuenta.impuestoValor)}">$</span></div>
+                <hr>
+                <div class="d-flex justify-content-between h4 mb-1"><span>Total</span><span class="text-wok" id="vTotal" th:text="${@fmt.dinero(cuenta.total)}">$</span></div>
+                <div class="d-flex justify-content-between small"><span>Recibido</span><span id="vRecibido">$ 0</span></div>
+                <div class="d-flex justify-content-between small"><span>Cambio / faltante</span><span id="vCambio">—</span></div>
+                <button type="submit" class="btn btn-wok w-100 mt-3 py-2"><i class="bi bi-cash-coin"></i> Cobrar y emitir comprobante</button>
+                <p class="small text-suave mt-2 mb-0"><i class="bi bi-info-circle"></i> Estimación en pantalla; el valor definitivo lo calcula el servidor.
+                  Se emite un <strong>comprobante interno de venta</strong>, no una factura electrónica DIAN.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+  </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<script>
+  (function () {
+    var form = document.getElementById('formCobro');
+    if (!form) return;
+    var impuesto = parseFloat(form.dataset.impuesto || '0');
+    var fmt = new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 });
+    function recalcular() {
+      var subtotal = 0;
+      form.querySelectorAll('[data-total-pedido]').forEach(function (c) { if (c.checked) subtotal += parseFloat(c.dataset.valor); });
+      var pct = parseFloat((form.querySelector('[name=descuentoPorcentaje]') || {}).value || '0') || 0;
+      var desc = Math.round(subtotal * pct / 100);
+      var base = Math.round(subtotal) - desc;
+      var imp = Math.round(base * impuesto / 100);
+      var total = base + imp;
+      var recibido = 0;
+      form.querySelectorAll('[data-pago]').forEach(function (i) { recibido += parseFloat(i.value || '0') || 0; });
+      document.getElementById('vSubtotal').textContent = '$ ' + fmt.format(Math.round(subtotal));
+      document.getElementById('vDescuento').textContent = '− $ ' + fmt.format(desc);
+      document.getElementById('vImpuesto').textContent = '$ ' + fmt.format(imp);
+      document.getElementById('vTotal').textContent = '$ ' + fmt.format(total);
+      document.getElementById('vRecibido').textContent = '$ ' + fmt.format(recibido);
+      var dif = recibido - total;
+      var c = document.getElementById('vCambio');
+      c.textContent = (dif >= 0 ? 'Cambio $ ' : 'Faltan $ ') + fmt.format(Math.abs(dif));
+      c.className = dif >= 0 ? 'text-success fw-semibold' : 'text-danger fw-semibold';
+    }
+    form.addEventListener('input', recalcular);
+    form.addEventListener('change', recalcular);
+    recalcular();
+  })();
+</script>
+</body>
+</html>

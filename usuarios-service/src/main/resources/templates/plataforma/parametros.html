@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Parámetros generales')}"></head>
+<body>
+<div class="wok-app">
+  <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+  <div class="wok-main">
+    <header th:replace="~{fragments/layout :: topbar('Parámetros generales', 'Datos del restaurante e impuestos')}"></header>
+    <main class="wok-content">
+      <div th:replace="~{fragments/layout :: mensajes}"></div>
+      <form th:action="@{/plataforma/parametros}" th:object="${form}" method="post" class="wok-card" style="max-width: 900px" novalidate>
+        <div class="wok-card-body">
+          <h3 class="wok-form-seccion">Restaurante</h3>
+          <div class="row g-3">
+            <div class="col-md-8">
+              <label class="form-label" for="nombreRestaurante">Nombre comercial</label>
+              <input th:field="*{nombreRestaurante}" class="form-control" th:classappend="${#fields.hasErrors('nombreRestaurante')} ? 'is-invalid'">
+              <div class="invalid-feedback" th:errors="*{nombreRestaurante}"></div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label" for="nit">NIT</label>
+              <input th:field="*{nit}" class="form-control" th:classappend="${#fields.hasErrors('nit')} ? 'is-invalid'">
+              <div class="invalid-feedback" th:errors="*{nit}"></div>
+            </div>
+            <div class="col-md-8">
+              <label class="form-label" for="direccion">Dirección</label>
+              <input th:field="*{direccion}" class="form-control">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label" for="telefono">Teléfono</label>
+              <input th:field="*{telefono}" class="form-control" th:classappend="${#fields.hasErrors('telefono')} ? 'is-invalid'">
+              <div class="invalid-feedback" th:errors="*{telefono}"></div>
+            </div>
+          </div>
+          <h3 class="wok-form-seccion">Facturación y cocina</h3>
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label" for="impuestoConsumoPorcentaje">Impuesto al consumo (%)</label>
+              <input th:field="*{impuestoConsumoPorcentaje}" type="number" step="0.01" min="0" max="30" class="form-control"
+                     th:classappend="${#fields.hasErrors('impuestoConsumoPorcentaje')} ? 'is-invalid'">
+              <div class="invalid-feedback" th:errors="*{impuestoConsumoPorcentaje}"></div>
+              <div class="form-text">Se aplica en los comprobantes internos emitidos desde ahora.</div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label" for="minutosAlertaCocina">Alerta de demora en cocina (min)</label>
+              <input th:field="*{minutosAlertaCocina}" type="number" min="5" max="120" class="form-control"
+                     th:classappend="${#fields.hasErrors('minutosAlertaCocina')} ? 'is-invalid'">
+              <div class="invalid-feedback" th:errors="*{minutosAlertaCocina}"></div>
+            </div>
+            <div class="col-12">
+              <label class="form-label" for="mensajeComprobante">Mensaje al pie del comprobante</label>
+              <input th:field="*{mensajeComprobante}" class="form-control" maxlength="250">
+            </div>
+          </div>
+        </div>
+        <div class="wok-card-body border-top d-flex align-items-center gap-2 flex-wrap">
+          <small class="text-suave me-auto" th:if="${actual.actualizadoEn}">
+            Última actualización: <span th:text="${@fmt.fechaHora(actual.actualizadoEn)}"></span> por <span th:text="${actual.actualizadoPor}"></span>
+          </small>
+          <button type="submit" class="btn btn-wok"><i class="bi bi-save"></i> Guardar parámetros</button>
+        </div>
+      </form>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+  </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

@@ -1,0 +1,12 @@
+spring:
+  mongodb:
+    database: wok_facturacion
+
+wok:
+  openapi:
+    titulo: "Wok Control · Facturación y caja"
+    descripcion: "Cuentas por mesa, pagos, comprobantes internos de venta (no son factura electrónica DIAN), descuentos autorizados y cierres de caja."
+  facturacion:
+    # Impuesto nacional al consumo para restaurantes (porcentaje). Se puede sobrescribir
+    # desde Parámetros de plataforma.
+    impuesto-consumo-porcentaje: 8

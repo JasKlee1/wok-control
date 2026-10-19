@@ -1,0 +1,36 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Wok: compilar y probar",
+      "type": "shell",
+      "command": ".\\mvnw.cmd -B clean install",
+      "group": { "kind": "build", "isDefault": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "Wok: compilar sin pruebas",
+      "type": "shell",
+      "command": ".\\mvnw.cmd -B package -DskipTests",
+      "problemMatcher": []
+    },
+    {
+      "label": "Wok: iniciar todo",
+      "type": "shell",
+      "command": "powershell -ExecutionPolicy Bypass -File scripts\\iniciar.ps1 -Compilar",
+      "problemMatcher": []
+    },
+    {
+      "label": "Wok: estado",
+      "type": "shell",
+      "command": "powershell -ExecutionPolicy Bypass -File scripts\\estado.ps1",
+      "problemMatcher": []
+    },
+    {
+      "label": "Wok: detener todo",
+      "type": "shell",
+      "command": "powershell -ExecutionPolicy Bypass -File scripts\\detener.ps1",
+      "problemMatcher": []
+    }
+  ]
+}

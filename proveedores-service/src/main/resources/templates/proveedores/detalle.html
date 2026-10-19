@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${proveedor.nombreComercial})}"></head>
+<body>
+<div class="wok-app">
+  <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+  <div class="wok-main">
+    <header th:replace="~{fragments/layout :: topbar(${proveedor.nombreComercial}, ${proveedor.razonSocial} + ' · NIT ' + ${proveedor.nit})}"></header>
+    <main class="wok-content">
+      <div th:replace="~{fragments/layout :: mensajes}"></div>
+      <div class="d-flex gap-2 mb-3 flex-wrap">
+        <a th:href="@{/proveedores}" class="btn btn-light btn-sm"><i class="bi bi-arrow-left"></i> Proveedores</a>
+        <a th:if="${usuarioActual.tiene('COMPRAS_GESTIONAR') and proveedor.activo}" th:href="@{/compras/ordenes/nueva(proveedorId=${proveedor.id})}" class="btn btn-wok btn-sm"><i class="bi bi-cart-plus"></i> Nueva orden de compra</a>
+        <th:block th:if="${usuarioActual.tiene('PROVEEDORES_GESTIONAR')}">
+          <a th:href="@{/proveedores/{id}/editar(id=${proveedor.id})}" class="btn btn-wok-outline btn-sm"><i class="bi bi-pencil"></i> Editar</a>
+          <form th:action="@{/proveedores/{id}/estado(id=${proveedor.id})}" method="post"
+                th:attr="data-wok-confirmar=${proveedor.activo} ? '¿Desactivar este proveedor? No podrá recibir nuevas órdenes.' : '¿Reactivar el proveedor?'">
+            <input type="hidden" name="activo" th:value="${!proveedor.activo}">
+            <button class="btn btn-sm" th:classappend="${proveedor.activo} ? 'btn-outline-danger' : 'btn-outline-success'" type="submit" th:text="${proveedor.activo} ? 'Desactivar' : 'Activar'">x</button>
+          </form>
+        </th:block>
+      </div>
+      <div class="row g-3 mb-3">
+        <div class="col-sm-4"><div class="wok-stat"><div class="wok-stat-icono"><i class="bi bi-clipboard-check"></i></div>
+          <div><div class="wok-stat-valor" th:text="${historial.ordenes}">0</div><div class="wok-stat-etiqueta">Órdenes emitidas</div></div></div></div>
+        <div class="col-sm-4"><div class="wok-stat"><div class="wok-stat-icono verde"><i class="bi bi-box-arrow-in-down"></i></div>
+          <div><div class="wok-stat-valor" th:text="${historial.recibidas}">0</div><div class="wok-stat-etiqueta">Órdenes recibidas</div></div></div></div>
+        <div class="col-sm-4"><div class="wok-stat"><div class="wok-stat-icono dorado"><i class="bi bi-cash-stack"></i></div>
+          <div><div class="wok-stat-valor" th:text="${@fmt.dinero(historial.totalComprado)}">$</div><div class="wok-stat-etiqueta">Total comprado</div></div></div></div>
+      </div>
+      <div class="row g-3">
+        <div class="col-lg-5">
+          <div class="wok-card mb-3">
+            <div class="wok-card-header"><i class="bi bi-person-lines-fill text-wok"></i><h2>Contacto</h2>
+              <span class="ms-auto wok-badge" th:classappend="${proveedor.activo} ? 'exito' : 'error'" th:text="${proveedor.activo} ? 'Activo' : 'Inactivo'">A</span></div>
+            <dl class="wok-card-body row small mb-0">
+              <dt class="col-5">Teléfono</dt><dd class="col-7" th:text="${proveedor.telefono}">t</dd>
+              <dt class="col-5">Correo</dt><dd class="col-7" th:text="${proveedor.email} ?: '—'">e</dd>
+              <dt class="col-5">Dirección</dt><dd class="col-7" th:text="${(proveedor.direccion ?: '—') + (proveedor.ciudad != null ? ', ' + proveedor.ciudad : '')}">d</dd>
+              <dt class="col-5">Contacto</dt><dd class="col-7"><span th:text="${proveedor.contacto?.nombre} ?: '—'">n</span> <small class="text-suave" th:text="${proveedor.contacto?.cargo}">c</small>
+                <div th:text="${proveedor.contacto?.telefono}">t</div><div th:text="${proveedor.contacto?.email}">e</div></dd>
+            </dl>
+          </div>
+          <div class="wok-card">
+            <div class="wok-card-header"><i class="bi bi-briefcase text-wok"></i><h2>Condiciones comerciales</h2></div>
+            <dl class="wok-card-body row small mb-0" th:with="c=${proveedor.condiciones}">
+              <dt class="col-6">Plazo de pago</dt><dd class="col-6" th:text="${c?.plazoPagoDias != null} ? ${c.plazoPagoDias} + ' días' : '—'">—</dd>
+              <dt class="col-6">Pedido mínimo</dt><dd class="col-6" th:text="${@fmt.dinero(c?.pedidoMinimo)}">—</dd>
+              <dt class="col-6">Tiempo de entrega</dt><dd class="col-6" th:text="${c?.tiempoEntregaDias != null} ? ${c.tiempoEntregaDias} + ' días' : '—'">—</dd>
+              <dt class="col-6">Forma de pago</dt><dd class="col-6" th:text="${c?.formaPago} ?: '—'">—</dd>
+              <dt class="col-12">Observaciones</dt><dd class="col-12" th:text="${c?.observaciones} ?: '—'">—</dd>
+            </dl>
+          </div>
+        </div>
+        <div class="col-lg-7">
+          <div class="wok-card mb-3">
+            <div class="wok-card-header"><i class="bi bi-box-seam text-wok"></i><h2>Insumos suministrados</h2></div>
+            <div class="wok-card-body small text-suave" th:if="${proveedor.insumos.isEmpty()}">No tiene insumos asociados.</div>
+            <div class="wok-card-body d-flex flex-wrap gap-2" th:unless="${proveedor.insumos.isEmpty()}">
+              <span th:each="i : ${proveedor.insumos}" class="wok-badge dorado" th:text="${i.nombre} + ' (' + ${i.unidad} + ')'">i</span>
+            </div>
+          </div>
+          <div class="wok-card">
+            <div class="wok-card-header"><i class="bi bi-clock-history text-wok"></i><h2>Historial de compras</h2></div>
+            <div th:if="${historial.ultimas.isEmpty()}">
+              <div th:replace="~{fragments/layout :: vacio('bi-clipboard', 'Sin órdenes', 'Todavía no se han emitido órdenes a este proveedor.')}"></div>
+            </div>
+            <table class="table table-wok" th:unless="${historial.ultimas.isEmpty()}">
+              <thead><tr><th>Orden</th><th>Fecha</th><th>Estado</th><th class="text-end">Total</th></tr></thead>
+              <tbody><tr th:each="o : ${historial.ultimas}">
+                <td><a th:href="@{/compras/ordenes/{id}(id=${o.id})}" class="wok-mono" th:text="${o.numero}">OC</a></td>
+                <td class="small" th:text="${@fmt.fecha(o.creadoEn)}">f</td>
+                <td><span class="wok-badge" th:classappend="${o.estado.claseCss()}" th:text="${o.estado.etiqueta()}">e</span></td>
+                <td class="text-end" th:text="${@fmt.dinero(o.total)}">$</td>
+              </tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+  </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

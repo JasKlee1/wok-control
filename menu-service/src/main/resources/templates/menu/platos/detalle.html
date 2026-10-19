@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${plato.nombre})}"></head>
+<body>
+<div class="wok-app">
+  <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+  <div class="wok-main">
+    <header th:replace="~{fragments/layout :: topbar(${plato.nombre}, ${categoria})}"></header>
+    <main class="wok-content">
+      <div th:replace="~{fragments/layout :: mensajes}"></div>
+      <div class="d-flex gap-2 mb-3 flex-wrap">
+        <a th:href="@{/menu/platos}" class="btn btn-light btn-sm"><i class="bi bi-arrow-left"></i> Volver</a>
+        <th:block th:if="${usuarioActual.tiene('MENU_GESTIONAR')}">
+          <a th:href="@{/menu/platos/{id}/editar(id=${plato.id})}" class="btn btn-wok btn-sm"><i class="bi bi-pencil"></i> Editar</a>
+          <form th:if="${plato.activo}" th:action="@{/menu/platos/{id}/retirar(id=${plato.id})}" method="post"
+                data-wok-confirmar="El plato dejará de ofrecerse en la carta. Los pedidos anteriores conservan su información. ¿Continuar?"
+                data-wok-confirmar-boton="Retirar plato">
+            <button class="btn btn-outline-danger btn-sm" type="submit"><i class="bi bi-archive"></i> Retirar de la carta</button>
+          </form>
+        </th:block>
+      </div>
+      <div class="row g-3">
+        <div class="col-lg-5">
+          <div class="wok-card">
+            <div class="wok-card-body">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="h3 text-wok mb-0" th:text="${@fmt.dinero(plato.precio)}">$</span>
+                <span th:if="${!plato.activo}" class="wok-badge error">Retirado</span>
+                <span th:if="${plato.activo and plato.disponible}" class="wok-badge exito">Disponible</span>
+                <span th:if="${plato.activo and !plato.disponible}" class="wok-badge alerta">Agotado</span>
+              </div>
+              <p th:text="${plato.descripcion}" class="text-suave">Descripción</p>
+              <dl class="row small mb-0">
+                <dt class="col-6">Picante base</dt><dd class="col-6"><span class="wok-picante"><i th:each="i : ${#numbers.sequence(1, 3)}" class="bi" th:classappend="${i <= plato.picanteBase} ? 'bi-fire' : 'bi-dot text-suave'"></i></span></dd>
+                <dt class="col-6">Tiempo estimado</dt><dd class="col-6" th:text="${plato.tiempoPreparacionMin != null} ? ${plato.tiempoPreparacionMin} + ' min' : '—'">—</dd>
+                <dt class="col-6">Alérgenos</dt>
+                <dd class="col-6"><span th:each="a : ${plato.alergenos}" class="wok-badge alerta me-1" th:text="${a}">A</span><span th:if="${plato.alergenos.isEmpty()}">Ninguno declarado</span></dd>
+              </dl>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-7">
+          <div class="wok-card mb-3">
+            <div class="wok-card-header"><i class="bi bi-journal-richtext text-wok"></i><h2>Receta por porción</h2></div>
+            <div th:if="${plato.receta.isEmpty()}">
+              <div th:replace="~{fragments/layout :: vacio('bi-basket', 'Sin receta', 'Este plato no descuenta insumos del inventario. Agregue la receta para controlar el consumo.')}"></div>
+            </div>
+            <table class="table table-wok" th:unless="${plato.receta.isEmpty()}">
+              <thead><tr><th>Insumo</th><th class="text-end">Cantidad</th><th>Unidad</th></tr></thead>
+              <tbody><tr th:each="r : ${plato.receta}"><td th:text="${r.nombreInsumo}">i</td><td class="text-end" th:text="${@fmt.numero(r.cantidad)}">0</td><td th:text="${r.unidad}">u</td></tr></tbody>
+            </table>
+          </div>
+          <div class="wok-card">
+            <div class="wok-card-header"><i class="bi bi-clock-history text-wok"></i><h2>Historial de precios</h2></div>
+            <table class="table table-wok">
+              <thead><tr><th>Fecha</th><th class="text-end">Anterior</th><th class="text-end">Nuevo</th><th>Usuario</th></tr></thead>
+              <tbody>
+                <tr th:each="h : ${plato.historialPrecios}">
+                  <td class="small" th:text="${@fmt.fechaHora(h.fecha)}">f</td>
+                  <td class="text-end" th:text="${@fmt.dinero(h.anterior)}">a</td>
+                  <td class="text-end fw-semibold" th:text="${@fmt.dinero(h.nuevo)}">n</td>
+                  <td class="wok-mono small" th:text="${h.usuario}">u</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+  </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

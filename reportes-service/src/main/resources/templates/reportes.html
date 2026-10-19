@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Reportes')}"></head>
+<body>
+<div class="wok-app">
+  <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+  <div class="wok-main">
+    <header th:replace="~{fragments/layout :: topbar('Reportes', 'Ventas, costos, inventario y compras')}"></header>
+    <main class="wok-content">
+      <div th:replace="~{fragments/layout :: mensajes}"></div>
+      <form class="wok-card wok-card-body wok-filtros mb-3 no-imprimir" method="get" th:action="@{/reportes}">
+        <div><label class="form-label small mb-1" for="desde">Desde</label><input id="desde" name="desde" type="date" class="form-control form-control-sm" th:value="${desde}"></div>
+        <div><label class="form-label small mb-1" for="hasta">Hasta</label><input id="hasta" name="hasta" type="date" class="form-control form-control-sm" th:value="${hasta}"></div>
+        <button class="btn btn-sm btn-wok" type="submit"><i class="bi bi-arrow-clockwise"></i> Consultar</button>
+        <button class="btn btn-sm btn-wok-outline ms-auto" type="button" onclick="window.print()"><i class="bi bi-printer"></i> Imprimir</button>
+      </form>
+
+      <!-- Ventas -->
+      <div class="alert alert-danger wok-alerta" th:if="${ventasError}"><i class="bi bi-wifi-off"></i><div>Ventas no disponibles: <span th:text="${ventasError}">e</span></div></div>
+      <th:block th:if="${ventas != null}">
+        <div class="row g-3 mb-3">
+          <div class="col-6 col-xl-3"><div class="wok-stat"><div class="wok-stat-icono dorado"><i class="bi bi-cash-stack"></i></div>
+            <div><div class="wok-stat-valor" th:text="${@fmt.dinero(ventas.ventasTotales)}">$</div><div class="wok-stat-etiqueta">Ventas del periodo</div></div></div></div>
+          <div class="col-6 col-xl-3"><div class="wok-stat"><div class="wok-stat-icono"><i class="bi bi-receipt"></i></div>
+            <div><div class="wok-stat-valor" th:text="${ventas.comprobantes}">0</div><div class="wok-stat-etiqueta">Comprobantes (<span th:text="${ventas.anulados}">0</span> anulados)</div></div></div></div>
+          <div class="col-6 col-xl-3"><div class="wok-stat"><div class="wok-stat-icono verde"><i class="bi bi-person-check"></i></div>
+            <div><div class="wok-stat-valor" th:text="${@fmt.dinero(ventas.ticketPromedio)}">$</div><div class="wok-stat-etiqueta">Ticket promedio</div></div></div></div>
+          <div class="col-6 col-xl-3"><div class="wok-stat"><div class="wok-stat-icono ambar"><i class="bi bi-percent"></i></div>
+            <div><div class="wok-stat-valor" th:text="${@fmt.dinero(ventas.descuentos)}">$</div><div class="wok-stat-etiqueta">Descuentos otorgados</div></div></div></div>
+        </div>
+        <div class="row g-3 mb-3">
+          <div class="col-xl-7">
+            <div class="wok-card h-100">
+              <div class="wok-card-header"><i class="bi bi-calendar3 text-wok"></i><h2>Ventas por día</h2></div>
+              <div class="wok-card-body" th:if="${ventas.comprobantes == 0}">
+                <div th:replace="~{fragments/layout :: vacio('bi-bar-chart', 'Sin ventas en el periodo', 'No se emitieron comprobantes entre las fechas seleccionadas.')}"></div>
+              </div>
+              <div class="wok-card-body" th:unless="${ventas.comprobantes == 0}">
+                <div class="d-flex align-items-center gap-2 mb-2 small" th:each="v : ${barras}">
+                  <span style="width:80px" th:text="${@fmt.fecha(v.fecha)}">f</span>
+                  <div class="wok-barra flex-grow-1" style="height:14px"><span th:style="'width:' + ${v.porcentaje} + '%'"></span></div>
+                  <span style="width:110px" class="text-end" th:text="${@fmt.dinero(v.total)}">$</span>
+                  <span style="width:40px" class="text-end text-suave" th:text="${v.comprobantes}">0</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-xl-5">
+            <div class="wok-card h-100">
+              <div class="wok-card-header"><i class="bi bi-wallet2 text-wok"></i><h2>Por método de pago</h2></div>
+              <table class="table table-wok mb-0"><tbody>
+                <tr th:each="m : ${ventas.porMetodo}"><td th:text="${m.key}">M</td><td class="text-end" th:text="${@fmt.dinero(m.value)}">$</td></tr>
+                <tr><td class="text-suave">Impuesto al consumo recaudado</td><td class="text-end text-suave" th:text="${@fmt.dinero(ventas.impuestos)}">$</td></tr>
+              </tbody></table>
+            </div>
+          </div>
+        </div>
+        <div class="wok-card mb-3">
+          <div class="wok-card-header"><i class="bi bi-trophy text-dorado"></i><h2>Productos más vendidos</h2></div>
+          <div class="wok-card-body small text-suave" th:if="${ventas.productos.isEmpty()}">Sin productos vendidos en el periodo.</div>
+          <table class="table table-wok mb-0" th:unless="${ventas.productos.isEmpty()}">
+            <thead><tr><th>#</th><th>Producto</th><th class="text-end">Unidades</th><th class="text-end">Ventas</th></tr></thead>
+            <tbody><tr th:each="p, st : ${ventas.productos}"><td th:text="${st.count}">1</td><td th:text="${p.descripcion}">p</td>
+              <td class="text-end" th:text="${p.unidades}">0</td><td class="text-end" th:text="${@fmt.dinero(p.ventas)}">$</td></tr></tbody>
+          </table>
+        </div>
+      </th:block>
+
+      <!-- Costos -->
+      <div class="wok-card mb-3">
+        <div class="wok-card-header"><i class="bi bi-calculator text-wok"></i><h2>Costo y margen por plato</h2>
+          <span class="small text-suave ms-auto">Receta × costo promedio actual del insumo</span></div>
+        <div class="wok-card-body small text-danger" th:if="${costosError}" th:text="'No disponible: ' + ${costosError}">e</div>
+        <div th:if="${costosError == null and costos.isEmpty()}">
+          <div th:replace="~{fragments/layout :: vacio('bi-calculator', 'Sin platos', 'Registre platos con su receta para calcular costos y márgenes.')}"></div>
+        </div>
+        <div class="table-responsive" th:unless="${costos.isEmpty()}">
+          <table class="table table-wok table-hover mb-0">
+            <thead><tr><th>Plato</th><th>Categoría</th><th class="text-end">Precio</th><th class="text-end">Costo</th><th class="text-end">Margen</th><th class="text-end">Margen %</th></tr></thead>
+            <tbody><tr th:each="c : ${costos}">
+              <td th:text="${c.nombre}">p</td><td class="small" th:text="${c.categoria}">c</td>
+              <td class="text-end" th:text="${@fmt.dinero(c.precio)}">$</td>
+              <td class="text-end" th:text="${c.recetaCompleta} ? ${@fmt.dinero(c.costo)} : '—'">$</td>
+              <td class="text-end" th:text="${c.margen != null} ? ${@fmt.dinero(c.margen)} : '—'">$</td>
+              <td class="text-end">
+                <span th:if="${c.margenPorcentaje != null}" class="wok-badge" th:classappend="${c.claseMargen()}"
+                      th:text="${c.margenPorcentaje} + '%'">%</span>
+                <span th:if="${c.margenPorcentaje == null}" class="wok-badge neutro" th:title="${c.ingredientes == 0} ? 'Sin receta' : 'Algún insumo no tiene costo registrado'"
+                      th:text="${c.ingredientes == 0} ? 'Sin receta' : 'Costo incompleto'">—</span>
+              </td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="row g-3">
+        <div class="col-lg-6">
+          <div class="wok-card h-100">
+            <div class="wok-card-header"><i class="bi bi-box-seam text-wok"></i><h2>Inventario</h2></div>
+            <div class="wok-card-body small text-danger" th:if="${inventarioError}" th:text="'No disponible: ' + ${inventarioError}">e</div>
+            <dl class="wok-card-body row mb-0" th:if="${valorizacion != null}">
+              <dt class="col-7">Valor a costo promedio</dt><dd class="col-5 text-end" th:text="${@fmt.dinero(valorizacion.valorTotal)}">$</dd>
+              <dt class="col-7">Insumos activos</dt><dd class="col-5 text-end" th:text="${valorizacion.insumosActivos}">0</dd>
+              <dt class="col-7">Bajo el mínimo</dt><dd class="col-5 text-end" th:text="${valorizacion.insumosBajoStock}">0</dd>
+            </dl>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="wok-card h-100">
+            <div class="wok-card-header"><i class="bi bi-truck text-wok"></i><h2>Compras</h2></div>
+            <div class="wok-card-body small text-danger" th:if="${comprasError}" th:text="'No disponible: ' + ${comprasError}">e</div>
+            <dl class="wok-card-body row mb-0" th:if="${compras != null}">
+              <dt class="col-7">Recibido este mes</dt><dd class="col-5 text-end" th:text="${@fmt.dinero(compras.comprasRecibidasMes)}">$</dd>
+              <dt class="col-7">Órdenes pendientes de recibir</dt><dd class="col-5 text-end" th:text="${compras.pendientesRecepcion}">0</dd>
+              <dt class="col-7">Proveedores activos</dt><dd class="col-5 text-end" th:text="${compras.proveedoresActivos}">0</dd>
+            </dl>
+          </div>
+        </div>
+      </div>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+  </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

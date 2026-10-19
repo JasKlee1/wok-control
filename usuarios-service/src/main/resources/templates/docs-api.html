@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Documentación de la API')}"></head>
+<body>
+<div class="wok-app">
+  <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+  <div class="wok-main">
+    <header th:replace="~{fragments/layout :: topbar('Documentación de la API', 'OpenAPI 3 · Swagger UI')}"></header>
+    <main class="wok-content">
+      <div class="row g-3">
+        <div class="col-lg-7">
+          <div class="wok-card h-100">
+            <div class="wok-card-header"><i class="bi bi-diagram-3 text-wok"></i><h2>Swagger centralizado en el gateway</h2></div>
+            <div class="wok-card-body">
+              <p>Todas las API se consultan desde un único punto de entrada. En la esquina superior de Swagger UI
+                seleccione el servicio que desea explorar.</p>
+              <a th:href="@{/swagger-ui.html}" class="btn btn-wok mb-3" target="_blank" rel="noopener">
+                <i class="bi bi-box-arrow-up-right"></i> Abrir Swagger UI
+              </a>
+              <h3 class="h6 mt-2">Cómo probar endpoints protegidos</h3>
+              <ol class="small mb-0">
+                <li>En el servicio <strong>usuarios-service</strong>, ejecute <code>POST /api/auth/login</code> con su usuario y contraseña.</li>
+                <li>Copie el valor de <code>token</code> de la respuesta.</li>
+                <li>Pulse <strong>Authorize</strong>, pegue el token (sin el prefijo <em>Bearer</em>) y confirme.</li>
+                <li>Las operaciones respetan los permisos de su rol: si no los tiene recibirá <code>403</code>.</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-5">
+          <div class="wok-card h-100">
+            <div class="wok-card-header"><i class="bi bi-hdd-network text-wok"></i><h2>Documentos por servicio</h2></div>
+            <div class="table-responsive">
+              <table class="table table-wok">
+                <thead><tr><th>Servicio</th><th>OpenAPI (JSON)</th></tr></thead>
+                <tbody>
+                  <tr th:each="s : ${ {'usuarios','menu','pedidos','inventario','proveedores','facturacion','reportes'} }">
+                    <td th:text="${s} + '-service'">servicio</td>
+                    <td><a th:href="@{'/docs/' + ${s} + '/v3/api-docs'}" target="_blank" rel="noopener" class="wok-mono"
+                           th:text="'/docs/' + ${s} + '/v3/api-docs'">/docs</a></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="wok-card-body small text-suave border-top">
+              Cada servicio también publica su propia Swagger UI en su puerto (por ejemplo
+              <span class="wok-mono">http://localhost:8082/swagger-ui.html</span> para el menú).
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+  </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

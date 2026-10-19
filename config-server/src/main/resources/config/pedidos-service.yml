@@ -1,0 +1,8 @@
+spring:
+  mongodb:
+    database: wok_pedidos
+
+wok:
+  openapi:
+    titulo: "Wok Control · Mesas, pedidos y cocina"
+    descripcion: "Mesas, pedidos, comandas y estados de preparación en cocina."

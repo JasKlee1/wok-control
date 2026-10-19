@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Cierres de caja')}"></head>
+<body>
+<div class="wok-app">
+  <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+  <div class="wok-main">
+    <header th:replace="~{fragments/layout :: topbar('Cierres de caja', 'Comparación entre lo vendido y lo recibido')}"></header>
+    <main class="wok-content">
+      <div th:replace="~{fragments/layout :: mensajes}"></div>
+      <div class="row g-3">
+        <div class="col-xl-5" th:if="${preliminar != null}">
+          <form th:action="@{/caja/cierres}" method="post" class="wok-card"
+                data-wok-confirmar="Se registrará el cierre con los montos contados. Los comprobantes incluidos ya no podrán anularse. ¿Continuar?">
+            <div class="wok-card-header"><i class="bi bi-safe text-wok"></i><h2>Mi cierre de caja</h2></div>
+            <div class="wok-card-body">
+              <div th:if="${preliminar.comprobantes == 0 and preliminar.anulados == 0}" class="text-suave small">No tiene comprobantes pendientes de cierre.</div>
+              <th:block th:unless="${preliminar.comprobantes == 0 and preliminar.anulados == 0}">
+                <div class="small text-suave mb-2">Desde <span th:text="${@fmt.fechaHora(preliminar.desde)}">f</span> ·
+                  <span th:text="${preliminar.comprobantes}">0</span> comprobantes · <span th:text="${preliminar.anulados}">0</span> anulados</div>
+                <table class="table table-wok table-sm">
+                  <thead><tr><th>Método</th><th class="text-end">Sistema</th><th style="width:150px">Contado</th></tr></thead>
+                  <tbody><tr th:each="m : ${metodos}">
+                    <td th:text="${m.etiqueta()}">m</td>
+                    <td class="text-end" th:text="${@fmt.dinero(preliminar.sistemaPorMetodo[m.name()])}">$</td>
+                    <td><input type="number" min="0" step="1" class="form-control form-control-sm" th:name="'declarado_' + ${m.name()}" th:value="${preliminar.sistemaPorMetodo[m.name()].signum() > 0} ? '' : 0" required th:attr="aria-label='Contado ' + ${m.etiqueta()}"></td>
+                  </tr></tbody>
+                  <tfoot><tr><th>Total ventas</th><th class="text-end" th:text="${@fmt.dinero(preliminar.totalVentas)}">$</th><th></th></tr></tfoot>
+                </table>
+                <label class="form-label" for="observaciones">Observaciones <small class="text-suave">(obligatorias si hay diferencia)</small></label>
+                <textarea id="observaciones" name="observaciones" class="form-control mb-3" rows="2" maxlength="300"></textarea>
+                <button class="btn btn-wok w-100" type="submit"><i class="bi bi-lock"></i> Registrar cierre</button>
+              </th:block>
+            </div>
+          </form>
+        </div>
+        <div th:class="${preliminar != null} ? 'col-xl-7' : 'col-12'">
+          <div class="wok-card">
+            <div class="wok-card-header"><i class="bi bi-journal-check text-wok"></i><h2>Cierres registrados</h2></div>
+            <div th:if="${cierres.isEmpty()}">
+              <div th:replace="~{fragments/layout :: vacio('bi-safe', 'Sin cierres', 'Todavía no se ha registrado ningún cierre de caja.')}"></div>
+            </div>
+            <div class="table-responsive" th:unless="${cierres.isEmpty()}">
+              <table class="table table-wok table-hover">
+                <thead><tr><th>Número</th><th>Cajero</th><th>Fecha</th><th class="text-center">Comprob.</th><th class="text-end">Ventas</th><th class="text-end">Diferencia</th></tr></thead>
+                <tbody><tr th:each="c : ${cierres}">
+                  <td><a th:href="@{/caja/cierres/{id}(id=${c.id})}" class="wok-mono fw-semibold" th:text="${c.numero}">CC</a></td>
+                  <td class="small" th:text="${c.cajeroNombre}">c</td>
+                  <td class="small" th:text="${@fmt.fechaHora(c.creadoEn)}">f</td>
+                  <td class="text-center" th:text="${c.comprobantes}">0</td>
+                  <td class="text-end" th:text="${@fmt.dinero(c.totalVentas)}">$</td>
+                  <td class="text-end"><span class="wok-badge" th:classappend="${c.diferenciaTotal.signum() == 0} ? 'exito' : 'alerta'" th:text="${@fmt.dinero(c.diferenciaTotal)}">$</span></td>
+                </tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+  </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

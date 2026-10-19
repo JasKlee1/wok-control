@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Panel de control')}"></head>
+<body data-wok-recargar="120">
+<div class="wok-app">
+  <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+  <div class="wok-main">
+    <header th:replace="~{fragments/layout :: topbar('Panel de control', ${fechaHoy})}"></header>
+    <main class="wok-content" th:with="u=${usuarioActual}">
+      <div th:replace="~{fragments/layout :: mensajes}"></div>
+
+      <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-1">
+        <div>
+          <h2 class="h4 mb-0">Hola, <span th:text="${u.nombre}">usuario</span></h2>
+          <div class="text-suave small" th:text="${u.rolPrincipal()}">Rol</div>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+          <a th:if="${u.tiene('PEDIDOS_GESTIONAR')}" th:href="@{/mesas}" class="btn btn-wok btn-sm"><i class="bi bi-plus-circle"></i> Tomar pedido</a>
+          <a th:if="${u.tiene('COCINA_OPERAR')}" th:href="@{/cocina}" class="btn btn-wok btn-sm"><i class="bi bi-fire"></i> Ir a cocina</a>
+          <a th:if="${u.tiene('FACTURACION_COBRAR')}" th:href="@{/caja/cuentas}" class="btn btn-wok btn-sm"><i class="bi bi-cash-coin"></i> Cobrar</a>
+          <a th:if="${u.tiene('CAJA_CERRAR')}" th:href="@{/caja/cierres}" class="btn btn-wok-outline btn-sm"><i class="bi bi-safe"></i> Cierre de caja</a>
+          <a th:if="${u.tiene('INVENTARIO_MOVIMIENTOS')}" th:href="@{/inventario/insumos}" class="btn btn-wok btn-sm"><i class="bi bi-box-seam"></i> Registrar movimiento</a>
+          <a th:if="${u.tiene('COMPRAS_GESTIONAR')}" th:href="@{/compras/ordenes/nueva}" class="btn btn-wok-outline btn-sm"><i class="bi bi-cart-plus"></i> Orden de compra</a>
+          <a th:if="${u.tiene('MENU_GESTIONAR')}" th:href="@{/menu/platos}" class="btn btn-wok-outline btn-sm"><i class="bi bi-egg-fried"></i> Carta</a>
+          <a th:if="${u.tiene('REPORTES_VER')}" th:href="@{/reportes}" class="btn btn-wok-outline btn-sm"><i class="bi bi-bar-chart-line"></i> Reportes</a>
+        </div>
+      </div>
+      <div class="wok-divisor"></div>
+
+      <!-- Indicadores -->
+      <div class="row g-3 mb-3">
+        <th:block th:if="${d.ventas != null}">
+          <div class="col-sm-6 col-xl-3">
+            <div class="wok-stat"><div class="wok-stat-icono dorado"><i class="bi bi-cash-stack"></i></div>
+              <div th:if="${d.ventas.disponible()}"><div class="wok-stat-valor" th:text="${@fmt.dinero(d.ventas.datos.ventasTotales)}">$</div>
+                <div class="wok-stat-etiqueta">Ventas del día</div>
+                <div class="wok-stat-nota" th:text="${d.ventas.datos.comprobantes} + ' comprobantes · ticket ' + ${@fmt.dinero(d.ventas.datos.ticketPromedio)}">n</div></div>
+              <div th:unless="${d.ventas.disponible()}"><div class="wok-stat-etiqueta">Ventas del día</div><div class="small text-danger" th:text="${d.ventas.error}">no disponible</div></div>
+            </div>
+          </div>
+        </th:block>
+        <th:block th:if="${d.pedidos != null}">
+          <div class="col-sm-6 col-xl-3">
+            <div class="wok-stat"><div class="wok-stat-icono"><i class="bi bi-receipt"></i></div>
+              <div th:if="${d.pedidos.disponible()}"><div class="wok-stat-valor" th:text="${d.pedidos.datos.pedidosHoy}">0</div>
+                <div class="wok-stat-etiqueta">Pedidos de hoy</div>
+                <div class="wok-stat-nota" th:text="${d.pedidos.datos.cancelados} + ' cancelados · ' + ${d.pedidos.datos.porCobrar} + ' por cobrar'">n</div></div>
+              <div th:unless="${d.pedidos.disponible()}"><div class="wok-stat-etiqueta">Pedidos</div><div class="small text-danger" th:text="${d.pedidos.error}">e</div></div>
+            </div>
+          </div>
+          <div class="col-sm-6 col-xl-3" th:if="${d.pedidos.disponible()}">
+            <div class="wok-stat"><div class="wok-stat-icono ambar"><i class="bi bi-fire"></i></div>
+              <div><div class="wok-stat-valor" th:text="${d.pedidos.datos.pendientesCocina + d.pedidos.datos.enPreparacion}">0</div>
+                <div class="wok-stat-etiqueta">Pendientes en cocina</div>
+                <div class="wok-stat-nota" th:text="${d.pedidos.datos.listos} + ' listos para entregar' + (${d.pedidos.datos.minutosPromedioPreparacion != null} ? ' · ' + ${d.pedidos.datos.minutosPromedioPreparacion} + ' min promedio' : '')">n</div></div>
+            </div>
+          </div>
+          <div class="col-sm-6 col-xl-3" th:if="${d.pedidos.disponible()}">
+            <div class="wok-stat"><div class="wok-stat-icono verde"><i class="bi bi-grid-3x3-gap"></i></div>
+              <div><div class="wok-stat-valor"><span th:text="${d.pedidos.datos.mesasOcupadas}">0</span><small class="text-suave fs-6"> / <span th:text="${d.pedidos.datos.mesasTotal}">0</span></small></div>
+                <div class="wok-stat-etiqueta">Mesas ocupadas</div>
+                <div class="wok-stat-nota" th:text="${d.pedidos.datos.mesasDisponibles} + ' disponibles'">n</div></div>
+            </div>
+          </div>
+        </th:block>
+        <th:block th:if="${d.alertas != null}">
+          <div class="col-sm-6 col-xl-3">
+            <a th:href="@{/inventario/alertas}" class="text-decoration-none text-reset"><div class="wok-stat"><div class="wok-stat-icono ambar"><i class="bi bi-exclamation-triangle"></i></div>
+              <div th:if="${d.alertas.disponible()}"><div class="wok-stat-valor" th:text="${d.alertas.datos.stockBajo.size()}">0</div>
+                <div class="wok-stat-etiqueta">Insumos con stock bajo</div>
+                <div class="wok-stat-nota" th:text="${d.alertas.datos.reportesCocina.size()} + ' reportes de cocina · ' + ${d.alertas.datos.vencimientos.size()} + ' lotes por vencer'">n</div></div>
+              <div th:unless="${d.alertas.disponible()}"><div class="wok-stat-etiqueta">Inventario</div><div class="small text-danger" th:text="${d.alertas.error}">e</div></div>
+            </div></a>
+          </div>
+        </th:block>
+        <th:block th:if="${d.compras != null}">
+          <div class="col-sm-6 col-xl-3">
+            <a th:href="@{/compras/ordenes}" class="text-decoration-none text-reset"><div class="wok-stat"><div class="wok-stat-icono"><i class="bi bi-clipboard-check"></i></div>
+              <div th:if="${d.compras.disponible()}"><div class="wok-stat-valor" th:text="${d.compras.datos.pendientesRecepcion}">0</div>
+                <div class="wok-stat-etiqueta">Órdenes de compra pendientes</div>
+                <div class="wok-stat-nota" th:text="${d.compras.datos.borradores} + ' borradores · ' + ${@fmt.dinero(d.compras.datos.comprasRecibidasMes)} + ' recibido este mes'">n</div></div>
+              <div th:unless="${d.compras.disponible()}"><div class="wok-stat-etiqueta">Compras</div><div class="small text-danger" th:text="${d.compras.error}">e</div></div>
+            </div></a>
+          </div>
+        </th:block>
+        <th:block th:if="${d.inventario != null and d.inventario.disponible()}">
+          <div class="col-sm-6 col-xl-3">
+            <div class="wok-stat"><div class="wok-stat-icono dorado"><i class="bi bi-box-seam"></i></div>
+              <div><div class="wok-stat-valor" th:text="${@fmt.dinero(d.inventario.datos.valorTotal)}">$</div>
+                <div class="wok-stat-etiqueta">Valor del inventario</div>
+                <div class="wok-stat-nota" th:text="${d.inventario.datos.insumosActivos} + ' insumos activos'">n</div></div>
+            </div>
+          </div>
+        </th:block>
+      </div>
+
+      <div class="row g-3">
+        <!-- Productos más vendidos -->
+        <div class="col-xl-6" th:if="${d.pedidos != null and d.pedidos.disponible()}">
+          <div class="wok-card h-100">
+            <div class="wok-card-header"><i class="bi bi-trophy text-dorado"></i><h2>Productos más vendidos hoy</h2></div>
+            <div th:if="${d.pedidos.datos.masVendidos.isEmpty()}">
+              <div th:replace="~{fragments/layout :: vacio('bi-egg-fried', 'Aún no hay ventas hoy', 'Los productos aparecerán cuando se envíen pedidos a cocina.')}"></div>
+            </div>
+            <ul class="list-group list-group-flush" th:unless="${d.pedidos.datos.masVendidos.isEmpty()}"
+                th:with="maxU=${d.pedidos.datos.masVendidos[0].unidades}">
+              <li class="list-group-item" th:each="p, st : ${d.pedidos.datos.masVendidos}">
+                <div class="d-flex justify-content-between"><span><strong th:text="${st.count} + '.'">1.</strong> <span th:text="${p.nombre}">p</span></span>
+                  <span class="small"><strong th:text="${p.unidades}">0</strong> und · <span th:text="${@fmt.dinero(p.ventas)}">$</span></span></div>
+                <div class="wok-barra mt-1"><span th:style="'width:' + ${p.unidades * 100 / maxU} + '%'"></span></div>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <!-- Resumen de caja -->
+        <div class="col-xl-6" th:if="${d.ventas != null and d.ventas.disponible()}">
+          <div class="wok-card h-100">
+            <div class="wok-card-header"><i class="bi bi-safe text-wok"></i><h2>Resumen de caja de hoy</h2>
+              <a th:if="${u.tiene('FACTURACION_VER')}" th:href="@{/caja/comprobantes}" class="ms-auto small">Ver comprobantes</a></div>
+            <div th:if="${d.ventas.datos.comprobantes == 0}">
+              <div th:replace="~{fragments/layout :: vacio('bi-cash-coin', 'Sin cobros registrados hoy', 'Cuando caja emita comprobantes, verá aquí los totales por método de pago.')}"></div>
+            </div>
+            <table class="table table-wok mb-0" th:unless="${d.ventas.datos.comprobantes == 0}">
+              <tbody>
+                <tr th:each="m : ${d.ventas.datos.porMetodo}" th:if="${m.value.signum() != 0}">
+                  <td th:text="${m.key}">METODO</td><td class="text-end" th:text="${@fmt.dinero(m.value)}">$</td></tr>
+                <tr><td class="text-suave">Descuentos otorgados</td><td class="text-end text-suave" th:text="${@fmt.dinero(d.ventas.datos.descuentos)}">$</td></tr>
+                <tr><td class="text-suave">Impuesto al consumo</td><td class="text-end text-suave" th:text="${@fmt.dinero(d.ventas.datos.impuestos)}">$</td></tr>
+                <tr><th>Total vendido</th><th class="text-end text-wok" th:text="${@fmt.dinero(d.ventas.datos.ventasTotales)}">$</th></tr>
+              </tbody>
+            </table>
+            <div class="wok-card-body small text-warning border-top" th:if="${d.ventas.datos.pendientesSincronizar > 0}">
+              <i class="bi bi-arrow-repeat"></i> <span th:text="${d.ventas.datos.pendientesSincronizar}">0</span> comprobante(s) pendientes de sincronizar con pedidos.
+            </div>
+          </div>
+        </div>
+        <!-- Stock bajo -->
+        <div class="col-xl-6" th:if="${d.alertas != null and d.alertas.disponible()}">
+          <div class="wok-card h-100">
+            <div class="wok-card-header"><i class="bi bi-exclamation-triangle" style="color:var(--wok-advertencia)"></i><h2>Insumos con stock bajo</h2>
+              <a th:href="@{/inventario/alertas}" class="ms-auto small">Ver alertas</a></div>
+            <div th:if="${d.alertas.datos.stockBajo.isEmpty()}">
+              <div th:replace="~{fragments/layout :: vacio('bi-check2-circle', 'Inventario en orden', 'Ningún insumo activo está por debajo de su nivel mínimo.')}"></div>
+            </div>
+            <table class="table table-wok mb-0" th:unless="${d.alertas.datos.stockBajo.isEmpty()}">
+              <thead><tr><th>Insumo</th><th class="text-end">Disponible</th><th class="text-end">Mínimo</th></tr></thead>
+              <tbody><tr th:each="i, st : ${d.alertas.datos.stockBajo}" th:if="${st.index < 6}">
+                <td th:text="${i.nombre}">i</td>
+                <td class="text-end" th:classappend="${i.cantidadDisponible.signum() == 0} ? 'text-danger fw-semibold'" th:text="${@fmt.numero(i.cantidadDisponible)} + ' ' + ${i.unidad}">0</td>
+                <td class="text-end" th:text="${@fmt.numero(i.stockMinimo)}">0</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+        <!-- Plataforma -->
+        <div class="col-xl-6" th:if="${u.tieneAlguno('USUARIOS_GESTIONAR','AUDITORIA_VER','PARAMETROS_GESTIONAR')}">
+          <div class="wok-card h-100">
+            <div class="wok-card-header"><i class="bi bi-shield-lock text-wok"></i><h2>Administración de la plataforma</h2></div>
+            <div class="list-group list-group-flush">
+              <a th:if="${u.tiene('USUARIOS_GESTIONAR')}" th:href="@{/plataforma/usuarios}" class="list-group-item list-group-item-action"><i class="bi bi-people me-2 text-dorado"></i>Usuarios y accesos</a>
+              <a th:if="${u.tiene('ROLES_GESTIONAR')}" th:href="@{/plataforma/roles}" class="list-group-item list-group-item-action"><i class="bi bi-shield-lock me-2 text-dorado"></i>Matriz de roles y permisos</a>
+              <a th:if="${u.tiene('PARAMETROS_GESTIONAR')}" th:href="@{/plataforma/parametros}" class="list-group-item list-group-item-action"><i class="bi bi-sliders me-2 text-dorado"></i>Parámetros generales</a>
+              <a th:if="${u.tiene('AUDITORIA_VER')}" th:href="@{/plataforma/auditoria}" class="list-group-item list-group-item-action"><i class="bi bi-journal-text me-2 text-dorado"></i>Auditoría de operaciones</a>
+              <a th:href="@{/docs-api}" class="list-group-item list-group-item-action"><i class="bi bi-code-square me-2 text-dorado"></i>Documentación de la API</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+  </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

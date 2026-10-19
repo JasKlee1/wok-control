@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Descuentos')}"></head>
+<body>
+<div class="wok-app">
+  <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+  <div class="wok-main">
+    <header th:replace="~{fragments/layout :: topbar('Autorización de descuentos', 'Códigos de un solo uso para caja')}"></header>
+    <main class="wok-content">
+      <div th:replace="~{fragments/layout :: mensajes}"></div>
+      <div class="row g-3">
+        <div class="col-xl-4">
+          <form th:action="@{/caja/descuentos}" method="post" class="wok-card">
+            <div class="wok-card-header"><i class="bi bi-shield-check text-wok"></i><h2>Nueva autorización</h2></div>
+            <div class="wok-card-body">
+              <div class="mb-2"><label class="form-label" for="porcentajeMaximo">Porcentaje máximo</label>
+                <div class="input-group"><input id="porcentajeMaximo" name="porcentajeMaximo" type="number" min="1" max="50" step="0.5" class="form-control" required><span class="input-group-text">%</span></div></div>
+              <div class="mb-2"><label class="form-label" for="motivo">Motivo</label>
+                <input id="motivo" name="motivo" class="form-control" minlength="5" maxlength="200" required placeholder="Cliente frecuente, demora en el servicio…"></div>
+              <div class="mb-2"><label class="form-label" for="mesaId">Mesa <small class="text-suave">(opcional)</small></label>
+                <select id="mesaId" name="mesaId" class="form-select"><option value="">Cualquier mesa</option>
+                  <option th:each="m : ${mesas}" th:value="${m.id}" th:text="'Mesa ' + ${m.numero}">m</option></select></div>
+              <div class="mb-3"><label class="form-label" for="horasVigencia">Vigencia (horas)</label>
+                <input id="horasVigencia" name="horasVigencia" type="number" min="1" max="24" value="4" class="form-control"></div>
+              <button class="btn btn-wok w-100" type="submit"><i class="bi bi-key"></i> Generar código</button>
+              <div class="form-text">Entregue el código al cajero. Solo sirve una vez y hasta el porcentaje indicado.</div>
+            </div>
+          </form>
+        </div>
+        <div class="col-xl-8">
+          <div class="wok-card">
+            <div class="wok-card-header"><h2>Autorizaciones recientes</h2></div>
+            <div th:if="${autorizaciones.isEmpty()}">
+              <div th:replace="~{fragments/layout :: vacio('bi-percent', 'Sin autorizaciones', 'Las autorizaciones de descuento emitidas aparecerán aquí.')}"></div>
+            </div>
+            <div class="table-responsive" th:unless="${autorizaciones.isEmpty()}">
+              <table class="table table-wok">
+                <thead><tr><th>Código</th><th class="text-end">Máx.</th><th>Motivo</th><th>Mesa</th><th>Autorizó</th><th>Vence</th><th>Estado</th></tr></thead>
+                <tbody><tr th:each="a : ${autorizaciones}">
+                  <td class="wok-mono fw-semibold" th:text="${a.codigo}">C</td>
+                  <td class="text-end" th:text="${@fmt.numero(a.porcentajeMaximo)} + '%'">%</td>
+                  <td class="small" th:text="${a.motivo}">m</td>
+                  <td th:text="${a.mesaNumero} ?: 'Todas'">m</td>
+                  <td class="wok-mono small" th:text="${a.autorizadoPor}">u</td>
+                  <td class="small" th:text="${@fmt.fechaHora(a.expiraEn)}">f</td>
+                  <td><span th:if="${a.usada}" class="wok-badge neutro">Usada</span>
+                    <span th:if="${!a.usada and !a.vigenteAhora}" class="wok-badge error">Vencida</span>
+                    <span th:if="${a.vigenteAhora}" class="wok-badge exito">Vigente</span></td>
+                </tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+  </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

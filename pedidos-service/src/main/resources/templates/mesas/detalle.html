@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Mesa ' + ${mesa.numero})}"></head>
+<body>
+<div class="wok-app">
+  <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+  <div class="wok-main">
+    <header th:replace="~{fragments/layout :: topbar('Mesa ' + ${mesa.numero}, ${mesa.zona} + ' · ' + ${mesa.capacidad} + ' personas')}"></header>
+    <main class="wok-content">
+      <div th:replace="~{fragments/layout :: mensajes}"></div>
+      <div class="d-flex gap-2 mb-3 flex-wrap">
+        <a th:href="@{/mesas}" class="btn btn-light btn-sm"><i class="bi bi-arrow-left"></i> Mesas</a>
+        <a th:if="${usuarioActual.tiene('PEDIDOS_GESTIONAR') and mesa.estado.name() != 'FUERA_DE_SERVICIO'}" th:href="@{/pedidos/nuevo(mesaId=${mesa.id})}" class="btn btn-wok btn-sm"><i class="bi bi-plus-circle"></i> Nuevo pedido</a>
+        <a th:if="${usuarioActual.tiene('FACTURACION_COBRAR')}" th:href="@{/caja/cuentas/{id}(id=${mesa.id})}" class="btn btn-dorado btn-sm"><i class="bi bi-cash-coin"></i> Cobrar cuenta</a>
+      </div>
+      <div th:if="${pedidos.isEmpty()}" class="wok-card">
+        <div th:replace="~{fragments/layout :: vacio('bi-receipt', 'Sin pedidos activos', 'La mesa no tiene pedidos en curso.')}"></div>
+      </div>
+      <div class="row g-3">
+        <div class="col-lg-6" th:each="p : ${pedidos}">
+          <div class="wok-card h-100">
+            <div class="wok-card-header">
+              <a th:href="@{/pedidos/{id}(id=${p.id})}" class="h6 mb-0 me-auto" th:text="${p.numero}">P-1</a>
+              <span class="wok-badge" th:classappend="${p.estado.claseCss()}" th:text="${p.estado.etiqueta()}">E</span>
+            </div>
+            <ul class="list-group list-group-flush">
+              <li class="list-group-item d-flex justify-content-between" th:each="i : ${p.items}">
+                <span><span th:text="${i.cantidad} + ' × ' + ${i.nombre}">1 x</span> <small class="text-suave" th:text="${i.estado.etiqueta()}">e</small></span>
+                <span th:text="${@fmt.dinero(i.subtotal)}">$</span>
+              </li>
+            </ul>
+            <div class="wok-card-body border-top d-flex justify-content-between fw-semibold">
+              <span>Subtotal</span><span th:text="${@fmt.dinero(p.total)}">$</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+  </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

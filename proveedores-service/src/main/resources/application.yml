@@ -1,0 +1,16 @@
+server:
+  port: ${PROVEEDORES_PORT:8085}
+
+spring:
+  application:
+    name: proveedores-service
+  config:
+    # 1) .env local (secretos, no versionado)  2) configuración centralizada del config-server
+    import:
+      - optional:file:.env[.properties]
+      - optional:file:../.env[.properties]
+      - optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888}
+  cloud:
+    config:
+      # si el config-server no responde, el servicio no arranca con configuración incompleta
+      fail-fast: true

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Rol personalizado')}"></head>
+<body>
+<div class="wok-app">
+  <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+  <div class="wok-main">
+    <header th:replace="~{fragments/layout :: topbar(${form.nuevo} ? 'Nuevo rol personalizado' : 'Editar rol', 'Combine permisos del catálogo')}"></header>
+    <main class="wok-content">
+      <div th:replace="~{fragments/layout :: mensajes}"></div>
+      <form th:action="@{/plataforma/roles/guardar}" th:object="${form}" method="post" class="wok-card" style="max-width: 980px" novalidate>
+        <input type="hidden" th:field="*{nuevo}">
+        <div class="wok-card-body">
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label" for="codigo">Código</label>
+              <input th:if="${form.nuevo}" th:field="*{codigo}" class="form-control wok-mono" placeholder="JEFE_COCINA"
+                     th:classappend="${#fields.hasErrors('codigo')} ? 'is-invalid'">
+              <th:block th:unless="${form.nuevo}">
+                <input class="form-control wok-mono" th:value="*{codigo}" disabled>
+                <input type="hidden" th:field="*{codigo}">
+              </th:block>
+              <div class="invalid-feedback" th:errors="*{codigo}"></div>
+            </div>
+            <div class="col-md-5">
+              <label class="form-label" for="nombre">Nombre</label>
+              <input th:field="*{nombre}" class="form-control" th:classappend="${#fields.hasErrors('nombre')} ? 'is-invalid'">
+              <div class="invalid-feedback" th:errors="*{nombre}"></div>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+              <div class="form-check form-switch mb-2">
+                <input class="form-check-input" type="checkbox" th:field="*{activo}">
+                <label class="form-check-label" th:for="${#ids.prev('activo')}">Rol activo</label>
+              </div>
+            </div>
+            <div class="col-12">
+              <label class="form-label" for="descripcion">Descripción</label>
+              <input th:field="*{descripcion}" class="form-control" maxlength="250">
+            </div>
+          </div>
+          <h3 class="wok-form-seccion">Permisos</h3>
+          <div class="row g-2">
+            <div class="col-md-6 col-xl-4" th:each="p : ${permisos}">
+              <label class="d-flex gap-2 p-2 border rounded-3 h-100" style="cursor:pointer">
+                <input type="checkbox" class="form-check-input mt-1" name="permisos" th:value="${p.key}"
+                       th:checked="${form.permisos != null and #sets.contains(form.permisos, p.key)}">
+                <span><span class="wok-mono small d-block" th:text="${p.key}">P</span><small class="text-suave" th:text="${p.value}">D</small></span>
+              </label>
+            </div>
+          </div>
+          <div class="text-danger small mt-1" th:if="${#fields.hasErrors('permisos')}" th:errors="*{permisos}"></div>
+        </div>
+        <div class="wok-card-body border-top d-flex gap-2 justify-content-end">
+          <a th:href="@{/plataforma/roles}" class="btn btn-light">Cancelar</a>
+          <button type="submit" class="btn btn-wok"><i class="bi bi-save"></i> Guardar rol</button>
+        </div>
+      </form>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+  </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Combos')}"></head>
+<body>
+<div class="wok-app">
+  <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+  <div class="wok-main">
+    <header th:replace="~{fragments/layout :: topbar('Combos', 'Platos agrupados a precio especial')}"></header>
+    <main class="wok-content">
+      <div th:replace="~{fragments/layout :: mensajes}"></div>
+      <th:block th:with="puedeGestionar=${usuarioActual.tiene('MENU_GESTIONAR')}">
+      <div class="d-flex justify-content-end mb-3" th:if="${puedeGestionar}">
+        <a th:href="@{/menu/combos/nuevo}" class="btn btn-wok btn-sm"><i class="bi bi-plus-lg"></i> Nuevo combo</a>
+      </div>
+      <div th:if="${combos.isEmpty()}" class="wok-card">
+        <div th:replace="~{fragments/layout :: vacio('bi-collection', 'Sin combos', 'Agrupe platos existentes y defina un precio conjunto.')}"></div>
+      </div>
+      <div class="row g-3">
+        <div class="col-md-6 col-xl-4" th:each="c : ${combos}">
+          <div class="wok-card h-100 d-flex flex-column">
+            <div class="wok-card-header">
+              <h3 class="h6 me-auto mb-0" th:text="${c.nombre}">Combo</h3>
+              <span th:if="${c.disponibleEfectivo}" class="wok-badge exito">Disponible</span>
+              <span th:unless="${c.disponibleEfectivo}" class="wok-badge alerta" title="Combo desactivado o algún plato agotado">No disponible</span>
+            </div>
+            <div class="wok-card-body flex-grow-1">
+              <p class="small text-suave" th:text="${c.descripcion}">d</p>
+              <ul class="list-unstyled small mb-0">
+                <li th:each="i : ${c.items}"><i class="bi bi-dot text-dorado"></i><span th:text="${i.cantidad} + ' × ' + ${i.nombrePlato}">1 x</span></li>
+              </ul>
+            </div>
+            <div class="wok-card-body border-top d-flex align-items-center justify-content-between py-2">
+              <div>
+                <span class="h5 text-wok mb-0" th:text="${@fmt.dinero(c.precio)}">$</span>
+                <small class="text-suave text-decoration-line-through ms-1" th:if="${c.precioPlatosSueltos.compareTo(c.precio) > 0}"
+                       th:text="${@fmt.dinero(c.precioPlatosSueltos)}">$</small>
+              </div>
+              <div class="wok-acciones" th:if="${puedeGestionar}">
+                <a th:href="@{/menu/combos/{id}/editar(id=${c.id})}" class="btn btn-sm btn-light" title="Editar"><i class="bi bi-pencil"></i></a>
+                <form th:action="@{/menu/combos/{id}/disponibilidad(id=${c.id})}" method="post">
+                  <input type="hidden" name="disponible" th:value="${!c.disponible}">
+                  <button class="btn btn-sm btn-light" type="submit" th:title="${c.disponible} ? 'Desactivar venta' : 'Activar venta'">
+                    <i class="bi" th:classappend="${c.disponible} ? 'bi-pause-circle' : 'bi-play-circle'"></i></button>
+                </form>
+                <form th:action="@{/menu/combos/{id}/retirar(id=${c.id})}" method="post" data-wok-confirmar="¿Retirar este combo de la carta?">
+                  <button class="btn btn-sm btn-outline-danger" type="submit" title="Retirar"><i class="bi bi-archive"></i></button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      </th:block>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+  </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

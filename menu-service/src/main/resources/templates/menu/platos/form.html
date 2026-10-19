@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${form.esNuevo()} ? 'Nuevo plato' : 'Editar plato')}"></head>
+<body>
+<div class="wok-app">
+  <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+  <div class="wok-main">
+    <header th:replace="~{fragments/layout :: topbar(${form.esNuevo()} ? 'Nuevo plato' : 'Editar plato', 'Datos, precio, alérgenos y receta')}"></header>
+    <main class="wok-content">
+      <div th:replace="~{fragments/layout :: mensajes}"></div>
+      <form th:action="@{/menu/platos/guardar}" th:object="${form}" method="post" class="wok-card" novalidate>
+        <input type="hidden" th:field="*{id}">
+        <div class="wok-card-body">
+          <div th:replace="~{fragments/layout :: erroresFormulario('form')}"></div>
+          <h3 class="wok-form-seccion">Datos del plato</h3>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label" for="nombre">Nombre</label>
+              <input th:field="*{nombre}" class="form-control" maxlength="80" th:classappend="${#fields.hasErrors('nombre')} ? 'is-invalid'">
+              <div class="invalid-feedback" th:errors="*{nombre}"></div>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label" for="categoriaId">Categoría</label>
+              <select th:field="*{categoriaId}" class="form-select" th:classappend="${#fields.hasErrors('categoriaId')} ? 'is-invalid'">
+                <option value="">Seleccione…</option>
+                <option th:each="c : ${categorias}" th:value="${c.id}" th:text="${c.nombre}">c</option>
+              </select>
+              <div class="invalid-feedback" th:errors="*{categoriaId}"></div>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label" for="precio">Precio de venta</label>
+              <div class="input-group has-validation">
+                <span class="input-group-text bg-crema">$</span>
+                <input th:field="*{precio}" type="number" step="0.01" min="0" class="form-control" th:classappend="${#fields.hasErrors('precio')} ? 'is-invalid'">
+                <div class="invalid-feedback" th:errors="*{precio}"></div>
+              </div>
+            </div>
+            <div class="col-12">
+              <label class="form-label" for="descripcion">Descripción</label>
+              <textarea th:field="*{descripcion}" class="form-control" rows="2" maxlength="300"></textarea>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label" for="picanteBase">Picante base</label>
+              <select th:field="*{picanteBase}" class="form-select">
+                <option value="0">0 · No pica</option><option value="1">1 · Suave</option>
+                <option value="2">2 · Medio</option><option value="3">3 · Muy picante</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label" for="tiempoPreparacionMin">Tiempo de preparación (min)</label>
+              <input th:field="*{tiempoPreparacionMin}" type="number" min="1" max="240" class="form-control" th:classappend="${#fields.hasErrors('tiempoPreparacionMin')} ? 'is-invalid'">
+              <div class="invalid-feedback" th:errors="*{tiempoPreparacionMin}"></div>
+            </div>
+            <div class="col-md-6 d-flex align-items-end">
+              <div class="form-check form-switch mb-2">
+                <input class="form-check-input" type="checkbox" th:field="*{disponible}">
+                <label class="form-check-label" th:for="${#ids.prev('disponible')}">Disponible para la venta</label>
+              </div>
+            </div>
+          </div>
+
+          <h3 class="wok-form-seccion">Alérgenos</h3>
+          <div class="d-flex flex-wrap gap-2">
+            <label th:each="a : ${alergenos}" class="border rounded-pill px-3 py-1" style="cursor:pointer">
+              <input type="checkbox" class="form-check-input me-1" name="alergenos" th:value="${a}"
+                     th:checked="${form.alergenos != null and #sets.contains(form.alergenos, a)}">
+              <span th:text="${a}">A</span>
+            </label>
+          </div>
+
+          <h3 class="wok-form-seccion">Receta por porción <span class="small text-suave">(cantidades en la unidad del insumo)</span></h3>
+          <div th:if="${insumos.isEmpty() and advertencia == null}" class="alert alert-info wok-alerta small">
+            <i class="bi bi-info-circle"></i><div>No hay insumos activos en inventario. Puede guardar el plato sin receta y completarla luego.</div>
+          </div>
+          <div id="filasReceta">
+            <div class="row g-2 align-items-center mb-2" data-wok-fila th:each="r, st : *{receta}">
+              <div class="col-7">
+                <select class="form-select form-select-sm" th:name="|receta[${st.index}].insumoId|">
+                  <option value="">Seleccione insumo…</option>
+                  <option th:each="i : ${insumos}" th:value="${i.id}" th:text="${i.nombre} + ' (' + ${i.unidad} + ')'" th:selected="${i.id == r.insumoId}">i</option>
+                </select>
+              </div>
+              <div class="col-3">
+                <input class="form-control form-control-sm" type="number" step="0.0001" min="0" th:name="|receta[${st.index}].cantidad|" th:value="${r.cantidad}"
+                       th:classappend="${#fields.hasErrors('receta[' + st.index + '].cantidad')} ? 'is-invalid'" placeholder="Cantidad">
+              </div>
+              <div class="col-2 text-end"><button type="button" class="btn btn-sm btn-light" data-wok-quitar-fila title="Quitar"><i class="bi bi-x-lg"></i></button></div>
+            </div>
+          </div>
+          <button type="button" class="btn btn-sm btn-wok-outline" th:disabled="${insumos.isEmpty()}"
+                  data-wok-agregar-fila="#filasReceta" data-wok-plantilla="#plantillaReceta"><i class="bi bi-plus"></i> Agregar insumo</button>
+          <template id="plantillaReceta">
+            <div class="row g-2 align-items-center mb-2" data-wok-fila>
+              <div class="col-7">
+                <select class="form-select form-select-sm" name="receta[__i__].insumoId">
+                  <option value="">Seleccione insumo…</option>
+                  <option th:each="i : ${insumos}" th:value="${i.id}" th:text="${i.nombre} + ' (' + ${i.unidad} + ')'">i</option>
+                </select>
+              </div>
+              <div class="col-3"><input class="form-control form-control-sm" type="number" step="0.0001" min="0" name="receta[__i__].cantidad" placeholder="Cantidad"></div>
+              <div class="col-2 text-end"><button type="button" class="btn btn-sm btn-light" data-wok-quitar-fila title="Quitar"><i class="bi bi-x-lg"></i></button></div>
+            </div>
+          </template>
+        </div>
+        <div class="wok-card-body border-top d-flex gap-2 justify-content-end">
+          <a th:href="@{/menu/platos}" class="btn btn-light">Cancelar</a>
+          <button type="submit" class="btn btn-wok"><i class="bi bi-save"></i> Guardar plato</button>
+        </div>
+      </form>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+  </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

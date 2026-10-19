@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Pedido ' + ${pedido.numero})}"></head>
+<body th:attr="data-wok-recargar=${pedido.estado.name() == 'ENVIADO' or pedido.estado.name() == 'EN_PREPARACION'} ? 30 : 0">
+<div class="wok-app">
+  <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+  <div class="wok-main">
+    <header th:replace="~{fragments/layout :: topbar('Pedido ' + ${pedido.numero}, 'Mesa ' + ${pedido.mesaNumero} + ' · ' + ${pedido.meseroNombre})}"></header>
+    <main class="wok-content">
+      <div th:replace="~{fragments/layout :: mensajes}"></div>
+      <th:block th:with="gestiona=${usuarioActual.tiene('PEDIDOS_GESTIONAR')}">
+      <div class="d-flex gap-2 mb-3 flex-wrap align-items-center">
+        <a th:href="@{/pedidos}" class="btn btn-light btn-sm"><i class="bi bi-arrow-left"></i> Pedidos</a>
+        <span class="wok-badge fs-6" th:classappend="${pedido.estado.claseCss()}" th:text="${pedido.estado.etiqueta()}">E</span>
+        <th:block th:if="${gestiona and pedido.estado.name() == 'ABIERTO'}">
+          <a th:href="@{/pedidos/{id}/editar(id=${pedido.id})}" class="btn btn-wok-outline btn-sm"><i class="bi bi-pencil"></i> Modificar</a>
+          <form th:action="@{/pedidos/{id}/enviar(id=${pedido.id})}" method="post"
+                data-wok-confirmar="Al enviar a cocina se descuentan los insumos del inventario y el pedido ya no se podrá modificar. ¿Enviar?"
+                data-wok-confirmar-boton="Enviar a cocina">
+            <button class="btn btn-wok btn-sm" type="submit"><i class="bi bi-send"></i> Enviar a cocina</button>
+          </form>
+        </th:block>
+        <form th:if="${gestiona and pedido.estado.name() == 'LISTO'}" th:action="@{/pedidos/{id}/items/entregar-todos(id=${pedido.id})}" method="post">
+          <button class="btn btn-success btn-sm" type="submit"><i class="bi bi-check2-all"></i> Entregar todo lo listo</button>
+        </form>
+        <a th:if="${pedido.estado.name() == 'ENTREGADO' and usuarioActual.tiene('FACTURACION_COBRAR')}" th:href="@{/caja/cuentas/{m}(m=${pedido.mesaId})}" class="btn btn-dorado btn-sm"><i class="bi bi-cash-coin"></i> Cobrar</a>
+        <button th:if="${gestiona and pedido.estado.permiteCancelar()}" type="button" class="btn btn-outline-danger btn-sm ms-auto"
+                data-bs-toggle="collapse" data-bs-target="#cancelar"><i class="bi bi-x-circle"></i> Cancelar pedido</button>
+      </div>
+      <div class="collapse mb-3" id="cancelar" th:if="${gestiona and pedido.estado.permiteCancelar()}">
+        <form th:action="@{/pedidos/{id}/cancelar(id=${pedido.id})}" method="post" class="wok-card wok-card-body d-flex gap-2 flex-wrap align-items-end"
+              data-wok-confirmar="Se cancelará el pedido. Si ya estaba en cocina sin prepararse, se restituye el inventario. ¿Confirmar?">
+          <div class="flex-grow-1"><label class="form-label" for="motivo">Motivo de la cancelación</label>
+            <input id="motivo" name="motivo" class="form-control" minlength="5" maxlength="200" required placeholder="El cliente se retiró, error en la toma…"></div>
+          <button class="btn btn-danger" type="submit">Confirmar cancelación</button>
+        </form>
+      </div>
+
+      <div class="alert alert-danger wok-alerta" th:unless="${pedido.alergias.isEmpty()}">
+        <i class="bi bi-exclamation-octagon-fill"></i>
+        <div><strong>Alergias declaradas:</strong> <span th:text="${#strings.listJoin(pedido.alergias, ', ')}">MANI</span></div>
+      </div>
+      <div class="alert alert-secondary wok-alerta" th:if="${pedido.estado.name() == 'CANCELADO'}">
+        <i class="bi bi-x-octagon"></i><div>Cancelado por <strong th:text="${pedido.canceladoPor}">u</strong> el <span th:text="${@fmt.fechaHora(pedido.canceladoEn)}">f</span>: <span th:text="${pedido.motivoCancelacion}">m</span></div>
+      </div>
+
+      <div class="row g-3">
+        <div class="col-xl-8">
+          <div class="wok-card">
+            <div class="table-responsive">
+              <table class="table table-wok align-middle">
+                <thead><tr><th>Producto</th><th class="text-center">Cant.</th><th class="text-end">Precio</th><th class="text-end">Subtotal</th><th>Estado</th><th></th></tr></thead>
+                <tbody>
+                  <tr th:each="i : ${pedido.items}">
+                    <td>
+                      <div class="fw-semibold" th:text="${i.nombre}">Plato</div>
+                      <div class="small"><span class="wok-picante" th:if="${i.nivelPicante > 0}"><i th:each="n : ${#numbers.sequence(1, i.nivelPicante)}" class="bi bi-fire"></i></span>
+                        <span class="text-suave" th:text="${i.notas}">notas</span></div>
+                    </td>
+                    <td class="text-center" th:text="${i.cantidad}">1</td>
+                    <td class="text-end" th:text="${@fmt.dinero(i.precioUnitario)}">$</td>
+                    <td class="text-end" th:text="${@fmt.dinero(i.subtotal)}">$</td>
+                    <td><span class="wok-badge info" th:text="${i.estado.etiqueta()}">E</span></td>
+                    <td class="text-end">
+                      <form th:if="${gestiona and i.estado.name() == 'LISTO'}" th:action="@{/pedidos/{p}/items/{i}/estado(p=${pedido.id},i=${i.id})}" method="post">
+                        <input type="hidden" name="estado" value="ENTREGADO">
+                        <button class="btn btn-sm btn-outline-success" type="submit">Entregado</button>
+                      </form>
+                    </td>
+                  </tr>
+                </tbody>
+                <tfoot><tr><th colspan="3" class="text-end">Total del pedido</th><th class="text-end h5 text-wok" th:text="${@fmt.dinero(pedido.total)}">$</th><th colspan="2"></th></tr></tfoot>
+              </table>
+            </div>
+            <div class="wok-card-body border-top small" th:if="${pedido.observaciones}">
+              <i class="bi bi-chat-left-text text-wok"></i> <span th:text="${pedido.observaciones}">obs</span>
+            </div>
+          </div>
+        </div>
+        <div class="col-xl-4">
+          <div class="wok-card">
+            <div class="wok-card-header"><i class="bi bi-clock-history text-wok"></i><h2>Historial</h2></div>
+            <ul class="list-group list-group-flush small">
+              <li class="list-group-item" th:each="h : ${pedido.historial}">
+                <div class="d-flex justify-content-between"><strong th:text="${h.estado}">E</strong><span class="text-suave" th:text="${@fmt.hora(h.fecha)}">h</span></div>
+                <div class="text-suave"><span class="wok-mono" th:text="${h.usuario}">u</span> <span th:text="${h.detalle}">d</span></div>
+              </li>
+            </ul>
+            <div class="wok-card-body border-top small text-suave">
+              Inventario: <strong th:text="${pedido.consumoInventario}">NO_REQUERIDO</strong>
+              <span th:if="${pedido.facturaId}"> · Comprobante <span class="wok-mono" th:text="${pedido.facturaId}">f</span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+      </th:block>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+  </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

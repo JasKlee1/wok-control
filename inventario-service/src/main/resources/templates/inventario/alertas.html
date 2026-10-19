@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Alertas de inventario')}"></head>
+<body>
+<div class="wok-app">
+  <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+  <div class="wok-main">
+    <header th:replace="~{fragments/layout :: topbar('Alertas de inventario', 'Stock bajo, vencimientos y reportes de cocina')}"></header>
+    <main class="wok-content">
+      <div th:replace="~{fragments/layout :: mensajes}"></div>
+      <div th:if="${alertas.total == 0}" class="wok-card mb-3">
+        <div th:replace="~{fragments/layout :: vacio('bi-check2-circle', 'Todo en orden', 'No hay insumos bajo el mínimo, lotes por vencer ni reportes pendientes de cocina.')}"></div>
+      </div>
+      <div class="row g-3">
+        <div class="col-xl-6">
+          <div class="wok-card h-100">
+            <div class="wok-card-header"><i class="bi bi-exclamation-triangle" style="color:var(--wok-advertencia)"></i><h2>Stock bajo</h2>
+              <span class="wok-badge alerta ms-auto" th:text="${alertas.stockBajo.size()}">0</span></div>
+            <div th:if="${alertas.stockBajo.isEmpty()}" class="wok-card-body small text-suave">Ningún insumo por debajo del mínimo.</div>
+            <div class="table-responsive" th:unless="${alertas.stockBajo.isEmpty()}">
+              <table class="table table-wok">
+                <thead><tr><th>Insumo</th><th class="text-end">Disponible</th><th class="text-end">Mínimo</th><th class="text-end">Faltante</th></tr></thead>
+                <tbody><tr th:each="i : ${alertas.stockBajo}">
+                  <td><a th:href="@{/inventario/insumos/{id}(id=${i.id})}" th:text="${i.nombre}">i</a></td>
+                  <td class="text-end" th:classappend="${i.cantidadDisponible.signum() == 0} ? 'text-danger fw-semibold'" th:text="${@fmt.numero(i.cantidadDisponible)} + ' ' + ${i.unidad}">0</td>
+                  <td class="text-end" th:text="${@fmt.numero(i.stockMinimo)}">0</td>
+                  <td class="text-end" th:text="${@fmt.numero(i.stockMinimo.subtract(i.cantidadDisponible))}">0</td>
+                </tr></tbody>
+              </table>
+            </div>
+            <div class="wok-card-body border-top small" th:if="${usuarioActual.tiene('COMPRAS_GESTIONAR') and !alertas.stockBajo.isEmpty()}">
+              <a th:href="@{/compras/ordenes/nueva}" class="btn btn-sm btn-wok-outline"><i class="bi bi-cart-plus"></i> Crear orden de compra</a>
+            </div>
+          </div>
+        </div>
+        <div class="col-xl-6">
+          <div class="wok-card mb-3">
+            <div class="wok-card-header"><i class="bi bi-fire text-wok"></i><h2>Reportes de cocina</h2>
+              <span class="wok-badge rojo ms-auto" th:text="${alertas.reportesCocina.size()}">0</span></div>
+            <div th:if="${alertas.reportesCocina.isEmpty()}" class="wok-card-body small text-suave">No hay reportes pendientes.</div>
+            <ul class="list-group list-group-flush" th:unless="${alertas.reportesCocina.isEmpty()}">
+              <li class="list-group-item" th:each="r : ${alertas.reportesCocina}">
+                <div class="d-flex justify-content-between gap-2 flex-wrap">
+                  <div>
+                    <a class="fw-semibold" th:href="@{/inventario/insumos/{id}(id=${r.insumoId})}" th:text="${r.insumo}">i</a>
+                    <div class="small text-suave"><span th:text="${r.reportadoPor}">u</span> · <span th:text="${@fmt.fechaHora(r.fecha)}">f</span></div>
+                    <div class="small" th:text="${r.observacion}">obs</div>
+                  </div>
+                  <form th:if="${usuarioActual.tiene('INVENTARIO_MOVIMIENTOS')}" th:action="@{/inventario/alertas/{id}/atender(id=${r.id})}" method="post" class="d-flex gap-1 align-items-start">
+                    <input name="respuesta" class="form-control form-control-sm" placeholder="Respuesta (opcional)" maxlength="200">
+                    <button class="btn btn-sm btn-wok" type="submit">Atender</button>
+                  </form>
+                </div>
+              </li>
+            </ul>
+          </div>
+          <div class="wok-card">
+            <div class="wok-card-header"><i class="bi bi-hourglass-bottom text-wok"></i><h2>Lotes por vencer (7 días)</h2>
+              <span class="wok-badge alerta ms-auto" th:text="${alertas.vencimientos.size()}">0</span></div>
+            <div th:if="${alertas.vencimientos.isEmpty()}" class="wok-card-body small text-suave">Ningún lote vigente vence en los próximos 7 días.</div>
+            <table class="table table-wok" th:unless="${alertas.vencimientos.isEmpty()}">
+              <thead><tr><th>Insumo</th><th>Lote</th><th>Vence</th><th class="text-end">Días</th></tr></thead>
+              <tbody><tr th:each="v : ${alertas.vencimientos}">
+                <td><a th:href="@{/inventario/insumos/{id}(id=${v.insumoId})}" th:text="${v.insumo}">i</a></td>
+                <td class="wok-mono" th:text="${v.lote}">l</td>
+                <td th:text="${@fmt.fecha(v.fechaVencimiento)}">f</td>
+                <td class="text-end"><span class="wok-badge" th:classappend="${v.diasRestantes < 0} ? 'error' : 'alerta'"
+                    th:text="${v.diasRestantes < 0} ? 'Vencido' : ${v.diasRestantes}">0</span></td>
+              </tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="wok-card mt-3" th:unless="${atendidos.isEmpty()}">
+        <div class="wok-card-header"><h2>Reportes atendidos recientemente</h2></div>
+        <div class="table-responsive"><table class="table table-wok table-sm">
+          <thead><tr><th>Insumo</th><th>Reportó</th><th>Atendió</th><th>Fecha atención</th><th>Respuesta</th></tr></thead>
+          <tbody><tr th:each="r : ${atendidos}"><td th:text="${r.nombreInsumo}">i</td><td class="wok-mono small" th:text="${r.reportadoPor}">u</td>
+            <td class="wok-mono small" th:text="${r.atendidoPor}">u</td><td class="small" th:text="${@fmt.fechaHora(r.atendidoEn)}">f</td><td class="small" th:text="${r.respuesta}">r</td></tr></tbody>
+        </table></div>
+      </div>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+  </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

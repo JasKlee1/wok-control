@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Roles y permisos')}"></head>
+<body>
+<div class="wok-app">
+  <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+  <div class="wok-main">
+    <header th:replace="~{fragments/layout :: topbar('Roles y permisos', 'Matriz de autorización validada en el backend')}"></header>
+    <main class="wok-content">
+      <div th:replace="~{fragments/layout :: mensajes}"></div>
+      <div class="wok-card">
+        <div class="wok-card-header">
+          <h2 class="me-auto">Matriz de permisos</h2>
+          <a th:href="@{/plataforma/roles/nuevo}" class="btn btn-wok btn-sm"><i class="bi bi-plus-lg"></i> Rol personalizado</a>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-wok table-hover table-sm align-middle">
+            <thead>
+              <tr>
+                <th style="min-width: 260px">Permiso</th>
+                <th th:each="r : ${roles}" class="text-center" style="min-width: 92px">
+                  <a th:unless="${r.sistema}" th:href="@{/plataforma/roles/{c}/editar(c=${r.codigo})}" th:text="${r.nombre}" class="text-reset">Rol</a>
+                  <span th:if="${r.sistema}" th:text="${r.nombre}" th:title="${r.descripcion}">Rol</span>
+                  <div th:unless="${r.activo}" class="wok-badge error mt-1">Inactivo</div>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="p : ${permisos}">
+                <td><div class="wok-mono small" th:text="${p.key}">PERMISO</div><small class="text-suave" th:text="${p.value}">Descripción</small></td>
+                <td th:each="r : ${roles}" class="text-center">
+                  <i th:if="${#sets.contains(r.permisos, p.key)}" class="bi bi-check-circle-fill" style="color: var(--wok-exito)" aria-label="Sí"></i>
+                  <span th:unless="${#sets.contains(r.permisos, p.key)}" class="text-suave" aria-label="No">·</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="wok-card-body border-top small text-suave">
+          <i class="bi bi-info-circle"></i>
+          Los 7 roles del sistema se definen en el código y se sincronizan al iniciar <span class="wok-mono">usuarios-service</span>;
+          son de solo lectura. <strong>Administrador</strong> opera el restaurante; <strong>Administrador de plataforma</strong>
+          gestiona usuarios, roles, parámetros y auditoría, sin acceso a la operación. Los cambios de permisos aplican
+          cuando el usuario vuelve a iniciar sesión.
+        </div>
+      </div>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+  </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

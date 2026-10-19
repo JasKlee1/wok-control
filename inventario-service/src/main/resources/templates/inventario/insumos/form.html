@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${form.esNuevo()} ? 'Nuevo insumo' : 'Editar insumo')}"></head>
+<body>
+<div class="wok-app">
+  <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+  <div class="wok-main">
+    <header th:replace="~{fragments/layout :: topbar(${form.esNuevo()} ? 'Nuevo insumo' : 'Editar insumo', 'Datos descriptivos y nivel mínimo de existencias')}"></header>
+    <main class="wok-content">
+      <div th:replace="~{fragments/layout :: mensajes}"></div>
+      <form th:action="@{/inventario/insumos/guardar}" th:object="${form}" method="post" class="wok-card" style="max-width: 820px" novalidate>
+        <input type="hidden" th:field="*{id}">
+        <div class="wok-card-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label" for="nombre">Nombre</label>
+              <input th:field="*{nombre}" class="form-control" maxlength="80" th:classappend="${#fields.hasErrors('nombre')} ? 'is-invalid'">
+              <div class="invalid-feedback" th:errors="*{nombre}"></div>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label" for="categoria">Categoría</label>
+              <select th:field="*{categoria}" class="form-select" th:classappend="${#fields.hasErrors('categoria')} ? 'is-invalid'">
+                <option value="">Seleccione…</option>
+                <option th:each="c : ${categorias}" th:value="${c}" th:text="${c}">c</option>
+              </select>
+              <div class="invalid-feedback" th:errors="*{categoria}"></div>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label" for="unidad">Unidad de medida</label>
+              <select th:field="*{unidad}" class="form-select" th:classappend="${#fields.hasErrors('unidad')} ? 'is-invalid'">
+                <option value="">Seleccione…</option>
+                <option th:each="u : ${unidades}" th:value="${u}" th:text="${u}">u</option>
+              </select>
+              <div class="invalid-feedback" th:errors="*{unidad}"></div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label" for="stockMinimo">Stock mínimo</label>
+              <input th:field="*{stockMinimo}" type="number" step="0.001" min="0" class="form-control" th:classappend="${#fields.hasErrors('stockMinimo')} ? 'is-invalid'">
+              <div class="invalid-feedback" th:errors="*{stockMinimo}"></div>
+              <div class="form-text">Al llegar a este nivel se genera la alerta de stock bajo.</div>
+            </div>
+            <div class="col-md-8 d-flex align-items-end">
+              <div class="form-check form-switch mb-2">
+                <input class="form-check-input" type="checkbox" th:field="*{perecedero}">
+                <label class="form-check-label" th:for="${#ids.prev('perecedero')}">Perecedero (controlar lotes y vencimientos)</label>
+              </div>
+            </div>
+          </div>
+          <div class="alert alert-info wok-alerta small mt-3 mb-0" th:if="${form.esNuevo()}">
+            <i class="bi bi-info-circle"></i>
+            <div>El insumo se crea con existencia <strong>0</strong>. La cantidad inicial se registra después con un movimiento de entrada, para que quede trazada.</div>
+          </div>
+        </div>
+        <div class="wok-card-body border-top d-flex gap-2 justify-content-end">
+          <a th:href="${form.esNuevo()} ? @{/inventario/insumos} : @{/inventario/insumos/{id}(id=${form.id})}" class="btn btn-light">Cancelar</a>
+          <button type="submit" class="btn btn-wok"><i class="bi bi-save"></i> Guardar</button>
+        </div>
+      </form>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+  </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

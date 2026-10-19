@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Categorías')}"></head>
+<body>
+<div class="wok-app">
+  <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+  <div class="wok-main">
+    <header th:replace="~{fragments/layout :: topbar('Categorías de la carta', 'Orden y visibilidad de las secciones')}"></header>
+    <main class="wok-content">
+      <div th:replace="~{fragments/layout :: mensajes}"></div>
+      <div class="row g-3">
+        <div class="col-lg-7">
+          <div class="wok-card">
+            <div class="wok-card-header"><h2>Categorías</h2></div>
+            <div th:if="${categorias.isEmpty()}">
+              <div th:replace="~{fragments/layout :: vacio('bi-tags', 'Sin categorías', 'Cree la primera sección de la carta: Entradas, Arroces, Tallarines, Sopas…')}"></div>
+            </div>
+            <div class="table-responsive" th:unless="${categorias.isEmpty()}">
+              <table class="table table-wok table-hover">
+                <thead><tr><th>Orden</th><th>Nombre</th><th class="text-center">Platos activos</th><th>Estado</th><th></th></tr></thead>
+                <tbody>
+                  <tr th:each="c : ${categorias}">
+                    <td th:text="${c.orden}">0</td>
+                    <td><div class="fw-semibold" th:text="${c.nombre}">n</div><small class="text-suave" th:text="${c.descripcion}">d</small></td>
+                    <td class="text-center" th:text="${conteo[c.id] ?: 0}">0</td>
+                    <td><span th:if="${c.activa}" class="wok-badge exito">Activa</span><span th:unless="${c.activa}" class="wok-badge neutro">Inactiva</span></td>
+                    <td class="text-end"><a th:href="@{/menu/categorias(editar=${c.id})}" class="btn btn-sm btn-light"><i class="bi bi-pencil"></i></a></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-5">
+          <form th:action="@{/menu/categorias/guardar}" th:object="${form}" method="post" class="wok-card" novalidate>
+            <div class="wok-card-header"><i class="bi text-wok" th:classappend="${form.esNuevo()} ? 'bi-plus-circle' : 'bi-pencil'"></i>
+              <h2 th:text="${form.esNuevo()} ? 'Nueva categoría' : 'Editar categoría'">Nueva categoría</h2></div>
+            <div class="wok-card-body">
+              <input type="hidden" th:field="*{id}">
+              <div class="mb-3">
+                <label class="form-label" for="nombre">Nombre</label>
+                <input th:field="*{nombre}" class="form-control" maxlength="60" th:classappend="${#fields.hasErrors('nombre')} ? 'is-invalid'">
+                <div class="invalid-feedback" th:errors="*{nombre}"></div>
+              </div>
+              <div class="mb-3">
+                <label class="form-label" for="descripcion">Descripción</label>
+                <input th:field="*{descripcion}" class="form-control" maxlength="200">
+              </div>
+              <div class="row g-3">
+                <div class="col-6">
+                  <label class="form-label" for="orden">Orden en la carta</label>
+                  <input th:field="*{orden}" type="number" min="0" max="999" class="form-control" th:classappend="${#fields.hasErrors('orden')} ? 'is-invalid'">
+                  <div class="invalid-feedback" th:errors="*{orden}"></div>
+                </div>
+                <div class="col-6 d-flex align-items-end">
+                  <div class="form-check form-switch mb-2">
+                    <input class="form-check-input" type="checkbox" th:field="*{activa}">
+                    <label class="form-check-label" th:for="${#ids.prev('activa')}">Activa</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="wok-card-body border-top d-flex gap-2 justify-content-end">
+              <a th:unless="${form.esNuevo()}" th:href="@{/menu/categorias}" class="btn btn-light">Cancelar</a>
+              <button type="submit" class="btn btn-wok"><i class="bi bi-save"></i> Guardar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+  </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

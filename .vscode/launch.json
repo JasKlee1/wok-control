@@ -1,0 +1,25 @@
+{
+  // Arranque desde VS Code (extensión "Debugger for Java"). Inicie en este orden:
+  // 1) config-server  2) discovery-service  3) servicios de negocio  4) api-gateway
+  // o use la configuración compuesta "Wok Control (todo)". El directorio de trabajo es la raíz,
+  // donde cada servicio lee el archivo .env.
+  "version": "0.2.0",
+  "configurations": [
+    { "type": "java", "name": "1. config-server", "request": "launch", "mainClass": "com.wokcontrol.config.ConfigServerApplication", "projectName": "config-server", "cwd": "${workspaceFolder}" },
+    { "type": "java", "name": "2. discovery-service", "request": "launch", "mainClass": "com.wokcontrol.discovery.DiscoveryServiceApplication", "projectName": "discovery-service", "cwd": "${workspaceFolder}" },
+    { "type": "java", "name": "usuarios-service", "request": "launch", "mainClass": "com.wokcontrol.usuarios.UsuariosServiceApplication", "projectName": "usuarios-service", "cwd": "${workspaceFolder}" },
+    { "type": "java", "name": "menu-service", "request": "launch", "mainClass": "com.wokcontrol.menu.MenuServiceApplication", "projectName": "menu-service", "cwd": "${workspaceFolder}" },
+    { "type": "java", "name": "pedidos-service", "request": "launch", "mainClass": "com.wokcontrol.pedidos.PedidosServiceApplication", "projectName": "pedidos-service", "cwd": "${workspaceFolder}" },
+    { "type": "java", "name": "inventario-service", "request": "launch", "mainClass": "com.wokcontrol.inventario.InventarioServiceApplication", "projectName": "inventario-service", "cwd": "${workspaceFolder}" },
+    { "type": "java", "name": "proveedores-service", "request": "launch", "mainClass": "com.wokcontrol.proveedores.ProveedoresServiceApplication", "projectName": "proveedores-service", "cwd": "${workspaceFolder}" },
+    { "type": "java", "name": "facturacion-service", "request": "launch", "mainClass": "com.wokcontrol.facturacion.FacturacionServiceApplication", "projectName": "facturacion-service", "cwd": "${workspaceFolder}" },
+    { "type": "java", "name": "reportes-service", "request": "launch", "mainClass": "com.wokcontrol.reportes.ReportesServiceApplication", "projectName": "reportes-service", "cwd": "${workspaceFolder}" },
+    { "type": "java", "name": "9. api-gateway", "request": "launch", "mainClass": "com.wokcontrol.gateway.ApiGatewayApplication", "projectName": "api-gateway", "cwd": "${workspaceFolder}" }
+  ],
+  "compounds": [
+    {
+      "name": "Servicios de negocio",
+      "configurations": ["usuarios-service", "menu-service", "pedidos-service", "inventario-service", "proveedores-service", "facturacion-service", "reportes-service"]
+    }
+  ]
+}

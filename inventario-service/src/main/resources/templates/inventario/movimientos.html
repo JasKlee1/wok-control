@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Movimientos')}"></head>
+<body>
+<div class="wok-app">
+  <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+  <div class="wok-main">
+    <header th:replace="~{fragments/layout :: topbar('Historial de movimientos', 'Trazabilidad completa de existencias')}"></header>
+    <main class="wok-content">
+      <div class="wok-card">
+        <div class="wok-card-header">
+          <form class="wok-filtros flex-grow-1" method="get" th:action="@{/inventario/movimientos}">
+            <div><label class="form-label small mb-1" for="insumoId">Insumo</label>
+              <select id="insumoId" name="insumoId" class="form-select form-select-sm">
+                <option value="">Todos</option>
+                <option th:each="i : ${insumos}" th:value="${i.id}" th:text="${i.nombre}" th:selected="${i.id == insumoId}">i</option>
+              </select></div>
+            <div><label class="form-label small mb-1" for="tipo">Tipo</label>
+              <select id="tipo" name="tipo" class="form-select form-select-sm">
+                <option value="">Todos</option>
+                <option th:each="t : ${tipos}" th:value="${t}" th:text="${t}" th:selected="${t == tipo}">t</option>
+              </select></div>
+            <div><label class="form-label small mb-1" for="referencia">Referencia</label>
+              <input id="referencia" name="referencia" class="form-control form-control-sm" th:value="${referencia}" placeholder="PEDIDO-…, OC-…"></div>
+            <div><label class="form-label small mb-1" for="desde">Desde</label>
+              <input id="desde" name="desde" type="date" class="form-control form-control-sm" th:value="${desde}"></div>
+            <div><label class="form-label small mb-1" for="hasta">Hasta</label>
+              <input id="hasta" name="hasta" type="date" class="form-control form-control-sm" th:value="${hasta}"></div>
+            <button class="btn btn-sm btn-wok-outline" type="submit"><i class="bi bi-funnel"></i> Filtrar</button>
+          </form>
+        </div>
+        <div th:if="${pagina.empty}">
+          <div th:replace="~{fragments/layout :: vacio('bi-arrow-left-right', 'Sin movimientos', 'No hay movimientos para los filtros seleccionados.')}"></div>
+        </div>
+        <div class="table-responsive" th:unless="${pagina.empty}">
+          <table class="table table-wok table-hover">
+            <thead><tr><th>Fecha</th><th>Insumo</th><th>Tipo</th><th class="text-end">Cantidad</th><th class="text-end">Saldo anterior → nuevo</th><th>Motivo</th><th>Referencia</th><th>Usuario</th></tr></thead>
+            <tbody>
+              <tr th:each="m : ${pagina.content}">
+                <td class="small text-nowrap" th:text="${@fmt.fechaHora(m.fecha)}">f</td>
+                <td><a th:href="@{/inventario/insumos/{id}(id=${m.insumoId})}" th:text="${m.nombreInsumo}">i</a></td>
+                <td><span class="wok-badge" th:classappend="${m.tipo.suma()} ? 'exito' : 'rojo'" th:text="${m.tipo}">T</span></td>
+                <td class="text-end text-nowrap" th:text="(${m.tipo.suma()} ? '+' : '−') + ${@fmt.numero(m.cantidad)} + ' ' + ${m.unidad}">0</td>
+                <td class="text-end small text-nowrap" th:text="${@fmt.numero(m.saldoAnterior)} + ' → ' + ${@fmt.numero(m.saldoNuevo)}">0</td>
+                <td class="small" th:text="${m.motivo}">m</td>
+                <td class="wok-mono small" th:text="${m.referencia}">r</td>
+                <td class="wok-mono small" th:text="${m.usuario}">u</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <nav th:replace="~{fragments/layout :: paginacion(${pagina}, ${baseUrl})}"></nav>
+      </div>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+  </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

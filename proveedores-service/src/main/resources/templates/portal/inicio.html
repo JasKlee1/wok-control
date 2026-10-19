@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Portal del proveedor')}"></head>
+<body>
+<div class="wok-app">
+  <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+  <div class="wok-main">
+    <header th:replace="~{fragments/layout :: topbar(${proveedor.nombreComercial}, 'Portal del proveedor')}"></header>
+    <main class="wok-content">
+      <div th:replace="~{fragments/layout :: mensajes}"></div>
+      <div class="row g-3 mb-3">
+        <div class="col-sm-4"><div class="wok-stat"><div class="wok-stat-icono"><i class="bi bi-inbox"></i></div>
+          <div><div class="wok-stat-valor" th:text="${ordenes.size()}">0</div><div class="wok-stat-etiqueta">Órdenes recibidas del restaurante</div></div></div></div>
+        <div class="col-sm-4"><div class="wok-stat"><div class="wok-stat-icono verde"><i class="bi bi-check2-circle"></i></div>
+          <div><div class="wok-stat-valor" th:text="${historial.recibidas}">0</div><div class="wok-stat-etiqueta">Entregas recibidas</div></div></div></div>
+        <div class="col-sm-4"><div class="wok-stat"><div class="wok-stat-icono dorado"><i class="bi bi-cash-stack"></i></div>
+          <div><div class="wok-stat-valor" th:text="${@fmt.dinero(historial.totalComprado)}">$</div><div class="wok-stat-etiqueta">Total suministrado</div></div></div></div>
+      </div>
+      <div class="row g-3">
+        <div class="col-xl-8">
+          <div class="wok-card">
+            <div class="wok-card-header"><i class="bi bi-clipboard-check text-wok"></i><h2>Mis órdenes de compra</h2></div>
+            <div th:if="${ordenes.isEmpty()}">
+              <div th:replace="~{fragments/layout :: vacio('bi-inbox', 'Sin órdenes', 'Cuando el restaurante le envíe una orden de compra aparecerá aquí.')}"></div>
+            </div>
+            <div class="table-responsive" th:unless="${ordenes.isEmpty()}">
+              <table class="table table-wok table-hover">
+                <thead><tr><th>Orden</th><th>Fecha</th><th>Entrega esperada</th><th class="text-end">Total</th><th>Estado</th></tr></thead>
+                <tbody><tr th:each="o : ${ordenes}">
+                  <td><a th:href="@{/portal-proveedor/ordenes/{id}(id=${o.id})}" class="wok-mono fw-semibold" th:text="${o.numero}">OC</a></td>
+                  <td class="small" th:text="${@fmt.fecha(o.creadoEn)}">f</td>
+                  <td class="small" th:text="${@fmt.fecha(o.fechaEntregaEsperada)}">f</td>
+                  <td class="text-end" th:text="${@fmt.dinero(o.total)}">$</td>
+                  <td><span class="wok-badge" th:classappend="${o.estado.claseCss()}" th:text="${o.estado.etiqueta()}">e</span></td>
+                </tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="col-xl-4">
+          <form th:action="@{/portal-proveedor/perfil}" method="post" class="wok-card">
+            <div class="wok-card-header"><i class="bi bi-person-vcard text-wok"></i><h2>Mis datos de contacto</h2></div>
+            <div class="wok-card-body">
+              <div class="small text-suave mb-2">NIT <span class="wok-mono" th:text="${proveedor.nit}">n</span> · <span th:text="${proveedor.razonSocial}">rs</span></div>
+              <div class="mb-2"><label class="form-label" for="telefono">Teléfono</label><input id="telefono" name="telefono" class="form-control" th:value="${proveedor.telefono}" required></div>
+              <div class="mb-2"><label class="form-label" for="email">Correo</label><input id="email" name="email" type="email" class="form-control" th:value="${proveedor.email}"></div>
+              <div class="mb-2"><label class="form-label" for="direccion">Dirección</label><input id="direccion" name="direccion" class="form-control" th:value="${proveedor.direccion}"></div>
+              <div class="mb-2"><label class="form-label" for="contactoNombre">Persona de contacto</label><input id="contactoNombre" name="contactoNombre" class="form-control" th:value="${proveedor.contacto?.nombre}"></div>
+              <div class="row g-2 mb-3">
+                <div class="col-6"><label class="form-label" for="contactoTelefono">Teléfono</label><input id="contactoTelefono" name="contactoTelefono" class="form-control" th:value="${proveedor.contacto?.telefono}"></div>
+                <div class="col-6"><label class="form-label" for="contactoEmail">Correo</label><input id="contactoEmail" name="contactoEmail" type="email" class="form-control" th:value="${proveedor.contacto?.email}"></div>
+              </div>
+              <button class="btn btn-wok w-100" type="submit"><i class="bi bi-save"></i> Actualizar datos</button>
+              <div class="form-text">La razón social, el NIT y las condiciones comerciales solo los modifica el restaurante.</div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+  </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

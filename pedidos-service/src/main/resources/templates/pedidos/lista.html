@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Pedidos')}"></head>
+<body data-wok-recargar="45">
+<div class="wok-app">
+  <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+  <div class="wok-main">
+    <header th:replace="~{fragments/layout :: topbar('Pedidos', 'Seguimiento de comandas')}"></header>
+    <main class="wok-content">
+      <div th:replace="~{fragments/layout :: mensajes}"></div>
+      <div class="wok-card">
+        <div class="wok-card-header">
+          <form class="wok-filtros flex-grow-1" method="get" th:action="@{/pedidos}">
+            <div><label class="form-label small mb-1" for="fecha">Fecha</label>
+              <input id="fecha" name="fecha" type="date" class="form-control form-control-sm" th:value="${fecha}"></div>
+            <div><label class="form-label small mb-1" for="estado">Estado</label>
+              <select id="estado" name="estado" class="form-select form-select-sm">
+                <option value="">Todos</option>
+                <option th:each="e : ${estados}" th:value="${e}" th:text="${e.etiqueta()}" th:selected="${e == estado}">e</option>
+              </select></div>
+            <div><label class="form-label small mb-1" for="mesaId">Mesa</label>
+              <select id="mesaId" name="mesaId" class="form-select form-select-sm">
+                <option value="">Todas</option>
+                <option th:each="m : ${mesas}" th:value="${m.id}" th:text="'Mesa ' + ${m.numero}" th:selected="${m.id == mesaId}">m</option>
+              </select></div>
+            <div class="form-check mb-1" th:if="${usuarioActual.tiene('PEDIDOS_GESTIONAR')}">
+              <input class="form-check-input" type="checkbox" name="mios" value="true" id="mios" th:checked="${mios}">
+              <label class="form-check-label small" for="mios">Solo mis pedidos</label>
+            </div>
+            <button class="btn btn-sm btn-wok-outline" type="submit"><i class="bi bi-funnel"></i> Filtrar</button>
+          </form>
+          <a th:if="${usuarioActual.tiene('PEDIDOS_GESTIONAR')}" th:href="@{/mesas}" class="btn btn-wok btn-sm"><i class="bi bi-plus-lg"></i> Nuevo (elegir mesa)</a>
+        </div>
+        <div th:if="${pedidos.isEmpty()}">
+          <div th:replace="~{fragments/layout :: vacio('bi-receipt', 'Sin pedidos', 'No hay pedidos para los filtros seleccionados.')}"></div>
+        </div>
+        <div class="table-responsive" th:unless="${pedidos.isEmpty()}">
+          <table class="table table-wok table-hover">
+            <thead><tr><th>Número</th><th>Mesa</th><th>Mesero</th><th>Hora</th><th class="text-center">Productos</th><th class="text-end">Total</th><th>Estado</th></tr></thead>
+            <tbody>
+              <tr th:each="p : ${pedidos}">
+                <td><a th:href="@{/pedidos/{id}(id=${p.id})}" class="fw-semibold wok-mono" th:text="${p.numero}">P</a></td>
+                <td th:text="${p.mesaNumero}">1</td>
+                <td class="small" th:text="${p.meseroNombre}">m</td>
+                <td class="small" th:text="${@fmt.hora(p.creadoEn)}">h</td>
+                <td class="text-center" th:text="${p.unidades}">0</td>
+                <td class="text-end" th:text="${@fmt.dinero(p.total)}">$</td>
+                <td><span class="wok-badge" th:classappend="${p.estado.claseCss()}" th:text="${p.estado.etiqueta()}">E</span>
+                  <i th:unless="${p.alergias.isEmpty()}" class="bi bi-exclamation-octagon-fill text-danger ms-1" th:title="'Alergias: ' + ${p.alergias}"></i></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+  </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

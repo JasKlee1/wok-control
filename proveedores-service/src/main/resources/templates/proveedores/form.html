@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${form.esNuevo()} ? 'Nuevo proveedor' : 'Editar proveedor')}"></head>
+<body>
+<div class="wok-app">
+  <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+  <div class="wok-main">
+    <header th:replace="~{fragments/layout :: topbar(${form.esNuevo()} ? 'Nuevo proveedor' : 'Editar proveedor', 'Identificación, contacto, insumos y condiciones')}"></header>
+    <main class="wok-content">
+      <div th:replace="~{fragments/layout :: mensajes}"></div>
+      <form th:action="@{/proveedores/guardar}" th:object="${form}" method="post" class="wok-card" novalidate>
+        <input type="hidden" th:field="*{id}">
+        <div class="wok-card-body">
+          <h3 class="wok-form-seccion">Identificación</h3>
+          <div class="row g-3">
+            <div class="col-md-3"><label class="form-label" for="nit">NIT / identificación</label>
+              <input th:field="*{nit}" class="form-control wok-mono" placeholder="900123456-7" th:classappend="${#fields.hasErrors('nit')} ? 'is-invalid'">
+              <div class="invalid-feedback" th:errors="*{nit}"></div></div>
+            <div class="col-md-5"><label class="form-label" for="razonSocial">Razón social</label>
+              <input th:field="*{razonSocial}" class="form-control" th:classappend="${#fields.hasErrors('razonSocial')} ? 'is-invalid'">
+              <div class="invalid-feedback" th:errors="*{razonSocial}"></div></div>
+            <div class="col-md-4"><label class="form-label" for="nombreComercial">Nombre comercial</label>
+              <input th:field="*{nombreComercial}" class="form-control" th:classappend="${#fields.hasErrors('nombreComercial')} ? 'is-invalid'">
+              <div class="invalid-feedback" th:errors="*{nombreComercial}"></div></div>
+            <div class="col-md-3"><label class="form-label" for="telefono">Teléfono</label>
+              <input th:field="*{telefono}" class="form-control" th:classappend="${#fields.hasErrors('telefono')} ? 'is-invalid'">
+              <div class="invalid-feedback" th:errors="*{telefono}"></div></div>
+            <div class="col-md-3"><label class="form-label" for="email">Correo</label>
+              <input th:field="*{email}" type="email" class="form-control" th:classappend="${#fields.hasErrors('email')} ? 'is-invalid'">
+              <div class="invalid-feedback" th:errors="*{email}"></div></div>
+            <div class="col-md-4"><label class="form-label" for="direccion">Dirección</label><input th:field="*{direccion}" class="form-control"></div>
+            <div class="col-md-2"><label class="form-label" for="ciudad">Ciudad</label><input th:field="*{ciudad}" class="form-control"></div>
+          </div>
+          <h3 class="wok-form-seccion">Persona de contacto</h3>
+          <div class="row g-3">
+            <div class="col-md-3"><label class="form-label" for="contactoNombre">Nombre</label><input th:field="*{contactoNombre}" class="form-control"></div>
+            <div class="col-md-3"><label class="form-label" for="contactoCargo">Cargo</label><input th:field="*{contactoCargo}" class="form-control"></div>
+            <div class="col-md-3"><label class="form-label" for="contactoTelefono">Teléfono</label>
+              <input th:field="*{contactoTelefono}" class="form-control" th:classappend="${#fields.hasErrors('contactoTelefono')} ? 'is-invalid'">
+              <div class="invalid-feedback" th:errors="*{contactoTelefono}"></div></div>
+            <div class="col-md-3"><label class="form-label" for="contactoEmail">Correo</label>
+              <input th:field="*{contactoEmail}" type="email" class="form-control" th:classappend="${#fields.hasErrors('contactoEmail')} ? 'is-invalid'">
+              <div class="invalid-feedback" th:errors="*{contactoEmail}"></div></div>
+          </div>
+          <h3 class="wok-form-seccion">Categorías de productos suministrados</h3>
+          <div class="d-flex flex-wrap gap-2">
+            <label th:each="c : ${categorias}" class="border rounded-pill px-3 py-1" style="cursor:pointer">
+              <input type="checkbox" class="form-check-input me-1" name="categorias" th:value="${c}" th:checked="${#sets.contains(form.categorias, c)}">
+              <span th:text="${c}">C</span></label>
+          </div>
+          <h3 class="wok-form-seccion">Insumos que suministra</h3>
+          <div th:if="${insumos.isEmpty()}" class="small text-suave">No hay insumos activos para asociar.</div>
+          <div class="row g-2" th:unless="${insumos.isEmpty()}">
+            <div class="col-sm-6 col-lg-4 col-xl-3" th:each="i : ${insumos}">
+              <label class="d-flex gap-2 p-2 border rounded-3" style="cursor:pointer">
+                <input type="checkbox" class="form-check-input mt-1" name="insumoIds" th:value="${i.id}" th:checked="${#sets.contains(form.insumoIds, i.id)}">
+                <span><span class="d-block" th:text="${i.nombre}">i</span><small class="text-suave" th:text="${i.categoria} + ' · ' + ${i.unidad}">c</small></span>
+              </label>
+            </div>
+          </div>
+          <h3 class="wok-form-seccion">Condiciones comerciales</h3>
+          <div class="row g-3">
+            <div class="col-md-2"><label class="form-label" for="plazoPagoDias">Plazo de pago (días)</label>
+              <input th:field="*{plazoPagoDias}" type="number" min="0" max="365" class="form-control" th:classappend="${#fields.hasErrors('plazoPagoDias')} ? 'is-invalid'"></div>
+            <div class="col-md-3"><label class="form-label" for="pedidoMinimo">Pedido mínimo ($)</label>
+              <input th:field="*{pedidoMinimo}" type="number" min="0" step="0.01" class="form-control" th:classappend="${#fields.hasErrors('pedidoMinimo')} ? 'is-invalid'"></div>
+            <div class="col-md-2"><label class="form-label" for="tiempoEntregaDias">Entrega (días)</label>
+              <input th:field="*{tiempoEntregaDias}" type="number" min="0" max="90" class="form-control"></div>
+            <div class="col-md-2"><label class="form-label" for="formaPago">Forma de pago</label>
+              <select th:field="*{formaPago}" class="form-select"><option value="">—</option><option value="CONTADO">Contado</option><option value="CREDITO">Crédito</option><option value="TRANSFERENCIA">Transferencia</option></select></div>
+            <div class="col-md-3"><label class="form-label" for="observacionesComerciales">Observaciones</label><input th:field="*{observacionesComerciales}" class="form-control"></div>
+          </div>
+        </div>
+        <div class="wok-card-body border-top d-flex gap-2 justify-content-end">
+          <a th:href="${form.esNuevo()} ? @{/proveedores} : @{/proveedores/{id}(id=${form.id})}" class="btn btn-light">Cancelar</a>
+          <button type="submit" class="btn btn-wok"><i class="bi bi-save"></i> Guardar proveedor</button>
+        </div>
+      </form>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+  </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

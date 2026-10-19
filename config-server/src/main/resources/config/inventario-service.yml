@@ -1,0 +1,8 @@
+spring:
+  mongodb:
+    database: wok_inventario
+
+wok:
+  openapi:
+    titulo: "Wok Control · Inventario"
+    descripcion: "Insumos, lotes, movimientos trazables, consumos idempotentes, mermas, ajustes y alertas de stock."

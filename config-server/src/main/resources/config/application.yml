@@ -1,0 +1,86 @@
+# ============================================================================
+# Configuración compartida por todos los microservicios de Wok Control.
+# Los secretos NUNCA se escriben aquí: llegan por variables de entorno o por el
+# archivo .env local (no versionado), que cada servicio importa al arrancar.
+# ============================================================================
+spring:
+  mongodb:
+    uri: ${MONGODB_URI}
+  data:
+    mongodb:
+      auto-index-creation: true
+      representation:
+        big-decimal: decimal128
+  threads:
+    virtual:
+      enabled: true
+  thymeleaf:
+    cache: ${WOK_THYMELEAF_CACHE:false}
+  web:
+    error:
+      include-message: always
+      include-stacktrace: never
+  jackson:
+    default-property-inclusion: non_null
+    deserialization:
+      # Jackson 3 rechaza por defecto los campos primitivos ausentes; se aceptan con su valor por defecto
+      fail-on-null-for-primitives: false
+
+server:
+  forward-headers-strategy: framework
+  tomcat:
+    # Redirecciones relativas (Location: /login): el navegador permanece en el gateway
+    # (localhost:8080) en lugar de ser enviado al puerto interno de cada microservicio.
+    use-relative-redirects: true
+  servlet:
+    session:
+      tracking-modes: cookie
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+    registry-fetch-interval-seconds: 10
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 10
+    lease-expiration-duration-in-seconds: 30
+
+wok:
+  zona-horaria: America/Bogota
+  security:
+    jwt:
+      secret: ${JWT_SECRET}
+      expiration-minutes: ${JWT_EXPIRATION_MINUTES:480}
+      issuer: wok-control
+      cookie-name: WOK_TOKEN
+      cookie-secure: ${WOK_COOKIE_SECURE:false}
+  http:
+    connect-timeout: 2s
+    read-timeout: 5s
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+    enabled: ${WOK_SWAGGER_ENABLED:true}
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: ${WOK_SWAGGER_ENABLED:true}
+    persist-authorization: true
+    operations-sorter: method
+    tags-sorter: alpha
+  paths-to-match: /api/**
+  default-produces-media-type: application/json
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+
+logging:
+  pattern:
+    level: "%5p [${spring.application.name:},%X{correlationId:-}]"

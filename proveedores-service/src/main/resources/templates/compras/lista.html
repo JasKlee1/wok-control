@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Órdenes de compra')}"></head>
+<body>
+<div class="wok-app">
+  <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+  <div class="wok-main">
+    <header th:replace="~{fragments/layout :: topbar('Órdenes de compra', 'Solicitudes de abastecimiento y recepción de mercancía')}"></header>
+    <main class="wok-content">
+      <div th:replace="~{fragments/layout :: mensajes}"></div>
+      <div class="row g-3 mb-3">
+        <div class="col-6 col-lg-3"><div class="wok-stat"><div class="wok-stat-icono"><i class="bi bi-send"></i></div>
+          <div><div class="wok-stat-valor" th:text="${resumen.pendientesRecepcion}">0</div><div class="wok-stat-etiqueta">Pendientes de recibir</div></div></div></div>
+        <div class="col-6 col-lg-3"><div class="wok-stat"><div class="wok-stat-icono ambar"><i class="bi bi-truck"></i></div>
+          <div><div class="wok-stat-valor" th:text="${resumen.entregaReportada}">0</div><div class="wok-stat-etiqueta">Entregas reportadas</div></div></div></div>
+        <div class="col-6 col-lg-3"><div class="wok-stat"><div class="wok-stat-icono"><i class="bi bi-pencil-square"></i></div>
+          <div><div class="wok-stat-valor" th:text="${resumen.borradores}">0</div><div class="wok-stat-etiqueta">Borradores</div></div></div></div>
+        <div class="col-6 col-lg-3"><div class="wok-stat"><div class="wok-stat-icono dorado"><i class="bi bi-cash-stack"></i></div>
+          <div><div class="wok-stat-valor" th:text="${@fmt.dinero(resumen.comprasRecibidasMes)}">$</div><div class="wok-stat-etiqueta">Compras recibidas este mes</div></div></div></div>
+      </div>
+      <div class="alert alert-warning wok-alerta" th:if="${resumen.recepcionesSinSincronizar > 0}">
+        <i class="bi bi-arrow-repeat"></i><div><strong th:text="${resumen.recepcionesSinSincronizar}">1</strong> recepción(es) pendientes de sincronizar con inventario. Abra la orden y pulse Reintentar.</div>
+      </div>
+      <div class="wok-card">
+        <div class="wok-card-header">
+          <form class="wok-filtros flex-grow-1" method="get" th:action="@{/compras/ordenes}">
+            <div><label class="form-label small mb-1" for="estado">Estado</label>
+              <select id="estado" name="estado" class="form-select form-select-sm">
+                <option value="">Todos</option>
+                <option th:each="e : ${estados}" th:value="${e}" th:text="${e.etiqueta()}" th:selected="${e == estado}">e</option>
+              </select></div>
+            <div><label class="form-label small mb-1" for="proveedorId">Proveedor</label>
+              <select id="proveedorId" name="proveedorId" class="form-select form-select-sm">
+                <option value="">Todos</option>
+                <option th:each="p : ${proveedores}" th:value="${p.id}" th:text="${p.nombreComercial}" th:selected="${p.id == proveedorId}">p</option>
+              </select></div>
+            <button class="btn btn-sm btn-wok-outline" type="submit"><i class="bi bi-funnel"></i> Filtrar</button>
+          </form>
+          <a th:if="${usuarioActual.tiene('COMPRAS_GESTIONAR')}" th:href="@{/compras/ordenes/nueva}" class="btn btn-wok btn-sm"><i class="bi bi-cart-plus"></i> Nueva orden</a>
+        </div>
+        <div th:if="${ordenes.isEmpty()}">
+          <div th:replace="~{fragments/layout :: vacio('bi-clipboard-check', 'Sin órdenes de compra', 'Cree una orden cuando necesite reabastecer insumos.')}"></div>
+        </div>
+        <div class="table-responsive" th:unless="${ordenes.isEmpty()}">
+          <table class="table table-wok table-hover">
+            <thead><tr><th>Orden</th><th>Proveedor</th><th>Creada</th><th>Entrega esperada</th><th class="text-center">Ítems</th><th class="text-end">Total</th><th>Estado</th></tr></thead>
+            <tbody>
+              <tr th:each="o : ${ordenes}">
+                <td><a th:href="@{/compras/ordenes/{id}(id=${o.id})}" class="wok-mono fw-semibold" th:text="${o.numero}">OC</a></td>
+                <td th:text="${o.proveedorNombre}">p</td>
+                <td class="small" th:text="${@fmt.fecha(o.creadoEn)}">f</td>
+                <td class="small" th:text="${@fmt.fecha(o.fechaEntregaEsperada)}">f</td>
+                <td class="text-center" th:text="${o.items.size()}">0</td>
+                <td class="text-end" th:text="${@fmt.dinero(o.total)}">$</td>
+                <td><span class="wok-badge" th:classappend="${o.estado.claseCss()}" th:text="${o.estado.etiqueta()}">e</span>
+                  <i th:if="${o.recepcion != null and !o.recepcion.sincronizadaInventario()}" class="bi bi-arrow-repeat text-warning" title="Pendiente de sincronizar"></i></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+  </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

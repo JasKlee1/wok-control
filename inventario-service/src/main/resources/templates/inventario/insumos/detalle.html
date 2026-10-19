@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${insumo.nombre})}"></head>
+<body>
+<div class="wok-app">
+  <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+  <div class="wok-main">
+    <header th:replace="~{fragments/layout :: topbar(${insumo.nombre}, ${insumo.categoria} + ' · ' + ${insumo.unidad})}"></header>
+    <main class="wok-content">
+      <div th:replace="~{fragments/layout :: mensajes}"></div>
+      <div class="d-flex gap-2 mb-3 flex-wrap">
+        <a th:href="@{/inventario/insumos}" class="btn btn-light btn-sm"><i class="bi bi-arrow-left"></i> Insumos</a>
+        <a th:href="@{/inventario/movimientos(insumoId=${insumo.id})}" class="btn btn-light btn-sm"><i class="bi bi-arrow-left-right"></i> Historial completo</a>
+        <th:block th:if="${usuarioActual.tiene('INVENTARIO_GESTIONAR')}">
+          <a th:href="@{/inventario/insumos/{id}/editar(id=${insumo.id})}" class="btn btn-wok-outline btn-sm"><i class="bi bi-pencil"></i> Editar datos</a>
+          <form th:action="@{/inventario/insumos/{id}/estado(id=${insumo.id})}" method="post"
+                th:attr="data-wok-confirmar=${insumo.activo} ? 'El insumo dejará de admitir movimientos y no aparecerá en recetas nuevas. ¿Continuar?' : 'Se reactivará el insumo.'">
+            <input type="hidden" name="activo" th:value="${!insumo.activo}">
+            <button class="btn btn-sm" th:classappend="${insumo.activo} ? 'btn-outline-danger' : 'btn-outline-success'" type="submit"
+                    th:text="${insumo.activo} ? 'Desactivar' : 'Reactivar'">Desactivar</button>
+          </form>
+        </th:block>
+      </div>
+
+      <div class="row g-3 mb-3">
+        <div class="col-sm-6 col-xl-3"><div class="wok-stat"><div class="wok-stat-icono" th:classappend="${insumo.bajoStock} ? 'ambar' : 'verde'"><i class="bi bi-box-seam"></i></div>
+          <div><div class="wok-stat-valor" th:text="${@fmt.numero(insumo.cantidadDisponible)} + ' ' + ${insumo.unidad}">0</div>
+            <div class="wok-stat-etiqueta">Disponible <span th:if="${insumo.bajoStock}" class="wok-badge alerta ms-1">Stock bajo</span></div></div></div></div>
+        <div class="col-sm-6 col-xl-3"><div class="wok-stat"><div class="wok-stat-icono dorado"><i class="bi bi-flag"></i></div>
+          <div><div class="wok-stat-valor" th:text="${@fmt.numero(insumo.stockMinimo)}">0</div><div class="wok-stat-etiqueta">Stock mínimo</div></div></div></div>
+        <div class="col-sm-6 col-xl-3"><div class="wok-stat"><div class="wok-stat-icono"><i class="bi bi-tag"></i></div>
+          <div><div class="wok-stat-valor" th:text="${@fmt.dinero(insumo.costoUnitario)}">$</div><div class="wok-stat-etiqueta">Costo promedio / unidad</div></div></div></div>
+        <div class="col-sm-6 col-xl-3"><div class="wok-stat"><div class="wok-stat-icono dorado"><i class="bi bi-cash-stack"></i></div>
+          <div><div class="wok-stat-valor" th:text="${@fmt.dinero(insumo.valorizado)}">$</div><div class="wok-stat-etiqueta">Valor en bodega</div></div></div></div>
+      </div>
+
+      <div class="row g-3">
+        <div class="col-xl-4">
+          <div class="wok-card mb-3" th:if="${usuarioActual.tiene('INVENTARIO_MOVIMIENTOS') and insumo.activo}">
+            <div class="wok-card-header"><i class="bi bi-plus-slash-minus text-wok"></i><h2>Registrar movimiento</h2></div>
+            <form th:action="@{/inventario/insumos/{id}/movimientos(id=${insumo.id})}" method="post" class="wok-card-body"
+                  data-wok-confirmar="Se registrará el movimiento y se actualizarán las existencias. ¿Confirmar?">
+              <div class="mb-2">
+                <label class="form-label" for="tipo">Tipo</label>
+                <select id="tipo" name="tipo" class="form-select">
+                  <option value="ENTRADA">Entrada (compra, donación, devolución)</option>
+                  <option value="SALIDA">Salida (uso interno, traslado)</option>
+                  <option value="MERMA">Merma (daño, vencimiento, desperdicio)</option>
+                </select>
+              </div>
+              <div class="row g-2 mb-2">
+                <div class="col-6"><label class="form-label" for="cantidad">Cantidad (<span th:text="${insumo.unidad}">u</span>)</label>
+                  <input id="cantidad" name="cantidad" type="number" step="0.0001" min="0.0001" class="form-control" required></div>
+                <div class="col-6"><label class="form-label" for="costoUnitario">Costo unitario <small class="text-suave">(entradas)</small></label>
+                  <input id="costoUnitario" name="costoUnitario" type="number" step="0.01" min="0" class="form-control"></div>
+              </div>
+              <div class="mb-2"><label class="form-label" for="motivo">Motivo <small class="text-suave">(obligatorio en salidas y mermas)</small></label>
+                <input id="motivo" name="motivo" class="form-control" maxlength="200"></div>
+              <div class="row g-2 mb-3" th:if="${insumo.perecedero}">
+                <div class="col-6"><label class="form-label" for="lote">Lote</label><input id="lote" name="lote" class="form-control" maxlength="40"></div>
+                <div class="col-6"><label class="form-label" for="fechaVencimiento">Vence</label><input id="fechaVencimiento" name="fechaVencimiento" type="date" class="form-control"></div>
+              </div>
+              <button type="submit" class="btn btn-wok w-100"><i class="bi bi-check2"></i> Registrar</button>
+            </form>
+          </div>
+
+          <div class="wok-card mb-3" th:if="${usuarioActual.tiene('INVENTARIO_AJUSTAR') and insumo.activo}">
+            <div class="wok-card-header"><i class="bi bi-clipboard-data text-wok"></i><h2>Ajuste por conteo físico</h2></div>
+            <form th:action="@{/inventario/insumos/{id}/ajuste(id=${insumo.id})}" method="post" class="wok-card-body"
+                  data-wok-confirmar="El ajuste reemplaza la existencia del sistema por la cantidad contada y queda auditado. ¿Continuar?"
+                  data-wok-confirmar-boton="Registrar ajuste">
+              <div class="mb-2"><label class="form-label" for="cantidadContada">Cantidad contada</label>
+                <input id="cantidadContada" name="cantidadContada" type="number" step="0.0001" min="0" class="form-control" required></div>
+              <div class="mb-3"><label class="form-label" for="motivoAjuste">Motivo</label>
+                <input id="motivoAjuste" name="motivo" class="form-control" minlength="5" maxlength="200" required placeholder="Ej.: inventario semanal"></div>
+              <button type="submit" class="btn btn-dorado w-100"><i class="bi bi-sliders"></i> Ajustar</button>
+            </form>
+          </div>
+
+          <div class="wok-card">
+            <div class="wok-card-header"><i class="bi bi-truck text-wok"></i><h2>Proveedores</h2></div>
+            <div class="wok-card-body small" th:if="${proveedores == null}"><i class="bi bi-wifi-off"></i> proveedores-service no respondió.</div>
+            <div class="wok-card-body small text-suave" th:if="${proveedores != null and proveedores.isEmpty()}">Ningún proveedor tiene asociado este insumo.</div>
+            <ul class="list-group list-group-flush" th:if="${proveedores != null and !proveedores.isEmpty()}">
+              <li class="list-group-item d-flex justify-content-between" th:each="p : ${proveedores}">
+                <span th:text="${p.nombreComercial}">p</span><span class="small text-suave" th:text="${p.telefono}">t</span></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="col-xl-8">
+          <div class="wok-card mb-3" th:if="${insumo.perecedero}">
+            <div class="wok-card-header"><i class="bi bi-hourglass-split text-wok"></i><h2>Lotes</h2></div>
+            <div th:if="${insumo.lotes.isEmpty()}" class="wok-card-body small text-suave">Sin lotes registrados.</div>
+            <div class="table-responsive" th:unless="${insumo.lotes.isEmpty()}">
+              <table class="table table-wok">
+                <thead><tr><th>Lote</th><th class="text-end">Cantidad ingresada</th><th>Ingreso</th><th>Vence</th><th>Estado</th><th></th></tr></thead>
+                <tbody><tr th:each="l : ${insumo.lotes}">
+                  <td class="wok-mono" th:text="${l.codigo}">l</td>
+                  <td class="text-end" th:text="${@fmt.numero(l.cantidadInicial)}">0</td>
+                  <td class="small" th:text="${@fmt.fecha(l.fechaIngreso)}">f</td>
+                  <td class="small" th:text="${@fmt.fecha(l.fechaVencimiento)}">f</td>
+                  <td><span th:if="${l.cerrado}" class="wok-badge neutro">Cerrado</span><span th:unless="${l.cerrado}" class="wok-badge info">Vigente</span></td>
+                  <td class="text-end"><form th:unless="${l.cerrado or !usuarioActual.tiene('INVENTARIO_MOVIMIENTOS')}"
+                      th:action="@{/inventario/insumos/{id}/lotes/{c}/cerrar(id=${insumo.id},c=${l.codigo})}" method="post"
+                      data-wok-confirmar="Marque el lote como cerrado cuando se haya consumido o descartado.">
+                    <button class="btn btn-sm btn-light" type="submit">Cerrar</button></form></td>
+                </tr></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="wok-card">
+            <div class="wok-card-header"><i class="bi bi-arrow-left-right text-wok"></i><h2>Últimos movimientos</h2></div>
+            <div th:if="${movimientos.isEmpty()}">
+              <div th:replace="~{fragments/layout :: vacio('bi-arrow-left-right', 'Sin movimientos', 'Registre una entrada para cargar las existencias iniciales.')}"></div>
+            </div>
+            <div class="table-responsive" th:unless="${movimientos.isEmpty()}">
+              <table class="table table-wok table-sm">
+                <thead><tr><th>Fecha</th><th>Tipo</th><th class="text-end">Cantidad</th><th class="text-end">Saldo</th><th>Motivo / referencia</th><th>Usuario</th></tr></thead>
+                <tbody><tr th:each="m : ${movimientos}">
+                  <td class="small text-nowrap" th:text="${@fmt.fechaHora(m.fecha)}">f</td>
+                  <td><span class="wok-badge" th:classappend="${m.tipo.suma()} ? 'exito' : 'rojo'" th:text="${m.tipo}">T</span></td>
+                  <td class="text-end" th:text="(${m.tipo.suma()} ? '+' : '−') + ${@fmt.numero(m.cantidad)}">0</td>
+                  <td class="text-end small" th:text="${@fmt.numero(m.saldoAnterior)} + ' → ' + ${@fmt.numero(m.saldoNuevo)}">0</td>
+                  <td class="small"><span th:text="${m.motivo}">m</span> <span class="wok-mono text-suave" th:text="${m.referencia}">r</span></td>
+                  <td class="wok-mono small" th:text="${m.usuario}">u</td>
+                </tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+  </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

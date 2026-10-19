@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Comprobante ' + ${f.numero})}"></head>
+<body>
+<div class="wok-app">
+  <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+  <div class="wok-main">
+    <header th:replace="~{fragments/layout :: topbar('Comprobante ' + ${f.numero}, 'Mesa ' + ${f.mesaNumero})}"></header>
+    <main class="wok-content">
+      <div th:replace="~{fragments/layout :: mensajes}"></div>
+      <div class="d-flex gap-2 mb-3 flex-wrap no-imprimir">
+        <a th:href="@{/caja/comprobantes}" class="btn btn-light btn-sm"><i class="bi bi-arrow-left"></i> Comprobantes</a>
+        <button type="button" class="btn btn-wok-outline btn-sm" onclick="window.print()"><i class="bi bi-printer"></i> Imprimir</button>
+        <form th:if="${f.sincronizacion.name() != 'COMPLETA' and (usuarioActual.tiene('FACTURACION_COBRAR') or usuarioActual.tiene('FACTURAS_ANULAR'))}"
+              th:action="@{/caja/comprobantes/{id}/sincronizar(id=${f.id})}" method="post">
+          <button class="btn btn-dorado btn-sm" type="submit"><i class="bi bi-arrow-repeat"></i> Reintentar notificación a pedidos</button>
+        </form>
+        <button th:if="${f.estado.name() == 'EMITIDA' and f.cierreId == null and usuarioActual.tiene('FACTURAS_ANULAR')}" type="button"
+                class="btn btn-outline-danger btn-sm ms-auto" data-bs-toggle="collapse" data-bs-target="#anular"><i class="bi bi-x-octagon"></i> Anular</button>
+      </div>
+      <div class="collapse mb-3 no-imprimir" id="anular" th:if="${f.estado.name() == 'EMITIDA' and usuarioActual.tiene('FACTURAS_ANULAR')}">
+        <form th:action="@{/caja/comprobantes/{id}/anular(id=${f.id})}" method="post" class="wok-card wok-card-body d-flex gap-2 align-items-end flex-wrap"
+              data-wok-confirmar="El comprobante quedará anulado (no se elimina) y los pedidos volverán a quedar por cobrar. ¿Continuar?">
+          <div class="flex-grow-1"><label class="form-label" for="motivo">Motivo de la anulación</label>
+            <input id="motivo" name="motivo" class="form-control" minlength="5" maxlength="200" required></div>
+          <button class="btn btn-danger" type="submit">Anular comprobante</button>
+        </form>
+      </div>
+      <div class="alert alert-warning wok-alerta no-imprimir" th:if="${f.sincronizacion.name() != 'COMPLETA'}">
+        <i class="bi bi-exclamation-triangle"></i><div>Pendiente de notificar a pedidos-service (<span th:text="${f.intentosSincronizacion}">0</span> intentos):
+          <span th:text="${f.errorSincronizacion}">error</span>. Se reintenta automáticamente.</div>
+      </div>
+
+      <div class="wok-ticket">
+        <div class="text-center">
+          <img th:src="@{/wok-static/images/logo.svg}" alt="" width="48">
+          <div class="h5 mb-0 mt-1 wok-titulo" th:text="${f.emisor?.nombre}">Restaurante</div>
+          <div class="small" th:if="${f.emisor?.nit}" th:text="'NIT ' + ${f.emisor.nit}">NIT</div>
+          <div class="small" th:text="${f.emisor?.direccion}">dir</div>
+          <div class="small" th:text="${f.emisor?.telefono}">tel</div>
+          <div class="fw-semibold mt-2">COMPROBANTE INTERNO DE VENTA</div>
+          <div class="small text-suave">No es factura electrónica de venta (DIAN)</div>
+          <div class="wok-mono mt-1" th:text="${f.numero}">TIQ</div>
+          <div th:if="${f.estado.name() == 'ANULADA'}" class="wok-badge error mt-2">ANULADO</div>
+        </div>
+        <hr>
+        <div class="d-flex justify-content-between small"><span>Fecha</span><span th:text="${@fmt.fechaHora(f.emitidaEn)}">f</span></div>
+        <div class="d-flex justify-content-between small"><span>Mesa</span><span th:text="${f.mesaNumero}">1</span></div>
+        <div class="d-flex justify-content-between small"><span>Cajero</span><span th:text="${f.cajeroNombre}">c</span></div>
+        <hr>
+        <div class="d-flex justify-content-between small" th:each="l : ${f.lineas}">
+          <span th:text="${l.cantidad} + ' × ' + ${l.descripcion}">1 x</span><span th:text="${@fmt.dinero(l.subtotal)}">$</span>
+        </div>
+        <hr>
+        <div class="d-flex justify-content-between"><span>Subtotal</span><span th:text="${@fmt.dinero(f.subtotal)}">$</span></div>
+        <div class="d-flex justify-content-between" th:if="${f.descuento}">
+          <span th:text="'Descuento ' + ${@fmt.numero(f.descuento.porcentaje)} + '%'">D</span><span th:text="'− ' + ${@fmt.dinero(f.descuento.valor)}">$</span></div>
+        <div class="d-flex justify-content-between"><span th:text="'Impuesto al consumo ' + ${@fmt.numero(f.impuestoPorcentaje)} + '%'">INC</span><span th:text="${@fmt.dinero(f.impuestoValor)}">$</span></div>
+        <div class="d-flex justify-content-between h5 mt-2"><span>TOTAL</span><span th:text="${@fmt.dinero(f.total)}">$</span></div>
+        <hr>
+        <div class="d-flex justify-content-between small" th:each="p : ${f.pagos}">
+          <span th:text="${p.metodo.etiqueta()} + (${p.referencia} != null ? ' · ' + ${p.referencia} : '')">m</span><span th:text="${@fmt.dinero(p.monto)}">$</span></div>
+        <div class="d-flex justify-content-between small fw-semibold"><span>Cambio</span><span th:text="${@fmt.dinero(f.cambio)}">$</span></div>
+        <div class="small text-suave mt-2" th:if="${f.descuento}">Descuento autorizado por <span th:text="${f.descuento.autorizadoPor}">u</span>: <span th:text="${f.descuento.motivo}">m</span></div>
+        <div class="small text-danger mt-2" th:if="${f.anulacion}">Anulado el <span th:text="${@fmt.fechaHora(f.anulacion.fecha)}">f</span> por <span th:text="${f.anulacion.usuario}">u</span>: <span th:text="${f.anulacion.motivo}">m</span></div>
+        <hr>
+        <div class="text-center small" th:text="${f.emisor?.mensaje}">Gracias</div>
+      </div>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+  </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

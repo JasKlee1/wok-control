@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${form.esNueva()} ? 'Nueva mesa' : 'Editar mesa')}"></head>
+<body>
+<div class="wok-app">
+  <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+  <div class="wok-main">
+    <header th:replace="~{fragments/layout :: topbar(${form.esNueva()} ? 'Nueva mesa' : 'Editar mesa', 'Número, capacidad y zona')}"></header>
+    <main class="wok-content">
+      <div th:replace="~{fragments/layout :: mensajes}"></div>
+      <form th:action="@{/mesas/guardar}" th:object="${form}" method="post" class="wok-card" style="max-width: 640px" novalidate>
+        <input type="hidden" th:field="*{id}">
+        <div class="wok-card-body row g-3">
+          <div class="col-sm-4">
+            <label class="form-label" for="numero">Número</label>
+            <input th:field="*{numero}" type="number" min="1" max="999" class="form-control" th:classappend="${#fields.hasErrors('numero')} ? 'is-invalid'">
+            <div class="invalid-feedback" th:errors="*{numero}"></div>
+          </div>
+          <div class="col-sm-4">
+            <label class="form-label" for="capacidad">Capacidad</label>
+            <input th:field="*{capacidad}" type="number" min="1" max="30" class="form-control" th:classappend="${#fields.hasErrors('capacidad')} ? 'is-invalid'">
+            <div class="invalid-feedback" th:errors="*{capacidad}"></div>
+          </div>
+          <div class="col-sm-4">
+            <label class="form-label" for="zona">Zona</label>
+            <select th:field="*{zona}" class="form-select"><option th:each="z : ${zonas}" th:value="${z}" th:text="${z}">z</option></select>
+          </div>
+          <div class="col-12">
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" th:field="*{activa}">
+              <label class="form-check-label" th:for="${#ids.prev('activa')}">Mesa activa</label>
+            </div>
+          </div>
+        </div>
+        <div class="wok-card-body border-top d-flex justify-content-end gap-2">
+          <a th:href="@{/mesas}" class="btn btn-light">Cancelar</a>
+          <button type="submit" class="btn btn-wok"><i class="bi bi-save"></i> Guardar</button>
+        </div>
+      </form>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+  </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

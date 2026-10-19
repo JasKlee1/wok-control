@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${form.esNuevo()} ? 'Nuevo usuario' : 'Editar usuario')}"></head>
+<body>
+<div class="wok-app">
+  <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+  <div class="wok-main">
+    <header th:replace="~{fragments/layout :: topbar(${form.esNuevo()} ? 'Nuevo usuario' : 'Editar usuario', 'Datos de acceso y roles')}"></header>
+    <main class="wok-content">
+      <div th:replace="~{fragments/layout :: mensajes}"></div>
+      <div class="row g-3">
+        <div class="col-xl-8">
+          <form th:action="@{/plataforma/usuarios/guardar}" th:object="${form}" method="post" class="wok-card" novalidate>
+            <input type="hidden" th:field="*{id}">
+            <div class="wok-card-body">
+              <h3 class="wok-form-seccion">Identificación</h3>
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label" for="username">Usuario</label>
+                  <input th:if="${form.esNuevo()}" th:field="*{username}" class="form-control" maxlength="40"
+                         th:classappend="${#fields.hasErrors('username')} ? 'is-invalid'" autocapitalize="none">
+                  <input th:unless="${form.esNuevo()}" class="form-control" th:value="*{username}" disabled>
+                  <input th:unless="${form.esNuevo()}" type="hidden" th:field="*{username}">
+                  <div class="invalid-feedback" th:errors="*{username}"></div>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label" for="nombre">Nombre completo</label>
+                  <input th:field="*{nombre}" class="form-control" maxlength="100" th:classappend="${#fields.hasErrors('nombre')} ? 'is-invalid'">
+                  <div class="invalid-feedback" th:errors="*{nombre}"></div>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label" for="email">Correo electrónico <span class="text-suave">(opcional)</span></label>
+                  <input th:field="*{email}" type="email" class="form-control" maxlength="120" th:classappend="${#fields.hasErrors('email')} ? 'is-invalid'">
+                  <div class="invalid-feedback" th:errors="*{email}"></div>
+                </div>
+                <div class="col-md-6" th:if="${form.esNuevo()}">
+                  <label class="form-label" for="password">Contraseña inicial</label>
+                  <input id="password" name="password" type="password" class="form-control" autocomplete="new-password"
+                         th:classappend="${#fields.hasErrors('password')} ? 'is-invalid'">
+                  <div class="invalid-feedback" th:errors="*{password}"></div>
+                  <div class="form-text">El usuario deberá cambiarla en su primer ingreso.</div>
+                </div>
+              </div>
+
+              <h3 class="wok-form-seccion">Roles</h3>
+              <div class="row g-2">
+                <div class="col-md-6" th:each="r : ${roles}">
+                  <label class="d-flex gap-2 p-2 border rounded-3 h-100" style="cursor:pointer">
+                    <input type="checkbox" class="form-check-input mt-1" name="roles" th:value="${r.codigo}"
+                           th:checked="${form.roles != null and #sets.contains(form.roles, r.codigo)}">
+                    <span>
+                      <span class="fw-semibold d-block" th:text="${r.nombre}">Rol</span>
+                      <small class="text-suave" th:text="${r.descripcion}">Descripción</small>
+                    </span>
+                  </label>
+                </div>
+              </div>
+              <div class="text-danger small mt-1" th:if="${#fields.hasErrors('roles')}" th:errors="*{roles}"></div>
+
+              <h3 class="wok-form-seccion">Vínculo con proveedor <span class="text-suave small">(solo rol Proveedor)</span></h3>
+              <div th:if="${proveedores == null}" class="alert alert-warning wok-alerta small">
+                <i class="bi bi-exclamation-triangle"></i>
+                <div>No fue posible consultar proveedores-service. Puede escribir el identificador del proveedor manualmente.</div>
+              </div>
+              <select th:if="${proveedores != null}" th:field="*{proveedorId}" class="form-select">
+                <option value="">Sin proveedor</option>
+                <option th:each="p : ${proveedores}" th:value="${p.id}" th:text="${p.nombreComercial} + ' · NIT ' + ${p.nit}">Proveedor</option>
+              </select>
+              <input th:if="${proveedores == null}" th:field="*{proveedorId}" class="form-control wok-mono" placeholder="Identificador del proveedor">
+              <div class="form-text" th:if="${proveedores != null and proveedores.isEmpty()}">No hay proveedores activos registrados todavía.</div>
+            </div>
+            <div class="wok-card-body border-top d-flex gap-2 justify-content-end">
+              <a th:href="@{/plataforma/usuarios}" class="btn btn-light">Cancelar</a>
+              <button type="submit" class="btn btn-wok"><i class="bi bi-save"></i> Guardar</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="col-xl-4" th:unless="${form.esNuevo()}">
+          <div class="wok-card">
+            <div class="wok-card-header"><i class="bi bi-key text-wok"></i><h2>Restablecer contraseña</h2></div>
+            <form th:action="@{/plataforma/usuarios/{id}/restablecer(id=${form.id})}" method="post" class="wok-card-body"
+                  data-wok-confirmar="Se reemplazará la contraseña del usuario y se desbloqueará la cuenta. ¿Continuar?">
+              <label class="form-label" for="nuevaPassword">Contraseña temporal</label>
+              <input id="nuevaPassword" name="nuevaPassword" type="password" class="form-control" minlength="8" required autocomplete="new-password">
+              <div class="form-text mb-3">Comuníquela al usuario por un canal seguro. Deberá cambiarla al ingresar.</div>
+              <button type="submit" class="btn btn-dorado w-100"><i class="bi bi-arrow-repeat"></i> Restablecer</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+  </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

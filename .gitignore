@@ -1,0 +1,53 @@
+# Secretos locales: NUNCA versionar
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Maven
+target/
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# Ejecución local (jar copiados por scripts/iniciar.ps1) y registros
+.run/
+logs/
+*.log
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### VS Code (se versionan solo las configuraciones compartidas) ###
+.vscode/*
+!.vscode/launch.json
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/tasks.json
+
+### Sistema operativo ###
+.DS_Store
+Thumbs.db

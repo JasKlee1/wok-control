@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Cocina')}"></head>
+<body data-wok-recargar="20">
+<div class="wok-app">
+  <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+  <div class="wok-main">
+    <header th:replace="~{fragments/layout :: topbar('Cocina', 'Comandas por orden de llegada · se actualiza cada 20 s')}"></header>
+    <main class="wok-content">
+      <div th:replace="~{fragments/layout :: mensajes}"></div>
+      <div class="row g-3">
+        <div class="col-xl-9">
+          <div th:if="${comandas.isEmpty()}" class="wok-card">
+            <div th:replace="~{fragments/layout :: vacio('bi-fire', 'Sin comandas pendientes', 'Los pedidos enviados por los meseros aparecerán aquí en orden de llegada.')}"></div>
+          </div>
+          <div class="row g-3">
+            <div class="col-md-6 col-xxl-4" th:each="p : ${comandas}" th:with="minutos=${@fmt.minutosDesde(p.enviadoEn)}">
+              <div class="wok-comanda" th:classappend="${minutos >= minutosUrgente and p.estado.name() != 'LISTO'} ? 'urgente'">
+                <div class="wok-comanda-cabecera">
+                  <div><strong th:text="'Mesa ' + ${p.mesaNumero}">Mesa</strong> <span class="small wok-mono ms-1" th:text="${p.numero}">P</span></div>
+                  <div class="tiempo"><i class="bi bi-stopwatch"></i> <span th:text="${minutos} + ' min'">0 min</span></div>
+                </div>
+                <div class="px-3 pt-2" th:unless="${p.alergias.isEmpty()}">
+                  <div class="wok-nota alergia"><i class="bi bi-exclamation-octagon-fill"></i> ALERGIA: <span th:text="${#strings.listJoin(p.alergias, ', ')}">MANI</span></div>
+                </div>
+                <div class="px-3 pt-2" th:if="${p.observaciones}"><div class="wok-nota" th:text="${p.observaciones}">obs</div></div>
+                <div class="flex-grow-1">
+                  <div class="wok-comanda-item" th:each="i : ${p.items}">
+                    <div class="d-flex justify-content-between align-items-start gap-2">
+                      <div>
+                        <strong th:text="${i.cantidad} + ' × ' + ${i.nombre}">1 x Plato</strong>
+                        <span class="wok-picante ms-1" th:if="${i.nivelPicante > 0}" th:title="'Picante ' + ${i.nivelPicante}"><i th:each="n : ${#numbers.sequence(1, i.nivelPicante)}" class="bi bi-fire"></i></span>
+                        <div class="wok-nota" th:if="${i.notas}" th:text="${i.notas}">nota</div>
+                        <div class="small text-danger" th:unless="${i.alergenos.isEmpty()}">Contiene: <span th:text="${#strings.listJoin(i.alergenos, ', ')}">a</span></div>
+                      </div>
+                      <div class="text-end">
+                        <form th:if="${i.estado.name() == 'PENDIENTE'}" th:action="@{/pedidos/{p}/items/{i}/estado(p=${p.id},i=${i.id})}" method="post" data-wok-permitir-reenvio>
+                          <input type="hidden" name="estado" value="EN_PREPARACION"><input type="hidden" name="volver" value="cocina">
+                          <button class="btn btn-sm btn-outline-warning" type="submit">Preparar</button>
+                        </form>
+                        <form th:if="${i.estado.name() == 'EN_PREPARACION'}" th:action="@{/pedidos/{p}/items/{i}/estado(p=${p.id},i=${i.id})}" method="post" data-wok-permitir-reenvio>
+                          <input type="hidden" name="estado" value="LISTO"><input type="hidden" name="volver" value="cocina">
+                          <button class="btn btn-sm btn-success" type="submit">Listo</button>
+                        </form>
+                        <span th:if="${i.estado.name() == 'LISTO' or i.estado.name() == 'ENTREGADO'}" class="wok-badge exito" th:text="${i.estado.etiqueta()}">Listo</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="p-2 border-top d-flex gap-2" th:if="${p.estado.name() != 'LISTO'}">
+                  <form class="flex-fill" th:action="@{/cocina/pedidos/{id}/avanzar(id=${p.id})}" method="post">
+                    <input type="hidden" name="estado" value="EN_PREPARACION">
+                    <button class="btn btn-sm btn-light w-100" type="submit">Preparar todo</button>
+                  </form>
+                  <form class="flex-fill" th:action="@{/cocina/pedidos/{id}/avanzar(id=${p.id})}" method="post">
+                    <input type="hidden" name="estado" value="LISTO">
+                    <button class="btn btn-sm btn-success w-100" type="submit">Todo listo</button>
+                  </form>
+                </div>
+                <div class="p-2 border-top text-center small text-success fw-semibold" th:if="${p.estado.name() == 'LISTO'}">
+                  <i class="bi bi-bell"></i> Listo para entregar
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-xl-3">
+          <div class="wok-card mb-3">
+            <div class="wok-card-header"><i class="bi bi-exclamation-triangle" style="color:var(--wok-advertencia)"></i><h2>Alertas de insumos</h2></div>
+            <div class="wok-card-body small" th:if="${alertasError}" th:text="${alertasError}">error</div>
+            <th:block th:if="${alertas != null}">
+              <div class="wok-card-body small text-suave" th:if="${alertas.stockBajo.isEmpty()}">Sin insumos bajo el mínimo.</div>
+              <ul class="list-group list-group-flush small" th:unless="${alertas.stockBajo.isEmpty()}">
+                <li class="list-group-item d-flex justify-content-between" th:each="a : ${alertas.stockBajo}">
+                  <span th:text="${a.nombre}">i</span>
+                  <span th:classappend="${a.cantidadDisponible.signum() == 0} ? 'text-danger fw-semibold'" th:text="${@fmt.numero(a.cantidadDisponible)} + ' ' + ${a.unidad}">0</span>
+                </li>
+              </ul>
+            </th:block>
+          </div>
+          <div class="wok-card" th:if="${insumos != null and usuarioActual.tiene('INSUMOS_REPORTAR_AGOTADO')}">
+            <div class="wok-card-header"><i class="bi bi-megaphone text-wok"></i><h2>Reportar agotado</h2></div>
+            <form th:action="@{/cocina/reportar-agotado}" method="post" class="wok-card-body">
+              <select name="insumoId" class="form-select form-select-sm mb-2" required aria-label="Insumo">
+                <option value="">Seleccione insumo…</option>
+                <option th:each="i : ${insumos}" th:value="${i.id}" th:text="${i.nombre}">i</option>
+              </select>
+              <input name="observacion" class="form-control form-control-sm mb-2" maxlength="200" placeholder="Observación (opcional)">
+              <button class="btn btn-sm btn-wok w-100" type="submit">Enviar reporte</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+  </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

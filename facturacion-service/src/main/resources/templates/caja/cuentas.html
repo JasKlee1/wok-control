@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Cuentas y cobro')}"></head>
+<body data-wok-recargar="60">
+<div class="wok-app">
+  <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+  <div class="wok-main">
+    <header th:replace="~{fragments/layout :: topbar('Cuentas y cobro', 'Mesas con consumo pendiente')}"></header>
+    <main class="wok-content">
+      <div th:replace="~{fragments/layout :: mensajes}"></div>
+      <div class="alert alert-warning wok-alerta" th:unless="${pendientes.isEmpty()}">
+        <i class="bi bi-arrow-repeat"></i>
+        <div><strong th:text="${pendientes.size()}">1</strong> comprobante(s) no han podido notificarse a pedidos-service; el sistema reintenta cada minuto.
+          <a th:href="@{/caja/comprobantes/{id}(id=${pendientes[0].id})}">Ver el primero</a></div>
+      </div>
+      <div th:if="${mesas.isEmpty()}" class="wok-card">
+        <div th:replace="~{fragments/layout :: vacio('bi-cash-coin', 'Sin cuentas abiertas', 'Ninguna mesa tiene pedidos activos en este momento.')}"></div>
+      </div>
+      <div class="row g-3">
+        <div class="col-6 col-md-4 col-xl-3" th:each="m : ${mesas}">
+          <a th:href="@{/caja/cuentas/{id}(id=${m.id})}" class="text-decoration-none text-reset">
+            <div class="wok-mesa ocupada">
+              <div class="small text-suave">Mesa</div>
+              <div class="wok-mesa-numero my-1" th:text="${m.numero}">1</div>
+              <div class="h5 text-wok mb-1" th:text="${@fmt.dinero(m.consumoActual)}">$</div>
+              <div class="small text-suave" th:text="${m.pedidosActivos} + ' pedido(s) activo(s)'">1</div>
+              <span class="btn btn-sm btn-wok mt-2 w-100"><i class="bi bi-cash-coin"></i> Ver cuenta</span>
+            </div>
+          </a>
+        </div>
+      </div>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+  </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

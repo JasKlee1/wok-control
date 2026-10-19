@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Proveedores')}"></head>
+<body>
+<div class="wok-app">
+  <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+  <div class="wok-main">
+    <header th:replace="~{fragments/layout :: topbar('Proveedores', 'Abastecimiento de insumos y condiciones comerciales')}"></header>
+    <main class="wok-content">
+      <div th:replace="~{fragments/layout :: mensajes}"></div>
+      <div class="wok-card">
+        <div class="wok-card-header">
+          <form class="wok-filtros flex-grow-1" method="get" th:action="@{/proveedores}">
+            <div><label class="form-label small mb-1" for="q">Buscar</label>
+              <input id="q" name="q" class="form-control form-control-sm" th:value="${q}" placeholder="Nombre, razón social o NIT"></div>
+            <div><label class="form-label small mb-1" for="categoria">Categoría</label>
+              <select id="categoria" name="categoria" class="form-select form-select-sm">
+                <option value="">Todas</option>
+                <option th:each="c : ${categorias}" th:value="${c}" th:text="${c}" th:selected="${c == categoriaFiltro}">c</option>
+              </select></div>
+            <div><label class="form-label small mb-1" for="activo">Estado</label>
+              <select id="activo" name="activo" class="form-select form-select-sm">
+                <option value="">Activos e inactivos</option>
+                <option value="true" th:selected="${activoFiltro == true}">Activos</option>
+                <option value="false" th:selected="${activoFiltro == false}">Inactivos</option>
+              </select></div>
+            <button class="btn btn-sm btn-wok-outline" type="submit"><i class="bi bi-funnel"></i> Filtrar</button>
+          </form>
+          <a th:if="${usuarioActual.tiene('PROVEEDORES_GESTIONAR')}" th:href="@{/proveedores/nuevo}" class="btn btn-wok btn-sm"><i class="bi bi-plus-lg"></i> Nuevo proveedor</a>
+        </div>
+        <div th:if="${proveedores.isEmpty()}">
+          <div th:replace="~{fragments/layout :: vacio('bi-truck', 'Sin proveedores', 'Registre los proveedores que abastecen el restaurante.')}"></div>
+        </div>
+        <div class="table-responsive" th:unless="${proveedores.isEmpty()}">
+          <table class="table table-wok table-hover">
+            <thead><tr><th>Proveedor</th><th>NIT</th><th>Contacto</th><th>Categorías</th><th class="text-center">Insumos</th><th>Estado</th></tr></thead>
+            <tbody>
+              <tr th:each="p : ${proveedores}">
+                <td><a th:href="@{/proveedores/{id}(id=${p.id})}" class="fw-semibold" th:text="${p.nombreComercial}">p</a>
+                  <div class="small text-suave" th:text="${p.razonSocial}">rs</div></td>
+                <td class="wok-mono small" th:text="${p.nit}">nit</td>
+                <td class="small"><div th:text="${p.contacto?.nombre}">c</div><div class="text-suave" th:text="${p.telefono}">t</div></td>
+                <td><span th:each="c : ${p.categorias}" class="wok-badge neutro me-1" th:text="${c}">C</span></td>
+                <td class="text-center" th:text="${p.insumos.size()}">0</td>
+                <td><span th:if="${p.activo}" class="wok-badge exito">Activo</span><span th:unless="${p.activo}" class="wok-badge error">Inactivo</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+  </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Acceso denegado')}"></head>
+<body>
+<div class="wok-app">
+  <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+  <div class="wok-main">
+    <header th:replace="~{fragments/layout :: topbar('Acceso denegado', '')}"></header>
+    <main class="wok-content d-flex align-items-center justify-content-center">
+      <div class="wok-card text-center p-4 p-md-5" style="max-width: 560px">
+        <div class="wok-vacio-icono" style="width:88px;height:88px;font-size:2.4rem;color:var(--wok-rojo)"><i class="bi bi-shield-x"></i></div>
+        <h2 class="h4">Su rol no tiene permiso para esta sección</h2>
+        <div class="wok-divisor mx-auto" style="max-width: 200px"></div>
+        <p class="text-suave">
+          Su perfil actual es <strong th:text="${usuarioActual?.rolPrincipal()}">Rol</strong>.
+          Si necesita este acceso, solicítelo al administrador de la plataforma.
+        </p>
+        <a th:href="@{/dashboard}" class="btn btn-wok"><i class="bi bi-house"></i> Volver al panel</a>
+      </div>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+  </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

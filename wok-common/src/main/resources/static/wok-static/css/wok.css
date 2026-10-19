@@ -1,0 +1,494 @@
+/* ==========================================================================
+   Wok Control — identidad visual
+   Restaurante chino contemporáneo: rojo laca, carbón, crema cálida y dorado.
+   ========================================================================== */
+
+:root {
+  --wok-rojo: #A61B1B;
+  --wok-rojo-oscuro: #7E1212;
+  --wok-bermellon: #D9362B;
+  --wok-carbon: #242424;
+  --wok-carbon-2: #2F2B29;
+  --wok-crema: #FFF8EE;
+  --wok-crema-2: #F6EBDA;
+  --wok-blanco: #FFFFFF;
+  --wok-dorado: #D4A64A;
+  --wok-dorado-suave: #EBD3A0;
+  --wok-exito: #2E7D32;
+  --wok-advertencia: #E0A100;
+  --wok-error: #C62828;
+  --wok-texto: #242424;
+  --wok-texto-suave: #6B625A;
+  --wok-borde: #EADFCF;
+  --wok-radio: 12px;
+  --wok-radio-sm: 8px;
+  --wok-sombra: 0 1px 2px rgba(36, 24, 12, .06), 0 4px 14px rgba(36, 24, 12, .06);
+  --wok-sombra-hover: 0 2px 4px rgba(36, 24, 12, .08), 0 10px 24px rgba(36, 24, 12, .10);
+  --wok-sidebar: 264px;
+  --wok-fuente: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --wok-fuente-titulos: "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+
+  /* Bootstrap */
+  --bs-primary: var(--wok-rojo);
+  --bs-primary-rgb: 166, 27, 27;
+  --bs-success: var(--wok-exito);
+  --bs-success-rgb: 46, 125, 50;
+  --bs-warning-rgb: 224, 161, 0;
+  --bs-danger: var(--wok-error);
+  --bs-danger-rgb: 198, 40, 40;
+  --bs-body-color: var(--wok-texto);
+  --bs-body-bg: var(--wok-crema);
+  --bs-body-font-family: var(--wok-fuente);
+  --bs-border-color: var(--wok-borde);
+  --bs-link-color: var(--wok-rojo);
+  --bs-link-color-rgb: 166, 27, 27;
+  --bs-link-hover-color: var(--wok-bermellon);
+  --bs-focus-ring-color: rgba(212, 166, 74, .45);
+}
+
+body {
+  background: var(--wok-crema);
+  color: var(--wok-texto);
+  font-family: var(--wok-fuente);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, .wok-titulo {
+  font-family: var(--wok-fuente-titulos);
+  letter-spacing: .2px;
+}
+
+/* --------------------------------------------------------------------------
+   Estructura
+   -------------------------------------------------------------------------- */
+.wok-app { display: flex; min-height: 100vh; }
+
+.wok-sidebar {
+  width: var(--wok-sidebar);
+  flex-shrink: 0;
+  background-color: var(--wok-carbon);
+  /* celosía geométrica inspirada en ventanas chinas, muy tenue */
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Cg fill='none' stroke='%23D4A64A' stroke-opacity='.07' stroke-width='1.2'%3E%3Cpath d='M0 24h12v-12h24v12h12M24 0v12M24 36v12M0 36h12v12M36 48v-12h12M12 24v12h24v-12'/%3E%3C/g%3E%3C/svg%3E");
+  color: #EDE4D6;
+  position: fixed;
+  inset: 0 auto 0 0;
+  overflow-y: auto;
+  z-index: 1040;
+  display: flex;
+  flex-direction: column;
+  transition: transform .25s ease;
+}
+
+.wok-sidebar::after {
+  content: "";
+  position: absolute;
+  top: 0; right: 0; bottom: 0;
+  width: 3px;
+  background: linear-gradient(180deg, var(--wok-rojo), var(--wok-dorado) 55%, var(--wok-rojo));
+  opacity: .85;
+}
+
+.wok-marca {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding: 1.25rem 1.25rem 1rem;
+  color: #fff;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(212, 166, 74, .18);
+}
+.wok-marca:hover { color: #fff; }
+.wok-marca img { width: 42px; height: 42px; }
+.wok-marca-nombre { font-family: var(--wok-fuente-titulos); font-size: 1.3rem; line-height: 1.1; }
+.wok-marca-sub { font-size: .7rem; letter-spacing: 2.5px; text-transform: uppercase; color: var(--wok-dorado); }
+
+.wok-nav { padding: .75rem .75rem 1.5rem; flex: 1; }
+.wok-nav-seccion {
+  font-size: .68rem;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  color: rgba(235, 211, 160, .6);
+  margin: 1rem .75rem .35rem;
+}
+.wok-nav a {
+  display: flex;
+  align-items: center;
+  gap: .7rem;
+  padding: .52rem .75rem;
+  border-radius: var(--wok-radio-sm);
+  color: #E4DACB;
+  text-decoration: none;
+  font-size: .92rem;
+  position: relative;
+  transition: background .15s ease, color .15s ease;
+}
+.wok-nav a i { font-size: 1.05rem; color: rgba(235, 211, 160, .75); transition: color .15s ease; }
+.wok-nav a:hover { background: rgba(255, 255, 255, .06); color: #fff; }
+.wok-nav a.activo { background: rgba(166, 27, 27, .55); color: #fff; }
+.wok-nav a.activo::before {
+  content: "";
+  position: absolute;
+  left: -.75rem; top: 20%; bottom: 20%;
+  width: 4px;
+  border-radius: 0 4px 4px 0;
+  background: var(--wok-dorado);
+}
+.wok-nav a.activo i { color: var(--wok-dorado); }
+
+.wok-sidebar-pie {
+  padding: 1rem 1.25rem;
+  font-size: .75rem;
+  color: rgba(237, 228, 214, .5);
+  border-top: 1px solid rgba(212, 166, 74, .14);
+}
+
+.wok-main {
+  flex: 1;
+  margin-left: var(--wok-sidebar);
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.wok-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 1030;
+  background: rgba(255, 255, 255, .94);
+  backdrop-filter: saturate(1.4) blur(6px);
+  border-bottom: 1px solid var(--wok-borde);
+  padding: .7rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.wok-topbar::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: -1px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--wok-rojo) 0 64px, var(--wok-dorado) 64px 128px, transparent 128px);
+}
+.wok-topbar h1 { font-size: 1.35rem; margin: 0; color: var(--wok-carbon); }
+.wok-topbar .wok-subtitulo { font-size: .82rem; color: var(--wok-texto-suave); }
+.wok-menu-toggle { display: none; border: 0; background: transparent; font-size: 1.5rem; color: var(--wok-carbon); }
+
+.wok-usuario { margin-left: auto; display: flex; align-items: center; gap: .65rem; }
+.wok-avatar {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--wok-rojo);
+  color: #fff;
+  font-weight: 600;
+  font-size: .9rem;
+  box-shadow: 0 0 0 2px #fff, 0 0 0 3px var(--wok-dorado);
+}
+.wok-usuario-nombre { font-weight: 600; font-size: .9rem; line-height: 1.1; }
+.wok-usuario-rol { font-size: .72rem; color: var(--wok-texto-suave); }
+
+.wok-content { padding: 1.5rem; flex: 1; }
+.wok-footer {
+  padding: 1rem 1.5rem;
+  font-size: .78rem;
+  color: var(--wok-texto-suave);
+  border-top: 1px solid var(--wok-borde);
+  display: flex; justify-content: space-between; flex-wrap: wrap; gap: .5rem;
+}
+
+.wok-backdrop { display: none; }
+
+/* --------------------------------------------------------------------------
+   Componentes
+   -------------------------------------------------------------------------- */
+.wok-card {
+  background: var(--wok-blanco);
+  border: 1px solid var(--wok-borde);
+  border-radius: var(--wok-radio);
+  box-shadow: var(--wok-sombra);
+}
+.wok-card-header {
+  padding: .9rem 1.15rem;
+  border-bottom: 1px solid var(--wok-borde);
+  display: flex; align-items: center; gap: .75rem; flex-wrap: wrap;
+}
+.wok-card-header h2, .wok-card-header h3 { font-size: 1.05rem; margin: 0; }
+.wok-card-body { padding: 1.15rem; }
+
+.wok-stat {
+  background: var(--wok-blanco);
+  border: 1px solid var(--wok-borde);
+  border-radius: var(--wok-radio);
+  box-shadow: var(--wok-sombra);
+  padding: 1rem 1.1rem;
+  display: flex; gap: .9rem; align-items: center;
+  height: 100%;
+  transition: box-shadow .2s ease, transform .2s ease;
+  position: relative;
+  overflow: hidden;
+}
+.wok-stat:hover { box-shadow: var(--wok-sombra-hover); transform: translateY(-1px); }
+.wok-stat::after {
+  content: "";
+  position: absolute; right: -18px; top: -18px;
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  border: 2px solid var(--wok-dorado-suave);
+  opacity: .5;
+}
+.wok-stat-icono {
+  width: 46px; height: 46px; flex-shrink: 0;
+  border-radius: 12px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 1.3rem;
+  background: rgba(166, 27, 27, .09);
+  color: var(--wok-rojo);
+}
+.wok-stat-icono.dorado { background: rgba(212, 166, 74, .16); color: #9A7120; }
+.wok-stat-icono.verde { background: rgba(46, 125, 50, .1); color: var(--wok-exito); }
+.wok-stat-icono.ambar { background: rgba(224, 161, 0, .14); color: #9B6F00; }
+.wok-stat-valor { font-size: 1.45rem; font-weight: 700; line-height: 1.1; color: var(--wok-carbon); }
+.wok-stat-etiqueta { font-size: .8rem; color: var(--wok-texto-suave); }
+.wok-stat-nota { font-size: .72rem; color: var(--wok-texto-suave); }
+
+.btn-wok {
+  --bs-btn-bg: var(--wok-rojo);
+  --bs-btn-border-color: var(--wok-rojo);
+  --bs-btn-color: #fff;
+  --bs-btn-hover-bg: var(--wok-bermellon);
+  --bs-btn-hover-border-color: var(--wok-bermellon);
+  --bs-btn-hover-color: #fff;
+  --bs-btn-active-bg: var(--wok-rojo-oscuro);
+  --bs-btn-active-border-color: var(--wok-rojo-oscuro);
+  --bs-btn-active-color: #fff;
+  --bs-btn-disabled-bg: #C48A8A;
+  --bs-btn-disabled-border-color: #C48A8A;
+  --bs-btn-focus-shadow-rgb: 212, 166, 74;
+}
+.btn-wok-outline {
+  --bs-btn-color: var(--wok-rojo);
+  --bs-btn-border-color: rgba(166, 27, 27, .45);
+  --bs-btn-hover-bg: rgba(166, 27, 27, .07);
+  --bs-btn-hover-color: var(--wok-rojo);
+  --bs-btn-hover-border-color: var(--wok-rojo);
+  --bs-btn-active-bg: rgba(166, 27, 27, .12);
+  --bs-btn-active-color: var(--wok-rojo);
+  --bs-btn-focus-shadow-rgb: 212, 166, 74;
+}
+.btn-dorado {
+  --bs-btn-bg: var(--wok-dorado);
+  --bs-btn-border-color: var(--wok-dorado);
+  --bs-btn-color: var(--wok-carbon);
+  --bs-btn-hover-bg: #C4943A;
+  --bs-btn-hover-border-color: #C4943A;
+  --bs-btn-hover-color: var(--wok-carbon);
+}
+.btn { border-radius: var(--wok-radio-sm); font-weight: 500; }
+
+.form-control, .form-select { border-radius: var(--wok-radio-sm); border-color: #E0D3BF; }
+.form-control:focus, .form-select:focus { border-color: var(--wok-dorado); box-shadow: 0 0 0 .2rem rgba(212, 166, 74, .25); }
+.form-label { font-weight: 500; font-size: .88rem; margin-bottom: .3rem; }
+.form-text { font-size: .76rem; }
+.form-check-input:checked { background-color: var(--wok-rojo); border-color: var(--wok-rojo); }
+.wok-form-seccion {
+  font-family: var(--wok-fuente-titulos);
+  font-size: 1rem;
+  color: var(--wok-rojo);
+  border-bottom: 1px dashed var(--wok-dorado-suave);
+  padding-bottom: .35rem;
+  margin: 1.25rem 0 .9rem;
+}
+.wok-form-seccion:first-child { margin-top: 0; }
+
+.table-wok { margin: 0; --bs-table-bg: transparent; --bs-table-hover-bg: rgba(212, 166, 74, .07); }
+.table-wok thead th {
+  background: var(--wok-crema-2);
+  color: #5A4A3A;
+  font-size: .75rem;
+  font-weight: 600;
+  letter-spacing: .6px;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--wok-borde);
+  white-space: nowrap;
+  padding: .65rem .9rem;
+}
+.table-wok td { padding: .65rem .9rem; vertical-align: middle; border-color: #F1E8DA; font-size: .92rem; }
+.table-wok tbody tr:last-child td { border-bottom: 0; }
+
+.wok-filtros { display: flex; flex-wrap: wrap; gap: .5rem; align-items: end; }
+.wok-filtros .form-control, .wok-filtros .form-select { min-width: 160px; }
+
+/* Estados */
+.wok-badge {
+  display: inline-flex; align-items: center; gap: .3rem;
+  font-size: .72rem; font-weight: 600; letter-spacing: .3px;
+  padding: .28rem .6rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.wok-badge::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.wok-badge.exito { background: rgba(46, 125, 50, .12); color: var(--wok-exito); }
+.wok-badge.alerta { background: rgba(224, 161, 0, .16); color: #8A6200; }
+.wok-badge.error { background: rgba(198, 40, 40, .1); color: var(--wok-error); }
+.wok-badge.info { background: rgba(36, 36, 36, .07); color: #4A4440; }
+.wok-badge.rojo { background: rgba(166, 27, 27, .1); color: var(--wok-rojo); }
+.wok-badge.dorado { background: rgba(212, 166, 74, .2); color: #7D5A14; }
+.wok-badge.neutro { background: #EFEAE3; color: #6B625A; }
+.wok-badge.neutro::before { display: none; }
+
+/* Estado vacío */
+.wok-vacio { text-align: center; padding: 2.5rem 1rem; color: var(--wok-texto-suave); }
+.wok-vacio-icono {
+  width: 72px; height: 72px;
+  margin: 0 auto .9rem;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--wok-crema-2);
+  color: var(--wok-dorado);
+  font-size: 2rem;
+  border: 1px dashed var(--wok-dorado-suave);
+}
+.wok-vacio h3 { font-size: 1.1rem; color: var(--wok-carbon); }
+
+/* Alertas flash */
+.wok-alerta {
+  border: 0;
+  border-left: 4px solid;
+  border-radius: var(--wok-radio-sm);
+  box-shadow: var(--wok-sombra);
+  display: flex; align-items: flex-start; gap: .6rem;
+}
+.wok-alerta.alert-success { border-color: var(--wok-exito); background: #EEF6EE; color: #1E5A22; }
+.wok-alerta.alert-danger { border-color: var(--wok-error); background: #FCEDED; color: #8E1C1C; }
+.wok-alerta.alert-warning { border-color: var(--wok-advertencia); background: #FFF6DE; color: #6E5000; }
+.wok-alerta.alert-info { border-color: var(--wok-dorado); background: #FFF9EC; color: #5A4512; }
+
+/* Divisor decorativo: nube china estilizada */
+.wok-divisor {
+  height: 10px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='10' viewBox='0 0 40 10'%3E%3Cpath d='M0 5h8a3 3 0 1 1 3-3M40 5h-8a3 3 0 1 0-3 3M14 5h12' fill='none' stroke='%23D4A64A' stroke-opacity='.55' stroke-width='1.2'/%3E%3C/svg%3E");
+  background-repeat: repeat-x;
+  margin: .25rem 0 1.25rem;
+}
+
+/* Mesas */
+.wok-mesa {
+  border-radius: var(--wok-radio);
+  border: 1px solid var(--wok-borde);
+  background: #fff;
+  padding: 1rem;
+  text-align: center;
+  box-shadow: var(--wok-sombra);
+  position: relative;
+  transition: transform .15s ease, box-shadow .15s ease;
+  height: 100%;
+}
+.wok-mesa:hover { transform: translateY(-2px); box-shadow: var(--wok-sombra-hover); }
+.wok-mesa-numero { font-family: var(--wok-fuente-titulos); font-size: 1.9rem; line-height: 1; }
+.wok-mesa.disponible { border-top: 4px solid var(--wok-exito); }
+.wok-mesa.ocupada { border-top: 4px solid var(--wok-rojo); background: #FFFBF6; }
+.wok-mesa.fuera { border-top: 4px solid #9E9E9E; opacity: .75; }
+
+/* Cocina */
+.wok-comanda {
+  background: #fff;
+  border-radius: var(--wok-radio);
+  border: 1px solid var(--wok-borde);
+  box-shadow: var(--wok-sombra);
+  overflow: hidden;
+  height: 100%;
+  display: flex; flex-direction: column;
+}
+.wok-comanda-cabecera {
+  background: var(--wok-carbon);
+  color: #fff;
+  padding: .6rem .9rem;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.wok-comanda-cabecera .tiempo { font-size: .8rem; color: var(--wok-dorado-suave); }
+.wok-comanda.urgente .wok-comanda-cabecera { background: var(--wok-rojo); }
+.wok-comanda-item { padding: .6rem .9rem; border-bottom: 1px dashed var(--wok-borde); }
+.wok-comanda-item:last-child { border-bottom: 0; }
+.wok-nota {
+  font-size: .8rem;
+  background: #FFF6DE;
+  border-left: 3px solid var(--wok-advertencia);
+  padding: .25rem .5rem;
+  border-radius: 4px;
+  margin-top: .3rem;
+}
+.wok-nota.alergia { background: #FCEDED; border-left-color: var(--wok-error); color: #8E1C1C; font-weight: 600; }
+.wok-picante { color: var(--wok-bermellon); letter-spacing: -2px; }
+
+/* Comprobante interno */
+.wok-ticket {
+  max-width: 420px;
+  margin: 0 auto;
+  background: #fff;
+  padding: 1.5rem;
+  border-radius: var(--wok-radio);
+  border: 1px solid var(--wok-borde);
+  box-shadow: var(--wok-sombra);
+  font-size: .9rem;
+}
+.wok-ticket hr { border-top: 1px dashed #B9A88E; opacity: 1; }
+
+/* Barras simples para reportes */
+.wok-barra { height: 8px; border-radius: 4px; background: var(--wok-crema-2); overflow: hidden; }
+.wok-barra > span { display: block; height: 100%; background: linear-gradient(90deg, var(--wok-rojo), var(--wok-bermellon)); border-radius: 4px; }
+
+/* Login */
+.wok-login { min-height: 100vh; display: grid; grid-template-columns: 1.1fr 1fr; }
+.wok-login-hero {
+  background-color: var(--wok-carbon);
+  background-image:
+    radial-gradient(circle at 20% 15%, rgba(166, 27, 27, .55), transparent 55%),
+    radial-gradient(circle at 85% 90%, rgba(212, 166, 74, .25), transparent 50%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Cg fill='none' stroke='%23D4A64A' stroke-opacity='.09' stroke-width='1.2'%3E%3Cpath d='M0 24h12v-12h24v12h12M24 0v12M24 36v12M0 36h12v12M36 48v-12h12M12 24v12h24v-12'/%3E%3C/g%3E%3C/svg%3E");
+  color: #F3EADC;
+  padding: 3rem;
+  display: flex; flex-direction: column; justify-content: space-between;
+}
+.wok-login-hero h1 { font-size: 2.6rem; color: #fff; }
+.wok-login-hero .acento { color: var(--wok-dorado); }
+.wok-login-form { display: flex; align-items: center; justify-content: center; padding: 2rem 1.25rem; }
+.wok-login-caja { width: 100%; max-width: 400px; }
+
+/* Utilidades */
+.text-wok { color: var(--wok-rojo) !important; }
+.text-dorado { color: #9A7120 !important; }
+.text-suave { color: var(--wok-texto-suave) !important; }
+.bg-crema { background: var(--wok-crema-2) !important; }
+.fw-semibold { font-weight: 600 !important; }
+.wok-mono { font-family: Consolas, "Courier New", monospace; font-size: .85em; }
+.wok-acciones { display: flex; gap: .35rem; justify-content: flex-end; flex-wrap: wrap; }
+.wok-acciones form { display: inline; }
+
+/* --------------------------------------------------------------------------
+   Responsive
+   -------------------------------------------------------------------------- */
+@media (max-width: 991.98px) {
+  .wok-sidebar { transform: translateX(-100%); }
+  .wok-app.menu-abierto .wok-sidebar { transform: translateX(0); }
+  .wok-app.menu-abierto .wok-backdrop { display: block; position: fixed; inset: 0; background: rgba(0, 0, 0, .4); z-index: 1035; }
+  .wok-main { margin-left: 0; }
+  .wok-menu-toggle { display: inline-block; }
+  .wok-content { padding: 1rem; }
+  .wok-topbar { padding: .6rem 1rem; }
+  .wok-usuario-texto { display: none; }
+}
+@media (max-width: 767.98px) {
+  .wok-login { grid-template-columns: 1fr; }
+  .wok-login-hero { padding: 1.75rem; min-height: 220px; }
+  .wok-login-hero h1 { font-size: 1.8rem; }
+  .wok-login-hero .wok-hero-detalle { display: none; }
+  .wok-topbar h1 { font-size: 1.1rem; }
+}
+
+@media print {
+  .wok-sidebar, .wok-topbar, .wok-footer, .no-imprimir { display: none !important; }
+  .wok-main { margin: 0; }
+  body, .wok-content { background: #fff; padding: 0; }
+  .wok-ticket { box-shadow: none; border: 0; }
+}

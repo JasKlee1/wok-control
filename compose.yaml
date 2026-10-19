@@ -1,0 +1,56 @@
+# Wok Control con Docker Compose (alternativa a scripts/iniciar.ps1).
+# 1) ./mvnw package -DskipTests      2) docker compose up --build
+# Las credenciales se leen de .env (no versionado); MongoDB sigue siendo MongoDB Atlas.
+# Solo el gateway publica puerto: los servicios internos se comunican por la red de Compose.
+x-servicio: &servicio
+  env_file: .env
+  restart: on-failure
+  environment:
+    CONFIG_SERVER_URL: http://config-server:8888
+    EUREKA_URL: http://discovery-service:8761/eureka/
+  depends_on:
+    - config-server
+    - discovery-service
+
+services:
+  config-server:
+    build: { context: ., args: { MODULO: config-server } }
+    restart: on-failure
+
+  discovery-service:
+    build: { context: ., args: { MODULO: discovery-service } }
+    restart: on-failure
+    ports: ["8761:8761"]
+
+  usuarios-service:
+    <<: *servicio
+    build: { context: ., args: { MODULO: usuarios-service } }
+
+  menu-service:
+    <<: *servicio
+    build: { context: ., args: { MODULO: menu-service } }
+
+  pedidos-service:
+    <<: *servicio
+    build: { context: ., args: { MODULO: pedidos-service } }
+
+  inventario-service:
+    <<: *servicio
+    build: { context: ., args: { MODULO: inventario-service } }
+
+  proveedores-service:
+    <<: *servicio
+    build: { context: ., args: { MODULO: proveedores-service } }
+
+  facturacion-service:
+    <<: *servicio
+    build: { context: ., args: { MODULO: facturacion-service } }
+
+  reportes-service:
+    <<: *servicio
+    build: { context: ., args: { MODULO: reportes-service } }
+
+  api-gateway:
+    <<: *servicio
+    build: { context: ., args: { MODULO: api-gateway } }
+    ports: ["8080:8080"]

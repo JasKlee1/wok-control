@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Platos')}"></head>
+<body>
+<div class="wok-app">
+  <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+  <div class="wok-main">
+    <header th:replace="~{fragments/layout :: topbar('Platos de la carta', 'Precios, disponibilidad y recetas')}"></header>
+    <main class="wok-content">
+      <div th:replace="~{fragments/layout :: mensajes}"></div>
+      <th:block th:with="puedeGestionar=${usuarioActual.tiene('MENU_GESTIONAR')}">
+      <div class="wok-card mb-3">
+        <div class="wok-card-header">
+          <form class="wok-filtros flex-grow-1" method="get" th:action="@{/menu/platos}">
+            <div><label class="form-label small mb-1" for="q">Buscar</label>
+              <input id="q" name="q" class="form-control form-control-sm" th:value="${q}" placeholder="Nombre del plato"></div>
+            <div><label class="form-label small mb-1" for="categoriaId">Categoría</label>
+              <select id="categoriaId" name="categoriaId" class="form-select form-select-sm">
+                <option value="">Todas</option>
+                <option th:each="c : ${categorias}" th:value="${c.id}" th:text="${c.nombre}" th:selected="${c.id == categoriaFiltro}">c</option>
+              </select></div>
+            <div><label class="form-label small mb-1" for="disponible">Disponibilidad</label>
+              <select id="disponible" name="disponible" class="form-select form-select-sm">
+                <option value="">Todos</option>
+                <option value="true" th:selected="${disponibleFiltro == true}">Disponibles</option>
+                <option value="false" th:selected="${disponibleFiltro == false}">Agotados</option>
+              </select></div>
+            <button class="btn btn-sm btn-wok-outline" type="submit"><i class="bi bi-funnel"></i> Filtrar</button>
+          </form>
+          <a th:if="${puedeGestionar}" th:href="@{/menu/platos/nuevo}" class="btn btn-wok btn-sm"><i class="bi bi-plus-lg"></i> Nuevo plato</a>
+        </div>
+      </div>
+
+      <div th:if="${platos.isEmpty()}" class="wok-card">
+        <div th:replace="~{fragments/layout :: vacio('bi-egg-fried', 'No hay platos', ${categorias.isEmpty()} ? 'Cree primero una categoría y luego registre los platos de la carta.' : 'No hay platos que coincidan con los filtros.')}"></div>
+        <div class="text-center pb-4" th:if="${puedeGestionar and categorias.isEmpty()}">
+          <a th:href="@{/menu/categorias}" class="btn btn-wok-outline btn-sm">Crear categorías</a>
+        </div>
+      </div>
+
+      <div class="row g-3" th:unless="${platos.isEmpty()}">
+        <div class="col-sm-6 col-xl-4 col-xxl-3" th:each="p : ${platos}">
+          <div class="wok-card h-100 d-flex flex-column">
+            <div class="wok-card-body flex-grow-1">
+              <div class="d-flex justify-content-between align-items-start gap-2 mb-1">
+                <span class="wok-badge neutro" th:text="${nombresCategorias[p.categoriaId]}">Categoría</span>
+                <span th:if="${p.disponible}" class="wok-badge exito">Disponible</span>
+                <span th:unless="${p.disponible}" class="wok-badge error">Agotado</span>
+              </div>
+              <h3 class="h5 mt-2 mb-1"><a th:href="@{/menu/platos/{id}(id=${p.id})}" class="text-reset text-decoration-none" th:text="${p.nombre}">Plato</a></h3>
+              <p class="small text-suave mb-2" th:text="${p.descripcion}">Descripción</p>
+              <div class="d-flex align-items-center gap-2 small">
+                <span class="wok-picante" th:if="${p.picanteBase > 0}" th:title="'Picante nivel ' + ${p.picanteBase}">
+                  <i th:each="i : ${#numbers.sequence(1, p.picanteBase)}" class="bi bi-fire"></i>
+                </span>
+                <span th:each="a : ${p.alergenos}" class="wok-badge alerta" th:text="${a}">ALERGENO</span>
+              </div>
+            </div>
+            <div class="wok-card-body border-top d-flex align-items-center justify-content-between gap-2 py-2">
+              <span class="h5 mb-0 text-wok" th:text="${@fmt.dinero(p.precio)}">$ 0</span>
+              <div class="wok-acciones" th:if="${puedeGestionar}">
+                <a th:href="@{/menu/platos/{id}/editar(id=${p.id})}" class="btn btn-sm btn-light" title="Editar"><i class="bi bi-pencil"></i></a>
+                <form th:action="@{/menu/platos/{id}/disponibilidad(id=${p.id})}" method="post">
+                  <input type="hidden" name="disponible" th:value="${!p.disponible}">
+                  <button type="submit" class="btn btn-sm" th:classappend="${p.disponible} ? 'btn-outline-warning' : 'btn-outline-success'"
+                          th:title="${p.disponible} ? 'Marcar agotado' : 'Marcar disponible'">
+                    <i class="bi" th:classappend="${p.disponible} ? 'bi-slash-circle' : 'bi-check-circle'"></i>
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      </th:block>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+  </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

@@ -1,0 +1,11 @@
+
+.git
+.vscode
+.env
+.env.*
+!.env.example
+
+**/target/
+**/logs/
+**/__pycache__/
+.run/

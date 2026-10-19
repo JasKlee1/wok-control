@@ -39,8 +39,8 @@ public class WokCommonConfig {
     @Bean(defaultCandidate = false)
     @LoadBalanced
     RestClient.Builder restClientBuilderInterno(
-            @Value("${wok.http.connect-timeout:2s}") Duration connectTimeout,
-            @Value("${wok.http.read-timeout:5s}") Duration readTimeout,
+            @Value("${wok.http.connect-timeout:3s}") Duration connectTimeout,
+            @Value("${wok.http.read-timeout:20s}") Duration readTimeout,
             ObjectProvider<JsonMapper> jsonMapper) {
         HttpClient http = HttpClient.newBuilder()
                 .version(HttpClient.Version.HTTP_1_1)

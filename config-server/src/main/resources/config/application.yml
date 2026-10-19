@@ -56,8 +56,11 @@ wok:
       cookie-name: WOK_TOKEN
       cookie-secure: ${WOK_COOKIE_SECURE:false}
   http:
-    connect-timeout: 2s
-    read-timeout: 5s
+    connect-timeout: 3s
+    # MongoDB Atlas remoto (~0,5 s por operación): un consumo de inventario con muchos insumos
+    # puede tardar varios segundos; con menos tiempo el cliente reintentaba mientras la operación
+    # original seguía en curso.
+    read-timeout: 20s
 
 springdoc:
   api-docs:

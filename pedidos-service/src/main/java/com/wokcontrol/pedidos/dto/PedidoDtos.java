@@ -65,8 +65,6 @@ public final class PedidoDtos {
             Set<String> alergias) {
     }
 
-    public enum AccionPedido { ENVIAR_COCINA }
-
     @Schema(description = "Cambio de estado del pedido: ENVIAR_COCINA (desde ABIERTO) o CANCELADO (con motivo)")
     public record CambioEstadoRequest(
             @NotNull(message = "Indique el estado destino") EstadoPedido estado,

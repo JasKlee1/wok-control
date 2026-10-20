@@ -492,3 +492,34 @@ h1, h2, h3, .wok-titulo {
   body, .wok-content { background: #fff; padding: 0; }
   .wok-ticket { box-shadow: none; border: 0; }
 }
+
+/* ---------- Fotos de la carta ---------- */
+.wok-foto {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  background: var(--wok-crema-2);
+  border-radius: var(--wok-radio) var(--wok-radio) 0 0;
+}
+.wok-foto.redonda { border-radius: var(--wok-radio); }
+.wok-foto-vacia {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 4 / 3;
+  background: repeating-linear-gradient(45deg, var(--wok-crema-2), var(--wok-crema-2) 10px, var(--wok-crema) 10px, var(--wok-crema) 20px);
+  color: var(--wok-dorado);
+  font-size: 2.5rem;
+  border-radius: var(--wok-radio) var(--wok-radio) 0 0;
+}
+.wok-foto-mini {
+  width: 56px;
+  height: 56px;
+  flex: 0 0 56px;
+  object-fit: cover;
+  border-radius: var(--wok-radio-sm);
+  background: var(--wok-crema-2);
+}
+.wok-foto-credito { font-size: .75rem; color: var(--wok-texto-suave); }
+.wok-foto-credito a { color: inherit; }

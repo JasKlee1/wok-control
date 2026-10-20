@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<body>
+<!-- Crédito de una foto con licencia libre (autor, licencia y página de origen) -->
+<small th:fragment="credito(imagen)" class="wok-foto-credito" th:if="${imagen != null and imagen.tieneCredito()}">
+  Foto: <span th:text="${imagen.autor ?: 'autor no indicado'}">autor</span>
+  · <a th:if="${imagen.licenciaUrl != null}" th:href="${imagen.licenciaUrl}" th:text="${imagen.licencia}" target="_blank" rel="noopener noreferrer">licencia</a>
+  <span th:if="${imagen.licenciaUrl == null}" th:text="${imagen.licencia}">licencia</span>
+  <a th:if="${imagen.fuenteUrl != null}" th:href="${imagen.fuenteUrl}" target="_blank" rel="noopener noreferrer" title="Ver origen"><i class="bi bi-box-arrow-up-right"></i></a>
+</small>
+
+<!-- Subir, reemplazar o quitar la foto (solo MENU_GESTIONAR) -->
+<div th:fragment="gestion(destino, id, imagen)" class="d-grid gap-2">
+  <form th:action="@{/menu/{d}/{id}/imagen(d=${destino},id=${id})}" method="post" enctype="multipart/form-data" class="d-grid gap-2">
+    <input type="file" name="archivo" accept="image/jpeg,image/png,image/webp" class="form-control form-control-sm" required
+           aria-label="Archivo de imagen">
+    <details class="small">
+      <summary class="text-suave">Crédito (si la foto no es propia)</summary>
+      <div class="d-grid gap-1 mt-1">
+        <input name="autor" maxlength="200" class="form-control form-control-sm" placeholder="Autor" aria-label="Autor">
+        <input name="licencia" maxlength="60" class="form-control form-control-sm" placeholder="Licencia (p. ej. CC BY 4.0)" aria-label="Licencia">
+        <input name="fuenteUrl" type="url" maxlength="500" class="form-control form-control-sm" placeholder="https://… página de origen" aria-label="Página de origen">
+      </div>
+    </details>
+    <button type="submit" class="btn btn-sm btn-wok-outline"><i class="bi bi-upload"></i>
+      <span th:text="${imagen != null} ? 'Reemplazar foto' : 'Subir foto'">Subir foto</span></button>
+    <small class="text-suave">JPG, PNG o WebP · máximo 2 MB</small>
+  </form>
+  <form th:if="${imagen != null}" th:action="@{/menu/{d}/{id}/imagen/quitar(d=${destino},id=${id})}" method="post"
+        data-wok-confirmar="¿Quitar la foto?" data-wok-confirmar-boton="Quitar foto">
+    <button type="submit" class="btn btn-sm btn-outline-danger w-100"><i class="bi bi-trash"></i> Quitar foto</button>
+  </form>
+</div>
+</body>
+</html>

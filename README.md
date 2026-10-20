@@ -76,7 +76,22 @@ configuraciones de `.vscode/launch.json`.
 - Eureka: <http://localhost:8761>
 
 Con Docker (preparado; **no verificado** porque Docker no estaba instalado en el equipo de desarrollo):
-`.\mvnw.cmd package -DskipTests` y luego `docker compose up --build`.
+`docker compose up --build`. El `Dockerfile` compila dentro del contenedor el módulo indicado en el
+argumento `MODULO`, así que no hace falta compilar antes.
+
+## Datos de demostración y fotos
+
+Con el sistema en marcha y `WOK_DEMO_PASSWORD` definido en `.env`:
+
+```powershell
+python scripts\cargar-datos-demo.py      # carta de "Éxito Chino", inventario, proveedores, mesas y pedidos del día
+python scripts\cargar-imagenes-demo.py   # fotos de referencia de Wikimedia Commons (licencias libres)
+```
+
+Ambos scripts trabajan a través de la API, no borran ni modifican información existente y pueden
+ejecutarse de nuevo sin duplicar datos. Las fotos se guardan en MongoDB (GridFS de `wok_menu`) junto con
+su autor y licencia, que se muestran bajo cada foto y en *Menú → Platos → Créditos de las fotos*.
+Cualquier foto puede reemplazarse por una propia desde el detalle del plato, combo o categoría.
 
 ## Pruebas de extremo a extremo
 

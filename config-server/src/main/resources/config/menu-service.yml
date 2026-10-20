@@ -1,8 +1,13 @@
 spring:
   mongodb:
     database: wok_menu
+  servlet:
+    multipart:
+      # fotos de la carta (GridFS): ImagenService valida además formato y tamaño
+      max-file-size: 2MB
+      max-request-size: 3MB
 
 wok:
   openapi:
     titulo: "Wok Control · Menú"
-    descripcion: "Categorías, platos, combos, recetas, precios y disponibilidad de la carta."
+    descripcion: "Categorías, platos, combos, recetas, precios, disponibilidad y fotos de la carta."

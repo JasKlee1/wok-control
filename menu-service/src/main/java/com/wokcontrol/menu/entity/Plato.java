@@ -40,6 +40,7 @@ public class Plato {
     private Integer tiempoPreparacionMin;
     private List<IngredienteReceta> receta = new ArrayList<>();
     private List<CambioPrecio> historialPrecios = new ArrayList<>();
+    private Imagen imagen;
 
     @CreatedDate
     private Instant creadoEn;
@@ -80,6 +81,8 @@ public class Plato {
     public void setHistorialPrecios(List<CambioPrecio> historialPrecios) { this.historialPrecios = historialPrecios; }
     public Instant getCreadoEn() { return creadoEn; }
     public Instant getActualizadoEn() { return actualizadoEn; }
+    public Imagen getImagen() { return imagen; }
+    public void setImagen(Imagen imagen) { this.imagen = imagen; }
     public Long getVersion() { return version; }
     public void setVersion(Long version) { this.version = version; }
 }

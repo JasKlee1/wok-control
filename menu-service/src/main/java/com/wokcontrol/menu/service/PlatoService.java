@@ -72,6 +72,12 @@ public class PlatoService {
         return repo.findById(id).orElseThrow(() -> new RecursoNoEncontradoException("Plato", id));
     }
 
+    /** Foto de cada categoría (las que tienen): se muestra en los platos que aún no tienen foto propia. */
+    public Map<String, String> fotosCategorias() {
+        return categorias.listar().stream().filter(c -> c.getImagen() != null)
+                .collect(Collectors.toMap(Categoria::getId, c -> c.getImagen().id()));
+    }
+
     public Map<String, String> nombresCategorias() {
         return categorias.listar().stream().collect(Collectors.toMap(Categoria::getId, Categoria::getNombre));
     }

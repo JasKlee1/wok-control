@@ -27,6 +27,7 @@ public class Combo {
     private boolean disponible = true;
     private boolean activo = true;
     private List<Plato.CambioPrecio> historialPrecios = new ArrayList<>();
+    private Imagen imagen;
 
     @CreatedDate
     private Instant creadoEn;
@@ -56,6 +57,8 @@ public class Combo {
     public void setHistorialPrecios(List<Plato.CambioPrecio> historialPrecios) { this.historialPrecios = historialPrecios; }
     public Instant getCreadoEn() { return creadoEn; }
     public Instant getActualizadoEn() { return actualizadoEn; }
+    public Imagen getImagen() { return imagen; }
+    public void setImagen(Imagen imagen) { this.imagen = imagen; }
     public Long getVersion() { return version; }
     public void setVersion(Long version) { this.version = version; }
 }

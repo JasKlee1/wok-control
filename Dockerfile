@@ -1,3 +1,5 @@
+# Imagen de cualquier microservicio. MODULO = carpeta del módulo (config-server, menu-service, ...).
+# En Render basta con definir la variable de entorno MODULO: Render la pasa como argumento del build.
 
 # Etapa 1: compilar el microservicio y sus dependencias Maven
 FROM eclipse-temurin:21-jdk-alpine AS build

@@ -7,6 +7,7 @@ import java.util.Set;
 
 import com.wokcontrol.menu.entity.Categoria;
 import com.wokcontrol.menu.entity.Combo;
+import com.wokcontrol.menu.entity.Imagen;
 import com.wokcontrol.menu.entity.Plato;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -37,9 +38,9 @@ public final class MenuDtos {
             boolean activa) {
     }
 
-    public record CategoriaResponse(String id, String nombre, String descripcion, int orden, boolean activa) {
+    public record CategoriaResponse(String id, String nombre, String descripcion, int orden, boolean activa, Imagen imagen) {
         public static CategoriaResponse de(Categoria c) {
-            return new CategoriaResponse(c.getId(), c.getNombre(), c.getDescripcion(), c.getOrden(), c.isActiva());
+            return new CategoriaResponse(c.getId(), c.getNombre(), c.getDescripcion(), c.getOrden(), c.isActiva(), c.getImagen());
         }
     }
 
@@ -76,12 +77,12 @@ public final class MenuDtos {
     public record PlatoResponse(String id, String nombre, String descripcion, String categoriaId, String categoria,
             BigDecimal precio, boolean disponible, boolean activo, int picanteBase, Set<String> alergenos,
             Integer tiempoPreparacionMin, List<Plato.IngredienteReceta> receta, List<Plato.CambioPrecio> historialPrecios,
-            Instant actualizadoEn) {
+            Instant actualizadoEn, Imagen imagen) {
 
         public static PlatoResponse de(Plato p, String categoria) {
             return new PlatoResponse(p.getId(), p.getNombre(), p.getDescripcion(), p.getCategoriaId(), categoria,
                     p.getPrecio(), p.isDisponible(), p.isActivo(), p.getPicanteBase(), p.getAlergenos(),
-                    p.getTiempoPreparacionMin(), p.getReceta(), p.getHistorialPrecios(), p.getActualizadoEn());
+                    p.getTiempoPreparacionMin(), p.getReceta(), p.getHistorialPrecios(), p.getActualizadoEn(), p.getImagen());
         }
     }
 
@@ -102,7 +103,7 @@ public final class MenuDtos {
 
     public record ComboResponse(String id, String nombre, String descripcion, List<Combo.ItemCombo> items,
             BigDecimal precio, BigDecimal precioPlatosSueltos, boolean disponible, boolean disponibleEfectivo,
-            boolean activo) {
+            boolean activo, Imagen imagen) {
     }
 
     // ---------- Carta y cotización ----------
@@ -127,8 +128,9 @@ public final class MenuDtos {
     public record CotizacionResponse(List<ItemCotizado> items, boolean todosDisponibles) {
     }
 
+    /** imagenId: foto del producto o, si no tiene, la de su categoría (null si ninguna). */
     public record ProductoCarta(TipoProducto tipo, String id, String nombre, String descripcion, BigDecimal precio,
-            int picanteBase, Set<String> alergenos) {
+            int picanteBase, Set<String> alergenos, String imagenId) {
     }
 
     public record SeccionCarta(String categoriaId, String categoria, List<ProductoCarta> productos) {

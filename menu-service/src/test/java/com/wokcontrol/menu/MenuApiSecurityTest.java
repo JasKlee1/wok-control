@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -26,12 +27,14 @@ import com.wokcontrol.common.security.Roles;
 import com.wokcontrol.common.security.TokenService;
 import com.wokcontrol.menu.config.SecurityConfig;
 import com.wokcontrol.menu.controller.api.CartaApiRestController;
+import com.wokcontrol.menu.controller.api.ImagenApiRestController;
 import com.wokcontrol.menu.controller.api.PlatoApiRestController;
 import com.wokcontrol.menu.entity.Plato;
 import com.wokcontrol.menu.service.CartaService;
+import com.wokcontrol.menu.service.ImagenService;
 import com.wokcontrol.menu.service.PlatoService;
 
-@WebMvcTest(controllers = { PlatoApiRestController.class, CartaApiRestController.class })
+@WebMvcTest(controllers = { PlatoApiRestController.class, CartaApiRestController.class, ImagenApiRestController.class })
 @Import({ SecurityConfig.class, JwtConfig.class, TokenService.class })
 class MenuApiSecurityTest {
 
@@ -43,6 +46,8 @@ class MenuApiSecurityTest {
     PlatoService platos;
     @MockitoBean
     CartaService carta;
+    @MockitoBean
+    ImagenService imagenes;
 
     private String token(String rol) {
         return "Bearer " + tokens.emitirTokenUsuario("u", "U", List.of(rol), Roles.SISTEMA.get(rol).permisos(), null).token();
@@ -117,6 +122,18 @@ class MenuApiSecurityTest {
         mvc.perform(post("/api/menu/cotizacion").header("Authorization", "Bearer " + tokens.emitirTokenServicio("pedidos-service", "mesero1"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"items\":[{\"tipo\":\"PLATO\",\"id\":\"p1\",\"cantidad\":2}]}"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void soloQuienGestionaLaCartaPuedeSubirFotos() throws Exception {
+        var foto = new org.springframework.mock.web.MockMultipartFile("archivo", "f.jpg", "image/jpeg",
+                new byte[] { (byte) 0xFF, (byte) 0xD8, (byte) 0xFF, 0 });
+        mvc.perform(multipart("/api/menu/platos/p1/imagen").file(foto).with(r -> { r.setMethod("PUT"); return r; })
+                .header("Authorization", token(Roles.MESERO)))
+                .andExpect(status().isForbidden());
+        mvc.perform(multipart("/api/menu/platos/p1/imagen").file(foto).with(r -> { r.setMethod("PUT"); return r; })
+                .header("Authorization", token(Roles.ADMINISTRADOR)))
                 .andExpect(status().isOk());
     }
 }

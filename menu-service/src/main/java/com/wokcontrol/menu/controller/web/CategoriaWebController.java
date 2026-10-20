@@ -97,6 +97,9 @@ public class CategoriaWebController {
     private String vista(Model model, CategoriaForm form) {
         model.addAttribute("form", form);
         model.addAttribute("categorias", categorias.listar());
+        if (!form.esNuevo()) {
+            model.addAttribute("categoriaEditada", categorias.obtener(form.getId()));
+        }
         java.util.Map<String, Long> conteo = new java.util.HashMap<>();
         platos.buscar(null, null, null, false).forEach(p -> conteo.merge(p.getCategoriaId(), 1L, Long::sum));
         model.addAttribute("conteo", conteo);

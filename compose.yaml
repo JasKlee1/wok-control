@@ -1,5 +1,5 @@
 # Wok Control con Docker Compose (alternativa a scripts/iniciar.ps1).
-# 1) ./mvnw package -DskipTests      2) docker compose up --build
+# docker compose up --build   (cada imagen compila su módulo dentro del contenedor)
 # Las credenciales se leen de .env (no versionado); MongoDB sigue siendo MongoDB Atlas.
 # Solo el gateway publica puerto: los servicios internos se comunican por la red de Compose.
 x-servicio: &servicio

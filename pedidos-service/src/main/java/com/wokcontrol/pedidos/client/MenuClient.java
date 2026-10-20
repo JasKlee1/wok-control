@@ -37,7 +37,7 @@ public class MenuClient {
     }
 
     public record ProductoCarta(String tipo, String id, String nombre, String descripcion, BigDecimal precio,
-            int picanteBase, Set<String> alergenos) {
+            int picanteBase, Set<String> alergenos, String imagenId) {
     }
 
     public record SeccionCarta(String categoriaId, String categoria, List<ProductoCarta> productos) {

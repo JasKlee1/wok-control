@@ -133,6 +133,6 @@ public class ComboService {
             }
         }
         return new ComboResponse(c.getId(), c.getNombre(), c.getDescripcion(), c.getItems(), c.getPrecio(), sueltos,
-                c.isDisponible(), motivoNoDisponible(c, porId) == null, c.isActivo());
+                c.isDisponible(), motivoNoDisponible(c, porId) == null, c.isActivo(), c.getImagen());
     }
 }

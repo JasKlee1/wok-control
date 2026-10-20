@@ -13,10 +13,6 @@ public enum EstadoPedido {
     public static final Set<EstadoPedido> ACTIVOS = EnumSet.of(ABIERTO, ENVIADO, EN_PREPARACION, LISTO, ENTREGADO);
     public static final Set<EstadoPedido> EN_COCINA = EnumSet.of(ENVIADO, EN_PREPARACION, LISTO);
 
-    public boolean esActivo() {
-        return ACTIVOS.contains(this);
-    }
-
     public boolean permiteEditarItems() {
         return this == ABIERTO;
     }

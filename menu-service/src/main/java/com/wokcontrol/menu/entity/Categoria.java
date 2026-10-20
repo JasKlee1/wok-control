@@ -20,6 +20,7 @@ public class Categoria {
     private String descripcion;
     private int orden;
     private boolean activa = true;
+    private Imagen imagen;
 
     @CreatedDate
     private Instant creadoEn;
@@ -40,6 +41,8 @@ public class Categoria {
     public void setActiva(boolean activa) { this.activa = activa; }
     public Instant getCreadoEn() { return creadoEn; }
     public Instant getActualizadoEn() { return actualizadoEn; }
+    public Imagen getImagen() { return imagen; }
+    public void setImagen(Imagen imagen) { this.imagen = imagen; }
     public Long getVersion() { return version; }
     public void setVersion(Long version) { this.version = version; }
 }

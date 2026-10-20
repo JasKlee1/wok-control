@@ -124,6 +124,7 @@ public class PlatoWebController {
         model.addAttribute("platos", platos.buscar(q, categoriaId, disponible, false));
         model.addAttribute("categorias", categorias.listar());
         model.addAttribute("nombresCategorias", platos.nombresCategorias());
+        model.addAttribute("fotosCategorias", platos.fotosCategorias());
         model.addAttribute("q", q);
         model.addAttribute("categoriaFiltro", categoriaId);
         model.addAttribute("disponibleFiltro", disponible);
@@ -135,6 +136,7 @@ public class PlatoWebController {
         Plato p = platos.obtener(id);
         model.addAttribute("plato", p);
         model.addAttribute("categoria", platos.nombresCategorias().get(p.getCategoriaId()));
+        model.addAttribute("fotoCategoria", platos.fotosCategorias().get(p.getCategoriaId()));
         return "menu/platos/detalle";
     }
 

@@ -30,9 +30,14 @@
                       <tr th:each="pr : ${s.productos}" th:with="l=${form.linea(pr.tipo + ':' + pr.id)}, idx=${form.lineas.indexOf(form.linea(pr.tipo + ':' + pr.id))}">
                         <td>
                           <input type="hidden" th:name="|lineas[${idx}].clave|" th:value="${l.clave}">
-                          <div class="fw-semibold" th:text="${pr.nombre}">Plato</div>
-                          <div class="small text-suave" th:text="${pr.descripcion}">desc</div>
-                          <span th:each="a : ${pr.alergenos}" class="wok-badge alerta me-1" th:text="${a}">A</span>
+                          <div class="d-flex gap-2 align-items-start">
+                            <img th:if="${pr.imagenId != null}" th:src="@{/menu/imagenes/{f}(f=${pr.imagenId})}" class="wok-foto-mini" alt="" loading="lazy">
+                            <div>
+                              <div class="fw-semibold" th:text="${pr.nombre}">Plato</div>
+                              <div class="small text-suave" th:text="${pr.descripcion}">desc</div>
+                              <span th:each="a : ${pr.alergenos}" class="wok-badge alerta me-1" th:text="${a}">A</span>
+                            </div>
+                          </div>
                         </td>
                         <td class="text-end text-nowrap" th:text="${@fmt.dinero(pr.precio)}">$</td>
                         <td><input type="number" min="0" max="50" class="form-control form-control-sm" th:name="|lineas[${idx}].cantidad|" th:value="${l.cantidad}" aria-label="Cantidad"></td>

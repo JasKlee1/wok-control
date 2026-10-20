@@ -28,10 +28,6 @@ public record UsuarioActual(String username, String nombre, List<String> roles, 
         return false;
     }
 
-    public boolean tieneRol(String rol) {
-        return roles.contains(rol);
-    }
-
     /** Nombre legible del primer rol, para la barra superior. */
     public String rolPrincipal() {
         if (servicio) {

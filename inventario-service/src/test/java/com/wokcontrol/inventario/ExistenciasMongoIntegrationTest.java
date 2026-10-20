@@ -22,7 +22,7 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import com.wokcontrol.common.audit.AuditoriaPublisher;
-import com.wokcontrol.inventario.config.MongoConfig;
+import com.wokcontrol.common.config.MongoAuditoriaConfig;
 import com.wokcontrol.inventario.dto.InventarioDtos.ConsumoRequest;
 import com.wokcontrol.inventario.dto.InventarioDtos.LineaConsumo;
 import com.wokcontrol.inventario.entity.Insumo;
@@ -41,7 +41,7 @@ import com.wokcontrol.inventario.service.StockInsuficienteException;
  * las bases de datos del restaurante.
  */
 @DataMongoTest
-@Import({ ExistenciasService.class, OperacionInternaService.class, MongoConfig.class })
+@Import({ ExistenciasService.class, OperacionInternaService.class, MongoAuditoriaConfig.class })
 @EnabledIfEnvironmentVariable(named = "WOK_TEST_MONGODB_URI", matches = ".+")
 class ExistenciasMongoIntegrationTest {
 

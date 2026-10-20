@@ -40,7 +40,11 @@
 
       <div class="row g-3" th:unless="${platos.isEmpty()}">
         <div class="col-sm-6 col-xl-4 col-xxl-3" th:each="p : ${platos}">
-          <div class="wok-card h-100 d-flex flex-column">
+          <div class="wok-card h-100 d-flex flex-column" th:with="foto=${p.imagen != null} ? ${p.imagen.id} : ${fotosCategorias[p.categoriaId]}">
+            <a th:href="@{/menu/platos/{id}(id=${p.id})}" tabindex="-1" aria-hidden="true">
+              <img th:if="${foto != null}" th:src="@{/menu/imagenes/{f}(f=${foto})}" class="wok-foto" alt="" loading="lazy">
+              <div th:unless="${foto != null}" class="wok-foto-vacia"><i class="bi bi-egg-fried"></i></div>
+            </a>
             <div class="wok-card-body flex-grow-1">
               <div class="d-flex justify-content-between align-items-start gap-2 mb-1">
                 <span class="wok-badge neutro" th:text="${nombresCategorias[p.categoriaId]}">Categoría</span>
@@ -72,6 +76,9 @@
           </div>
         </div>
       </div>
+      <p class="text-center small mt-4 mb-0" th:unless="${platos.isEmpty()}">
+        <a th:href="@{/menu/imagenes/creditos}" class="text-suave"><i class="bi bi-image"></i> Créditos de las fotos</a>
+      </p>
       </th:block>
     </main>
     <footer th:replace="~{fragments/layout :: footer}"></footer>

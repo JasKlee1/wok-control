@@ -15,6 +15,7 @@ y el gateway las bloquea desde el exterior.
 | | `GET/POST /api/menu/platos` · `GET/PUT/DELETE /api/menu/platos/{id}` · `PATCH .../precio` · `PATCH .../disponibilidad` | Platos (DELETE = retiro lógico) |
 | | `GET/POST /api/menu/combos` · `GET/PUT/DELETE /api/menu/combos/{id}` · `PATCH .../disponibilidad` | Combos |
 | | `GET /api/menu/carta` · `POST /api/menu/cotizacion` | Carta disponible y cotización |
+| | `PUT/DELETE /api/menu/{platos\|combos\|categorias}/{id}/imagen` (multipart) · `GET /api/menu/imagenes/{id}` · `GET /api/menu/imagenes/creditos` | Fotos en GridFS con su crédito |
 | pedidos | `GET/POST /api/mesas` · `GET/PUT /api/mesas/{id}` · `GET .../pedidos` · `PATCH .../liberar` · `PATCH .../servicio` | Mesas |
 | | `GET/POST /api/pedidos` · `GET/PUT /api/pedidos/{id}` · `PATCH /api/pedidos/{id}/estado` (ENVIADO, CANCELADO) | Pedidos |
 | | `PATCH /api/pedidos/{id}/items/{itemId}/estado` · `GET /api/cocina/comandas` | Cocina |

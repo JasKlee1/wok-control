@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Créditos de las fotos')}"></head>
+<body>
+<div class="wok-app">
+  <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+  <div class="wok-main">
+    <header th:replace="~{fragments/layout :: topbar('Créditos de las fotos', 'Autor y licencia de cada imagen de la carta')}"></header>
+    <main class="wok-content">
+      <div class="wok-card">
+        <div class="wok-card-body small text-suave">
+          Las fotos de referencia provienen de Wikimedia Commons y se usan según su licencia libre (CC0, dominio público,
+          CC BY o CC BY-SA), que exige reconocer al autor. Son ilustrativas: no corresponden necesariamente a la
+          presentación real del plato. Las fotos propias del restaurante pueden reemplazarlas desde cada plato.
+        </div>
+        <div th:if="${creditos.isEmpty()}">
+          <div th:replace="~{fragments/layout :: vacio('bi-image', 'Sin fotos', 'Aún no se han cargado fotos en la carta.')}"></div>
+        </div>
+        <div class="table-responsive" th:unless="${creditos.isEmpty()}">
+          <table class="table table-wok align-middle">
+            <thead><tr><th>Foto</th><th>Elemento</th><th>Autor</th><th>Licencia</th><th>Origen</th></tr></thead>
+            <tbody>
+              <tr th:each="c : ${creditos}">
+                <td><img th:src="@{/menu/imagenes/{f}(f=${c.imagen.id})}" class="wok-foto-mini" alt="" loading="lazy"></td>
+                <td><div class="fw-semibold" th:text="${c.elemento}">Plato</div><small class="text-suave" th:text="${c.tipo}">Plato</small></td>
+                <td class="small" th:text="${c.imagen.autor ?: 'Foto propia'}">autor</td>
+                <td class="small">
+                  <a th:if="${c.imagen.licenciaUrl != null}" th:href="${c.imagen.licenciaUrl}" th:text="${c.imagen.licencia}" target="_blank" rel="noopener noreferrer">lic</a>
+                  <span th:if="${c.imagen.licenciaUrl == null}" th:text="${c.imagen.licencia ?: '—'}">lic</span>
+                </td>
+                <td class="small"><a th:if="${c.imagen.fuenteUrl != null}" th:href="${c.imagen.fuenteUrl}" target="_blank" rel="noopener noreferrer">Ver <i class="bi bi-box-arrow-up-right"></i></a></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+  </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

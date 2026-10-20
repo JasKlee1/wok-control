@@ -1,7 +1,7 @@
 {
   // Arranque desde VS Code (extensión "Debugger for Java"). Inicie en este orden:
   // 1) config-server  2) discovery-service  3) servicios de negocio  4) api-gateway
-  // o use la configuración compuesta "Wok Control (todo)". El directorio de trabajo es la raíz,
+  // (la configuración compuesta "Servicios de negocio" arranca el paso 3). El directorio de trabajo es la raíz,
   // donde cada servicio lee el archivo .env.
   "version": "0.2.0",
   "configurations": [

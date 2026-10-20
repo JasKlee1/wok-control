@@ -18,6 +18,8 @@
       <div class="row g-3">
         <div class="col-md-6 col-xl-4" th:each="c : ${combos}">
           <div class="wok-card h-100 d-flex flex-column">
+            <img th:if="${c.imagen != null}" th:src="@{/menu/imagenes/{f}(f=${c.imagen.id})}" class="wok-foto" th:alt="${c.nombre}" loading="lazy">
+            <div th:unless="${c.imagen != null}" class="wok-foto-vacia"><i class="bi bi-collection"></i></div>
             <div class="wok-card-header">
               <h3 class="h6 me-auto mb-0" th:text="${c.nombre}">Combo</h3>
               <span th:if="${c.disponibleEfectivo}" class="wok-badge exito">Disponible</span>
@@ -25,9 +27,14 @@
             </div>
             <div class="wok-card-body flex-grow-1">
               <p class="small text-suave" th:text="${c.descripcion}">d</p>
-              <ul class="list-unstyled small mb-0">
+              <ul class="list-unstyled small mb-2">
                 <li th:each="i : ${c.items}"><i class="bi bi-dot text-dorado"></i><span th:text="${i.cantidad} + ' × ' + ${i.nombrePlato}">1 x</span></li>
               </ul>
+              <small th:replace="~{menu/fragments/foto :: credito(${c.imagen})}"></small>
+              <details class="mt-2" th:if="${puedeGestionar}">
+                <summary class="small text-suave"><i class="bi bi-image"></i> Foto del combo</summary>
+                <div class="mt-2" th:insert="~{menu/fragments/foto :: gestion('combos', ${c.id}, ${c.imagen})}"></div>
+              </details>
             </div>
             <div class="wok-card-body border-top d-flex align-items-center justify-content-between py-2">
               <div>

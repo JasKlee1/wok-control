@@ -21,6 +21,7 @@ import com.wokcontrol.menu.dto.MenuDtos.SeccionCarta;
 import com.wokcontrol.menu.dto.MenuDtos.TipoProducto;
 import com.wokcontrol.menu.entity.Categoria;
 import com.wokcontrol.menu.entity.Combo;
+import com.wokcontrol.menu.entity.Imagen;
 import com.wokcontrol.menu.entity.Plato;
 import com.wokcontrol.menu.repository.ComboRepository;
 import com.wokcontrol.menu.repository.PlatoRepository;
@@ -54,10 +55,12 @@ public class CartaService {
             if (!c.isActiva()) {
                 continue;
             }
+            String fotoCategoria = idImagen(c.getImagen());
             List<ProductoCarta> productos = activos.stream()
                     .filter(p -> c.getId().equals(p.getCategoriaId()) && p.isDisponible())
                     .map(p -> new ProductoCarta(TipoProducto.PLATO, p.getId(), p.getNombre(), p.getDescripcion(),
-                            p.getPrecio(), p.getPicanteBase(), p.getAlergenos()))
+                            p.getPrecio(), p.getPicanteBase(), p.getAlergenos(),
+                            p.getImagen() != null ? p.getImagen().id() : fotoCategoria))
                     .toList();
             if (!productos.isEmpty()) {
                 secciones.add(new SeccionCarta(c.getId(), c.getNombre(), productos));
@@ -66,12 +69,16 @@ public class CartaService {
         List<ProductoCarta> combosDisponibles = combos.findAllByOrderByNombreAsc().stream()
                 .filter(cb -> comboService.motivoNoDisponible(cb, porId) == null)
                 .map(cb -> new ProductoCarta(TipoProducto.COMBO, cb.getId(), cb.getNombre(), cb.getDescripcion(),
-                        cb.getPrecio(), maxPicante(cb, porId), alergenos(cb, porId)))
+                        cb.getPrecio(), maxPicante(cb, porId), alergenos(cb, porId), idImagen(cb.getImagen())))
                 .toList();
         if (!combosDisponibles.isEmpty()) {
             secciones.add(new SeccionCarta("combos", "Combos", combosDisponibles));
         }
         return secciones;
+    }
+
+    private static String idImagen(Imagen imagen) {
+        return imagen == null ? null : imagen.id();
     }
 
     public CotizacionResponse cotizar(CotizacionRequest req) {

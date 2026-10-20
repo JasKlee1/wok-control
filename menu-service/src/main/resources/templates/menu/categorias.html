@@ -17,10 +17,12 @@
             </div>
             <div class="table-responsive" th:unless="${categorias.isEmpty()}">
               <table class="table table-wok table-hover">
-                <thead><tr><th>Orden</th><th>Nombre</th><th class="text-center">Platos activos</th><th>Estado</th><th></th></tr></thead>
+                <thead><tr><th>Orden</th><th>Foto</th><th>Nombre</th><th class="text-center">Platos activos</th><th>Estado</th><th></th></tr></thead>
                 <tbody>
                   <tr th:each="c : ${categorias}">
                     <td th:text="${c.orden}">0</td>
+                    <td><img th:if="${c.imagen != null}" th:src="@{/menu/imagenes/{f}(f=${c.imagen.id})}" class="wok-foto-mini" alt="" loading="lazy">
+                        <span th:unless="${c.imagen != null}" class="wok-foto-mini d-inline-flex align-items-center justify-content-center text-dorado"><i class="bi bi-image"></i></span></td>
                     <td><div class="fw-semibold" th:text="${c.nombre}">n</div><small class="text-suave" th:text="${c.descripcion}">d</small></td>
                     <td class="text-center" th:text="${conteo[c.id] ?: 0}">0</td>
                     <td><span th:if="${c.activa}" class="wok-badge exito">Activa</span><span th:unless="${c.activa}" class="wok-badge neutro">Inactiva</span></td>
@@ -65,6 +67,15 @@
               <button type="submit" class="btn btn-wok"><i class="bi bi-save"></i> Guardar</button>
             </div>
           </form>
+          <div class="wok-card mt-3" th:unless="${form.esNuevo()}" th:with="cat=${categoriaEditada}">
+            <div class="wok-card-header"><i class="bi bi-image text-wok"></i><h2>Foto de la categoría</h2></div>
+            <img th:if="${cat.imagen != null}" th:src="@{/menu/imagenes/{f}(f=${cat.imagen.id})}" class="wok-foto redonda px-3" th:alt="${cat.nombre}">
+            <div class="wok-card-body">
+              <p class="small text-suave">Se muestra en los platos de esta categoría que aún no tienen foto propia.</p>
+              <small th:replace="~{menu/fragments/foto :: credito(${cat.imagen})}"></small>
+              <div class="mt-2" th:insert="~{menu/fragments/foto :: gestion('categorias', ${cat.id}, ${cat.imagen})}"></div>
+            </div>
+          </div>
         </div>
       </div>
     </main>

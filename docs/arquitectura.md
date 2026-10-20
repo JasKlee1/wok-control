@@ -12,11 +12,15 @@ wok_usuarios wok_menu wok_pedidos wok_inventario wok_proveedores wok_facturacion
 
 - **Una base lógica por servicio** en el mismo clúster de Atlas. Ningún servicio lee colecciones de
   otro; las relaciones son por identificador y se resuelven por REST (`client/` en cada servicio).
+- **Fotos de la carta en GridFS** (`wok_menu.fs.files` / `fs.chunks`). Platos, combos y categorías
+  guardan el identificador de su foto con el crédito (autor, licencia, origen). Se validan por su firma
+  binaria (JPG, PNG o WebP, máximo 2 MB) y se sirven con caché larga porque cada foto nueva recibe un
+  identificador nuevo.
 - **UI distribuida por dominio.** Cada servicio sirve sus pantallas (`controller/web`) con el layout
   común de `wok-common`. Como todo entra por el gateway (mismo origen), la cookie de sesión y el CSRF
   funcionan entre servicios.
 - **Llamadas internas.** `ClienteInterno` usa un `RestClient` con balanceo por Eureka, timeouts
-  (conexión 2 s, lectura 5 s), traducción de errores remotos y un reintento solo en llamadas
+  (conexión 3 s, lectura 20 s, por la latencia de Atlas), traducción de errores remotos y un reintento solo en llamadas
   idempotentes. Usa dos tipos de credencial:
   - el JWT del usuario, cuando el destino debe aplicar los permisos de ese usuario;
   - un token de servicio de 5 minutos (permiso `SISTEMA`, claim `actor`), para operaciones internas.

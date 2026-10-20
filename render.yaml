@@ -1,0 +1,325 @@
+# =============================================================================
+# Blueprint de Render: despliega Wok Control como 10 servicios web independientes,
+# uno por microservicio, todos construidos con el mismo Dockerfile (variable MODULO).
+#
+# Antes de usarlo, cree en Render el grupo de variables "wok-secretos" con:
+#   MONGODB_URI, JWT_SECRET y WOK_INFRA_PASSWORD   (ver docs/despliegue-render.md)
+#
+# Las URL públicas siguen el nombre de cada servicio: https://<nombre>.onrender.com.
+# Si Render asigna otra URL (nombre ocupado), corrija CONFIG_SERVER_URL, EUREKA_HOST y
+# WOK_CORS_ORIGINS abajo o en el panel de Render.
+# Plan: free (0,1 CPU, 512 MB, se duerme tras 15 min sin tráfico). Para producción cambie cada
+# servicio a un plan pago desde el panel de Render (Settings > Instance Type).
+# =============================================================================
+services:
+
+  - type: web
+    name: wokcontrol-exito-config
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /actuator/health
+    autoDeployTrigger: commit
+    buildFilter:
+      paths:
+        - config-server/**
+        - pom.xml
+        - Dockerfile
+        - .mvn/**
+        - mvnw
+    envVars:
+      - key: MODULO
+        value: "config-server"
+      - key: SPRING_PROFILES_ACTIVE
+        value: "native,render"
+      - key: CONFIG_SERVER_PORT
+        value: "10000"
+      - key: WOK_INFRA_USER
+        value: "wok"
+      - fromGroup: wok-secretos
+
+  - type: web
+    name: wokcontrol-exito-eureka
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /actuator/health
+    autoDeployTrigger: commit
+    buildFilter:
+      paths:
+        - discovery-service/**
+        - pom.xml
+        - Dockerfile
+        - .mvn/**
+        - mvnw
+    envVars:
+      - key: MODULO
+        value: "discovery-service"
+      - key: SPRING_PROFILES_ACTIVE
+        value: "render"
+      - key: EUREKA_PORT
+        value: "10000"
+      - key: WOK_INFRA_USER
+        value: "wok"
+      - fromGroup: wok-secretos
+
+  - type: web
+    name: wokcontrol-exito-usuarios
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /actuator/health
+    autoDeployTrigger: commit
+    buildFilter:
+      paths:
+        - usuarios-service/**
+        - wok-common/**
+        - pom.xml
+        - Dockerfile
+        - .mvn/**
+        - mvnw
+    envVars:
+      - key: MODULO
+        value: "usuarios-service"
+      - key: SPRING_PROFILES_ACTIVE
+        value: "render"
+      - key: USUARIOS_PORT
+        value: "10000"
+      - key: WOK_INFRA_USER
+        value: "wok"
+      - key: CONFIG_SERVER_URL
+        value: "https://wokcontrol-exito-config.onrender.com"
+      - key: EUREKA_HOST
+        value: "wokcontrol-exito-eureka.onrender.com"
+      - fromGroup: wok-secretos
+
+  - type: web
+    name: wokcontrol-exito-menu
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /actuator/health
+    autoDeployTrigger: commit
+    buildFilter:
+      paths:
+        - menu-service/**
+        - wok-common/**
+        - pom.xml
+        - Dockerfile
+        - .mvn/**
+        - mvnw
+    envVars:
+      - key: MODULO
+        value: "menu-service"
+      - key: SPRING_PROFILES_ACTIVE
+        value: "render"
+      - key: MENU_PORT
+        value: "10000"
+      - key: WOK_INFRA_USER
+        value: "wok"
+      - key: CONFIG_SERVER_URL
+        value: "https://wokcontrol-exito-config.onrender.com"
+      - key: EUREKA_HOST
+        value: "wokcontrol-exito-eureka.onrender.com"
+      - fromGroup: wok-secretos
+
+  - type: web
+    name: wokcontrol-exito-pedidos
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /actuator/health
+    autoDeployTrigger: commit
+    buildFilter:
+      paths:
+        - pedidos-service/**
+        - wok-common/**
+        - pom.xml
+        - Dockerfile
+        - .mvn/**
+        - mvnw
+    envVars:
+      - key: MODULO
+        value: "pedidos-service"
+      - key: SPRING_PROFILES_ACTIVE
+        value: "render"
+      - key: PEDIDOS_PORT
+        value: "10000"
+      - key: WOK_INFRA_USER
+        value: "wok"
+      - key: CONFIG_SERVER_URL
+        value: "https://wokcontrol-exito-config.onrender.com"
+      - key: EUREKA_HOST
+        value: "wokcontrol-exito-eureka.onrender.com"
+      - fromGroup: wok-secretos
+
+  - type: web
+    name: wokcontrol-exito-inventario
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /actuator/health
+    autoDeployTrigger: commit
+    buildFilter:
+      paths:
+        - inventario-service/**
+        - wok-common/**
+        - pom.xml
+        - Dockerfile
+        - .mvn/**
+        - mvnw
+    envVars:
+      - key: MODULO
+        value: "inventario-service"
+      - key: SPRING_PROFILES_ACTIVE
+        value: "render"
+      - key: INVENTARIO_PORT
+        value: "10000"
+      - key: WOK_INFRA_USER
+        value: "wok"
+      - key: CONFIG_SERVER_URL
+        value: "https://wokcontrol-exito-config.onrender.com"
+      - key: EUREKA_HOST
+        value: "wokcontrol-exito-eureka.onrender.com"
+      - fromGroup: wok-secretos
+
+  - type: web
+    name: wokcontrol-exito-proveedores
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /actuator/health
+    autoDeployTrigger: commit
+    buildFilter:
+      paths:
+        - proveedores-service/**
+        - wok-common/**
+        - pom.xml
+        - Dockerfile
+        - .mvn/**
+        - mvnw
+    envVars:
+      - key: MODULO
+        value: "proveedores-service"
+      - key: SPRING_PROFILES_ACTIVE
+        value: "render"
+      - key: PROVEEDORES_PORT
+        value: "10000"
+      - key: WOK_INFRA_USER
+        value: "wok"
+      - key: CONFIG_SERVER_URL
+        value: "https://wokcontrol-exito-config.onrender.com"
+      - key: EUREKA_HOST
+        value: "wokcontrol-exito-eureka.onrender.com"
+      - fromGroup: wok-secretos
+
+  - type: web
+    name: wokcontrol-exito-facturacion
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /actuator/health
+    autoDeployTrigger: commit
+    buildFilter:
+      paths:
+        - facturacion-service/**
+        - wok-common/**
+        - pom.xml
+        - Dockerfile
+        - .mvn/**
+        - mvnw
+    envVars:
+      - key: MODULO
+        value: "facturacion-service"
+      - key: SPRING_PROFILES_ACTIVE
+        value: "render"
+      - key: FACTURACION_PORT
+        value: "10000"
+      - key: WOK_INFRA_USER
+        value: "wok"
+      - key: CONFIG_SERVER_URL
+        value: "https://wokcontrol-exito-config.onrender.com"
+      - key: EUREKA_HOST
+        value: "wokcontrol-exito-eureka.onrender.com"
+      - fromGroup: wok-secretos
+
+  - type: web
+    name: wokcontrol-exito-reportes
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /actuator/health
+    autoDeployTrigger: commit
+    buildFilter:
+      paths:
+        - reportes-service/**
+        - wok-common/**
+        - pom.xml
+        - Dockerfile
+        - .mvn/**
+        - mvnw
+    envVars:
+      - key: MODULO
+        value: "reportes-service"
+      - key: SPRING_PROFILES_ACTIVE
+        value: "render"
+      - key: REPORTES_PORT
+        value: "10000"
+      - key: WOK_INFRA_USER
+        value: "wok"
+      - key: CONFIG_SERVER_URL
+        value: "https://wokcontrol-exito-config.onrender.com"
+      - key: EUREKA_HOST
+        value: "wokcontrol-exito-eureka.onrender.com"
+      - fromGroup: wok-secretos
+
+  - type: web
+    name: wokcontrol-exito-gateway
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /actuator/health
+    autoDeployTrigger: commit
+    buildFilter:
+      paths:
+        - api-gateway/**
+        - pom.xml
+        - Dockerfile
+        - .mvn/**
+        - mvnw
+    envVars:
+      - key: MODULO
+        value: "api-gateway"
+      - key: SPRING_PROFILES_ACTIVE
+        value: "render"
+      - key: GATEWAY_PORT
+        value: "10000"
+      - key: WOK_INFRA_USER
+        value: "wok"
+      - key: CONFIG_SERVER_URL
+        value: "https://wokcontrol-exito-config.onrender.com"
+      - key: EUREKA_HOST
+        value: "wokcontrol-exito-eureka.onrender.com"
+      - key: WOK_CORS_ORIGINS
+        value: "https://wokcontrol-exito-gateway.onrender.com"
+      - fromGroup: wok-secretos

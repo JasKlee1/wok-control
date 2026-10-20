@@ -1,0 +1,13 @@
+# Perfil de despliegue en Render (SPRING_PROFILES_ACTIVE=render).
+spring:
+  security:
+    user:
+      name: ${WOK_INFRA_USER:wok}
+      password: ${WOK_INFRA_PASSWORD}
+
+eureka:
+  server:
+    # En el plan gratuito Render duerme los servicios sin tráfico. No se dan de baja del registro:
+    # su URL pública no cambia y Render los despierta al recibir la siguiente petición.
+    enable-self-preservation: false
+    eviction-interval-timer-in-ms: 86400000

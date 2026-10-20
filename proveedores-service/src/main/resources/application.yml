@@ -14,3 +14,6 @@ spring:
     config:
       # si el config-server no responde, el servicio no arranca con configuración incompleta
       fail-fast: true
+      # credenciales del config-server en Render (perfil render); vacías en local
+      username: ${WOK_INFRA_USER:}
+      password: ${WOK_INFRA_PASSWORD:}

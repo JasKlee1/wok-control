@@ -1,0 +1,6 @@
+# Perfil de despliegue en Render (SPRING_PROFILES_ACTIVE=native,render).
+spring:
+  security:
+    user:
+      name: ${WOK_INFRA_USER:wok}
+      password: ${WOK_INFRA_PASSWORD}

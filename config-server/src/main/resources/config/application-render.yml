@@ -1,0 +1,28 @@
+# ============================================================================
+# Ajustes que reciben todos los servicios cuando se ejecutan en Render (perfil "render").
+# Cada servicio es un "web service" con URL pública https://<nombre>.onrender.com. En el plan
+# gratuito no hay red privada, así que los servicios se registran en Eureka con su URL pública
+# (puerto 443, https) y el gateway y los clientes internos los llaman por ahí.
+# ============================================================================
+eureka:
+  client:
+    service-url:
+      defaultZone: https://${WOK_INFRA_USER:wok}:${WOK_INFRA_PASSWORD}@${EUREKA_HOST}/eureka/
+  instance:
+    prefer-ip-address: false
+    hostname: ${RENDER_EXTERNAL_HOSTNAME}
+    instance-id: ${RENDER_EXTERNAL_HOSTNAME}
+    non-secure-port-enabled: false
+    secure-port-enabled: true
+    secure-port: 443
+    status-page-url: https://${RENDER_EXTERNAL_HOSTNAME}/actuator/info
+    health-check-url: https://${RENDER_EXTERNAL_HOSTNAME}/actuator/health
+    home-page-url: https://${RENDER_EXTERNAL_HOSTNAME}/
+
+wok:
+  security:
+    jwt:
+      cookie-secure: true
+  http:
+    # un servicio dormido tarda alrededor de un minuto en despertar en el plan gratuito
+    read-timeout: 90s

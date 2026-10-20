@@ -79,6 +79,11 @@ Con Docker (preparado; **no verificado** porque Docker no estaba instalado en el
 `docker compose up --build`. El `Dockerfile` compila dentro del contenedor el módulo indicado en el
 argumento `MODULO`, así que no hace falta compilar antes.
 
+## Despliegue en Render
+
+El Blueprint [`render.yaml`](render.yaml) crea los 10 microservicios como servicios web
+independientes. Pasos, secretos y limitaciones del plan gratuito: [docs/despliegue-render.md](docs/despliegue-render.md).
+
 ## Datos de demostración y fotos
 
 Con el sistema en marcha y `WOK_DEMO_PASSWORD` definido en `.env`:
@@ -117,4 +122,4 @@ un comprobante y un cierre. Las credenciales de esos usuarios quedan en `.run/cr
 
 Documentación: [arquitectura](docs/arquitectura.md) · [endpoints](docs/endpoints.md) ·
 [seguridad](docs/seguridad.md) · [modelo de dominio](docs/modelo-dominio.md) ·
-[informe de auditoría](docs/informe-auditoria.md)
+[informe de auditoría](docs/informe-auditoria.md) · [despliegue en Render](docs/despliegue-render.md)

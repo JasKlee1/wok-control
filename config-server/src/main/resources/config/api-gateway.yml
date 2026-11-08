@@ -94,7 +94,7 @@ spring:
             - id: pedidos-web
               uri: lb://pedidos-service
               predicates:
-                - Path=/mesas/**,/pedidos/**,/cocina/**
+                - Path=/mesas/**,/pedidos/**,/cocina/**,/cliente/**
             - id: inventario-web
               uri: lb://inventario-service
               predicates:

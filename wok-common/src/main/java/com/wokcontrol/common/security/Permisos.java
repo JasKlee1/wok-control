@@ -43,6 +43,9 @@ public final class Permisos {
     public static final String FACTURAS_ANULAR = "FACTURAS_ANULAR";
     public static final String CAJA_CERRAR = "CAJA_CERRAR";
 
+    /** v2 · HU-036: cliente con sesión de mesa abierta desde el QR. */
+    public static final String CARTA_CLIENTE = "CARTA_CLIENTE";
+
     /** Permiso reservado a los tokens internos emitidos entre microservicios. */
     public static final String SISTEMA = "SISTEMA";
 
@@ -77,6 +80,7 @@ public final class Permisos {
         d.put(DESCUENTOS_AUTORIZAR, "Autorizar descuentos");
         d.put(FACTURAS_ANULAR, "Anular comprobantes con motivo");
         d.put(CAJA_CERRAR, "Realizar cierres de caja");
+        d.put(CARTA_CLIENTE, "Ver la carta y el pedido de su propia mesa desde el QR (sesión de mesa)");
         DESCRIPCIONES = Map.copyOf(d);
     }
 

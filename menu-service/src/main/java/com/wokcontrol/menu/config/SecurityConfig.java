@@ -35,6 +35,8 @@ public class SecurityConfig {
         WokSecurity.web(http, decoder, props).authorizeHttpRequests(a -> a
                 .requestMatchers(WokSecurity.RUTAS_PUBLICAS).permitAll()
                 .requestMatchers(HttpMethod.POST, "/menu/**").hasAuthority(MENU_GESTIONAR)
+                // v2 · HU-033: el cliente con sesión de mesa ve las fotos de la carta
+                .requestMatchers(HttpMethod.GET, "/menu/imagenes/*").hasAnyAuthority(MENU_VER, MENU_GESTIONAR, CARTA_CLIENTE)
                 .requestMatchers("/menu/categorias/**", "/menu/platos/nuevo", "/menu/platos/*/editar",
                         "/menu/combos/nuevo", "/menu/combos/*/editar").hasAuthority(MENU_GESTIONAR)
                 .requestMatchers("/menu/**").hasAnyAuthority(MENU_VER, MENU_GESTIONAR)

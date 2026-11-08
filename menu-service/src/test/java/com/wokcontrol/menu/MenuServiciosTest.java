@@ -79,6 +79,30 @@ class MenuServiciosTest {
         return p;
     }
 
+    /** Épica 7 · T003 · AC-033.1: la carta del QR solo trae los platos disponibles. */
+    @Test
+    void ac033_1_cartaPorQrMuestra38De40PlatosCuandoHay2Agotados() {
+        Categoria c = new Categoria();
+        c.setId("cat1");
+        c.setNombre("Arroces");
+        c.setActiva(true);
+        when(categoriasRepo.findAllByOrderByOrdenAscNombreAsc()).thenReturn(List.of(c));
+        List<Plato> carta40 = new java.util.ArrayList<>();
+        for (int i = 1; i <= 40; i++) {
+            Plato p = plato("p" + i, "20000", i > 2);
+            p.setCategoriaId("cat1");
+            carta40.add(p);
+        }
+        when(platos.findByActivoTrueOrderByNombreAsc()).thenReturn(carta40);
+        when(combos.findAllByOrderByNombreAsc()).thenReturn(List.of());
+
+        var secciones = carta.cartaDisponible();
+
+        assertThat(secciones).hasSize(1);
+        assertThat(secciones.get(0).productos()).hasSize(38)
+                .noneMatch(p -> p.id().equals("p1") || p.id().equals("p2"));
+    }
+
     @Test
     void cotizacionDeComboSumaLasRecetasDeSusPlatos() {
         Plato arroz = plato("p1", "20000", true, new Plato.IngredienteReceta("arroz", "Arroz", "KG", new BigDecimal("0.2")));

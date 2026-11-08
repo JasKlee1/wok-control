@@ -78,7 +78,8 @@ public class UsuarioWebController {
     public String lista(@RequestParam(required = false) String q, @RequestParam(required = false) String rol,
             @RequestParam(required = false) Boolean activo, @RequestParam(defaultValue = "0") int page, Model model) {
         model.addAttribute("pagina", usuarios.buscar(q, rol, activo, PageRequest.of(Math.max(page, 0), 15)));
-        model.addAttribute("roles", roles.listar());
+        model.addAttribute("roles", roles.listar().stream()
+                .filter(r -> !com.wokcontrol.common.security.Roles.SOLO_SESION.contains(r.getCodigo())).toList());
         model.addAttribute("q", q);
         model.addAttribute("rolFiltro", rol);
         model.addAttribute("activoFiltro", activo);
@@ -166,7 +167,8 @@ public class UsuarioWebController {
 
     private String formulario(Model model, UsuarioForm form) {
         model.addAttribute("form", form);
-        model.addAttribute("roles", roles.listar().stream().filter(r -> r.isActivo()).toList());
+        model.addAttribute("roles", roles.listar().stream().filter(r -> r.isActivo())
+                .filter(r -> !com.wokcontrol.common.security.Roles.SOLO_SESION.contains(r.getCodigo())).toList());
         model.addAttribute("proveedores", proveedores.listarActivos());
         return "plataforma/usuarios/form";
     }

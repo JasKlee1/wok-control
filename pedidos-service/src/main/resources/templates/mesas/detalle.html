@@ -12,6 +12,7 @@
         <a th:href="@{/mesas}" class="btn btn-light btn-sm"><i class="bi bi-arrow-left"></i> Mesas</a>
         <a th:if="${usuarioActual.tiene('PEDIDOS_GESTIONAR') and mesa.estado.name() != 'FUERA_DE_SERVICIO'}" th:href="@{/pedidos/nuevo(mesaId=${mesa.id})}" class="btn btn-wok btn-sm"><i class="bi bi-plus-circle"></i> Nuevo pedido</a>
         <a th:if="${usuarioActual.tiene('FACTURACION_COBRAR')}" th:href="@{/caja/cuentas/{id}(id=${mesa.id})}" class="btn btn-dorado btn-sm"><i class="bi bi-cash-coin"></i> Cobrar cuenta</a>
+        <a th:if="${usuarioActual.tiene('MESAS_GESTIONAR')}" th:href="@{/mesas/{id}/qr(id=${mesa.id})}" class="btn btn-light btn-sm"><i class="bi bi-qr-code"></i> QR de la mesa</a>
       </div>
       <div th:if="${pedidos.isEmpty()}" class="wok-card">
         <div th:replace="~{fragments/layout :: vacio('bi-receipt', 'Sin pedidos activos', 'La mesa no tiene pedidos en curso.')}"></div>

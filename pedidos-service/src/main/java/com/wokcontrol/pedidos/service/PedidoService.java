@@ -324,6 +324,7 @@ public class PedidoService {
         p.registrar(EstadoPedido.PAGADO.name(), UsuarioActual.responsableActual(), "Comprobante " + facturaId);
         Pedido g = repo.save(p);
         mesas.actualizarOcupacion(p.getMesaId());
+        mesas.cerrarSesionesSiLibre(p.getMesaId());
         return g;
     }
 

@@ -40,5 +40,25 @@
 El **Administrador** opera el restaurante y el **Administrador de plataforma** administra accesos.
 Se mantuvieron separados para no mezclar la operación con la gestión de usuarios.
 
-Además de los 7 roles del sistema, que son de solo lectura y se definen en `Roles.java`, se pueden
+Además de los roles del sistema, que son de solo lectura y se definen en `Roles.java`, se pueden
 crear roles personalizados combinando permisos del catálogo.
+
+## Sesión de mesa del cliente (v2 · épica 7 · ADR-002)
+
+El rol **CLIENTE** no es un usuario: es una sesión de mesa que se abre al escanear el QR. Su único
+permiso es `CARTA_CLIENTE`, pertenece a `Roles.SOLO_SESION` y por eso no se puede asignar a usuarios
+(`RolService` lo rechaza y el formulario de usuarios no lo muestra).
+
+- **QR:** cada mesa tiene un `codigoQr` aleatorio (UUID sin guiones), que se genera la primera vez que
+  alguien con `MESAS_GESTIONAR` abre `/mesas/{id}/qr`. El QR no contiene el número ni el id de la mesa.
+- **Entrada:** `GET /cliente/mesa/{codigo}` es pública. Si la mesa existe, está activa y no está fuera de
+  servicio, crea una `SesionMesa` ACTIVA y emite un JWT con `tipo=mesa`, `roles=[CLIENTE]`,
+  `permisos=[CARTA_CLIENTE]`, `mesaId` y `sesionMesa`, que va en la cookie `WOK_TOKEN`. Si no, responde
+  404 «Mesa no disponible, pide ayuda al personal» sin sesión ni cookie.
+- **Cada petición** del cliente comprueba en la base que la sesión siga ACTIVA y sea de la misma mesa.
+  Si no, responde 401, borra la cookie y pide escanear el QR de nuevo.
+- **Vencimiento:** la sesión se cierra al pagar el último pedido activo de la mesa («Cuenta cobrada»)
+  o al liberar la mesa («Mesa liberada»).
+- **Alcance:** `CARTA_CLIENTE` solo abre `/cliente/**` (pedidos-service) y `GET /menu/imagenes/*`
+  (menu-service). Todo lo demás responde 403 en la API y redirige a `/acceso-denegado` en la web.
+- **Auditoría:** `GENERAR_QR`, `ABRIR_SESION_QR` y `CERRAR_SESION_QR`.

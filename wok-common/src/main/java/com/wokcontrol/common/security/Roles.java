@@ -23,6 +23,11 @@ public final class Roles {
     public static final String PROVEEDOR = "PROVEEDOR";
     public static final String INVENTARIO = "INVENTARIO";
     public static final String ADMIN_PLATAFORMA = "ADMIN_PLATAFORMA";
+    /** v2 · HU-036: cliente sentado en una mesa; entra con el QR, sin usuario ni contraseña. */
+    public static final String CLIENTE = "CLIENTE";
+
+    /** Roles que existen solo como sesión temporal y nunca se asignan a usuarios del personal. */
+    public static final Set<String> SOLO_SESION = Set.of(CLIENTE);
 
     public record DefinicionRol(String codigo, String nombre, String descripcion, Set<String> permisos) {
     }
@@ -55,6 +60,9 @@ public final class Roles {
         r.put(ADMIN_PLATAFORMA, new DefinicionRol(ADMIN_PLATAFORMA, "Administrador de plataforma",
                 "Gestiona usuarios, roles, parámetros generales y auditoría. No opera el restaurante",
                 Set.of(DASHBOARD_VER, USUARIOS_GESTIONAR, ROLES_GESTIONAR, AUDITORIA_VER, PARAMETROS_GESTIONAR)));
+        r.put(CLIENTE, new DefinicionRol(CLIENTE, "Cliente (sesión de mesa)",
+                "Cliente en el salón: entra con el QR de su mesa, sin usuario ni contraseña; solo ve la carta y el pedido de su mesa",
+                Set.of(CARTA_CLIENTE)));
         SISTEMA = Map.copyOf(r);
     }
 

@@ -37,6 +37,10 @@ public class SecurityConfig {
     SecurityFilterChain webChain(HttpSecurity http, JwtDecoder decoder, JwtProperties props) throws Exception {
         WokSecurity.web(http, decoder, props).authorizeHttpRequests(a -> a
                 .requestMatchers(WokSecurity.RUTAS_PUBLICAS).permitAll()
+                // v2 · HU-033/036: el QR abre la sesión de mesa sin usuario ni contraseña
+                .requestMatchers(HttpMethod.GET, "/cliente/mesa/*").permitAll()
+                .requestMatchers("/cliente/**").hasAuthority(CARTA_CLIENTE)
+                .requestMatchers("/mesas/*/qr").hasAuthority(MESAS_GESTIONAR)
                 .requestMatchers("/mesas/nueva", "/mesas/*/editar", "/mesas/guardar", "/mesas/*/servicio").hasAuthority(MESAS_GESTIONAR)
                 .requestMatchers(HttpMethod.POST, "/mesas/*/liberar").hasAnyAuthority(PEDIDOS_GESTIONAR, MESAS_GESTIONAR)
                 .requestMatchers("/mesas/**").hasAnyAuthority(MESAS_VER, MESAS_GESTIONAR)

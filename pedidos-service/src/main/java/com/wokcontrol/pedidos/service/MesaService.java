@@ -32,12 +32,36 @@ public class MesaService {
     private final PedidoRepository pedidos;
     private final MongoTemplate mongo;
     private final AuditoriaPublisher auditoria;
+    private final SesionMesaService sesiones;
 
-    public MesaService(MesaRepository repo, PedidoRepository pedidos, MongoTemplate mongo, AuditoriaPublisher auditoria) {
+    public MesaService(MesaRepository repo, PedidoRepository pedidos, MongoTemplate mongo, AuditoriaPublisher auditoria,
+            SesionMesaService sesiones) {
         this.repo = repo;
         this.pedidos = pedidos;
         this.mongo = mongo;
         this.auditoria = auditoria;
+        this.sesiones = sesiones;
+    }
+
+    /**
+     * v2 · HU-033: código del QR de la mesa. Se genera la primera vez que se pide, es aleatorio y no
+     * cambia, para que el QR impreso siga sirviendo.
+     */
+    public String codigoQr(String id) {
+        Mesa m = obtener(id);
+        if (m.getCodigoQr() == null || m.getCodigoQr().isBlank()) {
+            m.setCodigoQr(java.util.UUID.randomUUID().toString().replace("-", ""));
+            repo.save(m);
+            auditoria.registrar("GENERAR_QR", "Mesa", id, "QR de la mesa " + m.getNumero());
+        }
+        return m.getCodigoQr();
+    }
+
+    /** v2 · AC-036.2: al cobrar la última cuenta de la mesa, vencen las sesiones de los clientes. */
+    public void cerrarSesionesSiLibre(String mesaId) {
+        if (!tienePedidosActivos(mesaId)) {
+            sesiones.cerrarDeMesa(mesaId, "Cuenta cobrada");
+        }
     }
 
     public List<Mesa> listar(boolean incluirInactivas) {
@@ -112,6 +136,7 @@ public class MesaService {
             throw new ReglaNegocioException("La mesa " + m.getNumero() + " tiene pedidos sin pagar o en curso; no se puede liberar");
         }
         actualizarOcupacion(id);
+        sesiones.cerrarDeMesa(id, "Mesa liberada");
         auditoria.registrar("LIBERAR", "Mesa", id, "Mesa " + m.getNumero());
         return obtener(id);
     }

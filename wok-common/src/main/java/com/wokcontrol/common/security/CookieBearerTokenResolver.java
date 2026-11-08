@@ -35,7 +35,7 @@ public class CookieBearerTokenResolver implements BearerTokenResolver {
     }
 
     static boolean esPublica(String uri) {
-        return uri.equals("/login") || uri.startsWith("/wok-static/") || uri.startsWith("/webjars/")
+        return uri.equals("/login") || uri.startsWith("/cliente/mesa/") || uri.startsWith("/wok-static/") || uri.startsWith("/webjars/")
                 || uri.equals("/error") || uri.equals("/favicon.ico") || uri.startsWith("/actuator/")
                 || uri.startsWith("/v3/api-docs") || uri.startsWith("/swagger-ui");
     }

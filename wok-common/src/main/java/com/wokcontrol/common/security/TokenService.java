@@ -25,6 +25,8 @@ public class TokenService {
     public static final String CLAIM_PROVEEDOR = "proveedorId";
     public static final String CLAIM_TIPO = "tipo";
     public static final String CLAIM_ACTOR = "actor";
+    public static final String CLAIM_MESA = "mesaId";
+    public static final String CLAIM_SESION = "sesionMesa";
 
     private final JwtEncoder encoder;
     private final JwtProperties props;
@@ -54,6 +56,29 @@ public class TokenService {
             claims.claim(CLAIM_PROVEEDOR, proveedorId);
         }
         return new TokenEmitido(codificar(claims.build()), expira);
+    }
+
+    /**
+     * v2 · HU-036 (ADR-002): token de la sesión de mesa que abre el QR. No tiene usuario ni
+     * contraseña: lleva el rol CLIENTE, el permiso CARTA_CLIENTE y la mesa a la que pertenece. La
+     * sesión además se valida en pedidos-service en cada petición, porque vence al cobrar la cuenta.
+     */
+    public TokenEmitido emitirTokenMesa(String sesionId, String mesaId, int mesaNumero) {
+        Instant ahora = Instant.now();
+        Instant expira = ahora.plus(props.expirationMinutes(), ChronoUnit.MINUTES);
+        JwtClaimsSet claims = JwtClaimsSet.builder()
+                .issuer(props.issuer())
+                .subject("mesa:" + mesaNumero)
+                .issuedAt(ahora)
+                .expiresAt(expira)
+                .claim(CLAIM_TIPO, "mesa")
+                .claim(CLAIM_NOMBRE, "Mesa " + mesaNumero)
+                .claim(CLAIM_ROLES, List.of(Roles.CLIENTE))
+                .claim(CLAIM_PERMISOS, List.of(Permisos.CARTA_CLIENTE))
+                .claim(CLAIM_MESA, mesaId)
+                .claim(CLAIM_SESION, sesionId)
+                .build();
+        return new TokenEmitido(codificar(claims), expira);
     }
 
     /**

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<!--/* v2 · HU-033: QR imprimible de la mesa. El QR se dibuja en el navegador con qrcodejs (ver ADR-002). */-->
+<head th:replace="~{fragments/layout :: head('QR mesa ' + ${mesa.numero})}"></head>
+<body>
+<style>
+  @media print { .wok-sidebar, .wok-topbar, .no-print, footer { display: none !important; } .wok-main { margin: 0 !important; } }
+  .qr-tarjeta { max-width: 420px; margin: 0 auto; text-align: center; background: #fff; border: 2px solid #A61B1B;
+    border-radius: 16px; padding: 1.5rem; }
+  #qr { display: inline-block; padding: 12px; background: #fff; }
+  .qr-url { word-break: break-all; font-size: .8rem; color: #666; }
+</style>
+<div class="wok-app">
+  <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+  <div class="wok-main">
+    <header th:replace="~{fragments/layout :: topbar('QR de la mesa ' + ${mesa.numero}, 'El cliente lo escanea para ver la carta')}"></header>
+    <main class="wok-content">
+      <div class="d-flex gap-2 mb-3 no-print">
+        <a th:href="@{/mesas/{id}(id=${mesa.id})}" class="btn btn-light btn-sm"><i class="bi bi-arrow-left"></i> Mesa</a>
+        <button type="button" class="btn btn-wok btn-sm" onclick="window.print()"><i class="bi bi-printer"></i> Imprimir</button>
+        <a id="abrir" class="btn btn-light btn-sm" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right"></i> Abrir enlace</a>
+      </div>
+      <div class="qr-tarjeta">
+        <h2 class="h4 mb-1">Wok Control</h2>
+        <div class="fs-1 fw-bold" style="color:#A61B1B" th:text="'Mesa ' + ${mesa.numero}">Mesa 5</div>
+        <p class="mb-3">Escanea para ver la carta</p>
+        <div id="qr" th:attr="data-ruta=${rutaQr}"></div>
+        <p class="qr-url mt-2" id="url"></p>
+      </div>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+  </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+  (function () {
+    var el = document.getElementById('qr');
+    var url = window.location.origin + el.getAttribute('data-ruta');
+    document.getElementById('url').textContent = url;
+    document.getElementById('abrir').href = url;
+    new QRCode(el, { text: url, width: 240, height: 240, correctLevel: QRCode.CorrectLevel.M });
+  })();
+</script>
+</body>
+</html>

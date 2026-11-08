@@ -32,7 +32,7 @@ public class RolService {
         this.auditoria = auditoria;
     }
 
-    /** Crea o corrige los 7 roles del sistema según la matriz definida en {@link Roles}. */
+    /** Crea o corrige los roles del sistema según la matriz definida en {@link Roles}. */
     public void sincronizarRolesSistema() {
         for (Roles.DefinicionRol def : Roles.SISTEMA.values()) {
             Rol rol = repo.findById(def.codigo()).orElseGet(Rol::new);
@@ -96,6 +96,9 @@ public class RolService {
     /** Valida que todos los códigos existan y estén activos. */
     public void validarAsignables(Set<String> codigos) {
         for (String c : codigos) {
+            if (Roles.SOLO_SESION.contains(c)) {
+                throw new ReglaNegocioException("El rol " + c + " es una sesión de mesa por QR y no se asigna a usuarios");
+            }
             Rol r = repo.findById(c).orElseThrow(() -> new ReglaNegocioException("El rol " + c + " no existe"));
             if (!r.isActivo()) {
                 throw new ReglaNegocioException("El rol " + c + " está inactivo");

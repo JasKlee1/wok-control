@@ -32,6 +32,18 @@ y el gateway las bloquea desde el exterior.
 | | `GET /api/caja/cierres/preliminar` · `GET/POST /api/caja/cierres` · `GET /api/caja/cierres/{id}` · `GET/POST /api/descuentos/autorizaciones` | Caja y descuentos |
 | reportes | `GET /api/reportes/dashboard` · `GET /api/reportes/ventas` · `GET /api/reportes/costos-platos` | Panel e indicadores |
 
+## Interfaz web del cliente en el salón (v2 · épica 7)
+
+Rutas Thymeleaf servidas por pedidos-service a través del gateway (`pedidos-web`, `/cliente/**`).
+El detalle de la sesión está en [seguridad.md](seguridad.md#sesión-de-mesa-del-cliente-v2--épica-7--adr-002).
+
+| Método y ruta | Acceso | Respuesta |
+|---|---|---|
+| `GET /cliente/mesa/{codigo}` | Pública (lo abre el QR) | 302 a `/cliente/carta` con la cookie de la sesión de mesa · 404 «Mesa no disponible, pide ayuda al personal» |
+| `GET /cliente/carta` | `CARTA_CLIENTE` con sesión ACTIVA | Carta con solo los platos disponibles · 401 si la sesión terminó |
+| `GET /mesas/{id}/qr` | `MESAS_GESTIONAR` | QR imprimible de la mesa (genera el código la primera vez) |
+| `GET /menu/imagenes/{id}` | `MENU_VER`, `MENU_GESTIONAR` o `CARTA_CLIENTE` | Foto del plato |
+
 Códigos de respuesta usados en todas las API:
 
 | Código | Significado |

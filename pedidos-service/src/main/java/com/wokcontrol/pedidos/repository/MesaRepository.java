@@ -1,6 +1,7 @@
 package com.wokcontrol.pedidos.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
 
@@ -13,4 +14,6 @@ public interface MesaRepository extends MongoRepository<Mesa, String> {
     List<Mesa> findAllByOrderByNumeroAsc();
 
     List<Mesa> findByActivaTrueOrderByNumeroAsc();
+
+    Optional<Mesa> findByCodigoQr(String codigoQr);
 }

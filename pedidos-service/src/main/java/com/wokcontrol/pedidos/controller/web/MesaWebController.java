@@ -78,6 +78,14 @@ public class MesaWebController {
         return "mesas/detalle";
     }
 
+    /** v2 · HU-033: QR imprimible de la mesa; al escanearlo el cliente abre su sesión de mesa. */
+    @GetMapping("/{id}/qr")
+    public String qr(@PathVariable String id, Model model) {
+        model.addAttribute("mesa", mesas.obtener(id));
+        model.addAttribute("rutaQr", "/cliente/mesa/" + mesas.codigoQr(id));
+        return "mesas/qr";
+    }
+
     @GetMapping("/nueva")
     public String nueva(Model model) {
         return formulario(model, new MesaForm());

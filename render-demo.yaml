@@ -98,9 +98,9 @@ services:
       - key: WOK_INFRA_USER
         value: "wok"
       - key: CONFIG_SERVER_URL
-        value: "https://wokcontrol-s1-config.onrender.com"
+        value: "https://wokcontrol-s1-config-lu10.onrender.com"
       - key: EUREKA_HOST
-        value: "wokcontrol-s1-eureka.onrender.com"
+        value: "wokcontrol-s1-eureka-lu10.onrender.com"
       - fromGroup: wok-secretos
 
   - type: web
@@ -130,9 +130,9 @@ services:
       - key: WOK_INFRA_USER
         value: "wok"
       - key: CONFIG_SERVER_URL
-        value: "https://wokcontrol-s1-config.onrender.com"
+        value: "https://wokcontrol-s1-config-lu10.onrender.com"
       - key: EUREKA_HOST
-        value: "wokcontrol-s1-eureka.onrender.com"
+        value: "wokcontrol-s1-eureka-lu10.onrender.com"
       - fromGroup: wok-secretos
 
   - type: web
@@ -162,9 +162,9 @@ services:
       - key: WOK_INFRA_USER
         value: "wok"
       - key: CONFIG_SERVER_URL
-        value: "https://wokcontrol-s1-config.onrender.com"
+        value: "https://wokcontrol-s1-config-lu10.onrender.com"
       - key: EUREKA_HOST
-        value: "wokcontrol-s1-eureka.onrender.com"
+        value: "wokcontrol-s1-eureka-lu10.onrender.com"
       - fromGroup: wok-secretos
 
   - type: web
@@ -194,9 +194,9 @@ services:
       - key: WOK_INFRA_USER
         value: "wok"
       - key: CONFIG_SERVER_URL
-        value: "https://wokcontrol-s1-config.onrender.com"
+        value: "https://wokcontrol-s1-config-lu10.onrender.com"
       - key: EUREKA_HOST
-        value: "wokcontrol-s1-eureka.onrender.com"
+        value: "wokcontrol-s1-eureka-lu10.onrender.com"
       - fromGroup: wok-secretos
 
   - type: web
@@ -226,9 +226,9 @@ services:
       - key: WOK_INFRA_USER
         value: "wok"
       - key: CONFIG_SERVER_URL
-        value: "https://wokcontrol-s1-config.onrender.com"
+        value: "https://wokcontrol-s1-config-lu10.onrender.com"
       - key: EUREKA_HOST
-        value: "wokcontrol-s1-eureka.onrender.com"
+        value: "wokcontrol-s1-eureka-lu10.onrender.com"
       - fromGroup: wok-secretos
 
   - type: web
@@ -258,9 +258,9 @@ services:
       - key: WOK_INFRA_USER
         value: "wok"
       - key: CONFIG_SERVER_URL
-        value: "https://wokcontrol-s1-config.onrender.com"
+        value: "https://wokcontrol-s1-config-lu10.onrender.com"
       - key: EUREKA_HOST
-        value: "wokcontrol-s1-eureka.onrender.com"
+        value: "wokcontrol-s1-eureka-lu10.onrender.com"
       - fromGroup: wok-secretos
 
   - type: web
@@ -290,9 +290,9 @@ services:
       - key: WOK_INFRA_USER
         value: "wok"
       - key: CONFIG_SERVER_URL
-        value: "https://wokcontrol-s1-config.onrender.com"
+        value: "https://wokcontrol-s1-config-lu10.onrender.com"
       - key: EUREKA_HOST
-        value: "wokcontrol-s1-eureka.onrender.com"
+        value: "wokcontrol-s1-eureka-lu10.onrender.com"
       - fromGroup: wok-secretos
 
   - type: web
@@ -321,9 +321,9 @@ services:
       - key: WOK_INFRA_USER
         value: "wok"
       - key: CONFIG_SERVER_URL
-        value: "https://wokcontrol-s1-config.onrender.com"
+        value: "https://wokcontrol-s1-config-lu10.onrender.com"
       - key: EUREKA_HOST
-        value: "wokcontrol-s1-eureka.onrender.com"
+        value: "wokcontrol-s1-eureka-lu10.onrender.com"
       - key: WOK_CORS_ORIGINS
-        value: "https://wokcontrol-s1-gateway.onrender.com"
+        value: "https://wokcontrol-s1-gateway-lu10.onrender.com"
       - fromGroup: wok-secretos

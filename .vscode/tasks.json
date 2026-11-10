@@ -27,6 +27,13 @@
       "problemMatcher": []
     },
     {
+      "label": "Wok: túnel para la demo (celular)",
+      "type": "shell",
+      "command": "powershell -ExecutionPolicy Bypass -File scripts\\tunel-demo.ps1",
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
       "label": "Wok: detener todo",
       "type": "shell",
       "command": "powershell -ExecutionPolicy Bypass -File scripts\\detener.ps1",

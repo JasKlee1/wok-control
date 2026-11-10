@@ -27,7 +27,13 @@ public class PedidosClient {
             BigDecimal total, Instant entregadoEn) {
     }
 
-    public record Mesa(String id, int numero, String estado, int pedidosActivos, BigDecimal consumoActual) {
+    /** v2 · HU-035: {@code cuentaSolicitadaEn} y {@code platosSinEntregar} vienen de la sesión de mesa del cliente. */
+    public record Mesa(String id, int numero, String estado, int pedidosActivos, BigDecimal consumoActual,
+            Instant cuentaSolicitadaEn, int platosSinEntregar) {
+
+        public boolean cuentaSolicitada() {
+            return cuentaSolicitadaEn != null;
+        }
     }
 
     public List<Pedido> facturables(String mesaId) {

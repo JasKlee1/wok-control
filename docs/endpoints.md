@@ -40,7 +40,19 @@ El detalle de la sesión está en [seguridad.md](seguridad.md#sesión-de-mesa-de
 | Método y ruta | Acceso | Respuesta |
 |---|---|---|
 | `GET /cliente/mesa/{codigo}` | Pública (lo abre el QR) | 302 a `/cliente/carta` con la cookie de la sesión de mesa · 404 «Mesa no disponible, pide ayuda al personal» |
-| `GET /cliente/carta` | `CARTA_CLIENTE` con sesión ACTIVA | Carta con solo los platos disponibles · 401 si la sesión terminó |
+| `GET /cliente/carta` | `CARTA_CLIENTE` con sesión ACTIVA | Carta con solo los platos disponibles y el botón «Agregar» · 401 si la sesión terminó |
+| `POST /cliente/carrito` | `CARTA_CLIENTE` con sesión ACTIVA | HU-032: agrega un plato al pedido sin enviar (rechaza platos agotados) |
+| `POST /cliente/carrito/{lineaId}` | `CARTA_CLIENTE` con sesión ACTIVA | HU-032: cambia cantidad y observación; con cantidad 0 lo quita |
+| `POST /cliente/carrito/{lineaId}/quitar` | `CARTA_CLIENTE` con sesión ACTIVA | HU-032: quita un plato del pedido sin enviar |
+| `GET /cliente/pedido` | `CARTA_CLIENTE` con sesión ACTIVA | HU-034: pedido sin enviar con aviso de agotados (HU-038), pedidos enviados con el estado de cada plato, motivo del rechazo (HU-037) y la cuenta (HU-035) |
+| `POST /cliente/pedido/enviar` | `CARTA_CLIENTE` con sesión ACTIVA | HU-034: crea el pedido POR_CONFIRMAR · «Agrega al menos un plato» · «Quita los platos agotados antes de enviar» |
+| `POST /cliente/pedidos/{id}/items/{itemId}/quitar` | `CARTA_CLIENTE` con sesión ACTIVA | AC-032.2: «El pedido ya fue enviado; pide el cambio al mesero» · 403 si el pedido es de otra mesa |
+| `GET /cliente/estado` | `CARTA_CLIENTE` con sesión ACTIVA | JSON `{huella}`: el celular lo consulta cada 8 s y recarga si cambió |
+| `POST /cliente/cuenta` | `CARTA_CLIENTE` con sesión ACTIVA | HU-035: la mesa queda como «Cuenta solicitada» para el cajero |
+| `POST /pedidos/{id}/confirmar` | `PEDIDOS_GESTIONAR` | HU-037: el pedido QR pasa a cocina como comanda |
+| `POST /pedidos/{id}/rechazar` | `PEDIDOS_GESTIONAR` | HU-037: exige motivo; el cliente lo ve |
+| `PATCH /api/pedidos/{id}/estado` | `PEDIDOS_GESTIONAR` | Con `ENVIADO` confirma un pedido QR; con `RECHAZADO` y `motivo` lo rechaza |
+| `POST /menu/platos/{id}/disponibilidad` · `PATCH /api/menu/platos/{id}/disponibilidad` | `MENU_GESTIONAR` o `COCINA_OPERAR` | HU-038: el cocinero marca un plato agotado |
 | `GET /mesas/{id}/qr` | `MESAS_GESTIONAR` | QR imprimible de la mesa (genera el código la primera vez) |
 | `GET /menu/imagenes/{id}` | `MENU_VER`, `MENU_GESTIONAR` o `CARTA_CLIENTE` | Foto del plato |
 

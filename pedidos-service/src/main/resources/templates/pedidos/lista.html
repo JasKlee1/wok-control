@@ -8,6 +8,28 @@
     <header th:replace="~{fragments/layout :: topbar('Pedidos', 'Seguimiento de comandas')}"></header>
     <main class="wok-content">
       <div th:replace="~{fragments/layout :: mensajes}"></div>
+      <!--/* v2 · HU-034 / HU-037: pedidos del QR que esperan al mesero; no llegan a cocina sin su confirmación */-->
+      <div class="wok-card mb-3 border border-warning" th:unless="${porConfirmar.isEmpty()}">
+        <div class="wok-card-header">
+          <strong><i class="bi bi-qr-code"></i> Pedidos por QR por confirmar</strong>
+          <span class="wok-badge alerta" th:text="${porConfirmar.size()}">1</span>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-wok table-hover mb-0">
+            <thead><tr><th>Número</th><th>Mesa</th><th>Hora</th><th class="text-center">Productos</th><th class="text-end">Total</th><th></th></tr></thead>
+            <tbody>
+              <tr th:each="p : ${porConfirmar}">
+                <td class="fw-semibold" th:text="${p.numero}">P-1</td>
+                <td th:text="'Mesa ' + ${p.mesaNumero}">Mesa 5</td>
+                <td th:text="${@fmt.hora(p.creadoEn)}">19:05</td>
+                <td class="text-center" th:text="${p.unidades}">3</td>
+                <td class="text-end" th:text="${@fmt.dinero(p.total)}">$</td>
+                <td class="text-end"><a class="btn btn-wok btn-sm" th:href="@{/pedidos/{id}(id=${p.id})}"><i class="bi bi-eye"></i> Revisar</a></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
       <div class="wok-card">
         <div class="wok-card-header">
           <form class="wok-filtros flex-grow-1" method="get" th:action="@{/pedidos}">

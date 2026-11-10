@@ -118,6 +118,7 @@ public class PedidoWebController {
         model.addAttribute("mesaId", mesaId);
         model.addAttribute("fecha", dia);
         model.addAttribute("mios", mios);
+        model.addAttribute("porConfirmar", pedidos.porConfirmar());
         return "pedidos/lista";
     }
 
@@ -192,6 +193,30 @@ public class PedidoWebController {
             flash.addFlashAttribute("exito", "Pedido " + p.getNumero() + " enviado a cocina");
         } catch (WokException ex) {
             flash.addFlashAttribute("error", "No se envió a cocina: " + ex.getMessage());
+        }
+        return "redirect:/pedidos/" + id;
+    }
+
+    /** v2 · HU-037 (AC-037.1): el pedido QR pasa a cocina como comanda. */
+    @PostMapping("/{id}/confirmar")
+    public String confirmar(@PathVariable String id, RedirectAttributes flash) {
+        try {
+            Pedido p = pedidos.confirmar(id);
+            flash.addFlashAttribute("exito", "Pedido " + p.getNumero() + " confirmado y enviado a cocina");
+        } catch (WokException ex) {
+            flash.addFlashAttribute("error", "No se confirmó: " + ex.getMessage());
+        }
+        return "redirect:/pedidos/" + id;
+    }
+
+    /** v2 · HU-037 (AC-037.2): el rechazo exige motivo. */
+    @PostMapping("/{id}/rechazar")
+    public String rechazar(@PathVariable String id, @RequestParam(required = false) String motivo, RedirectAttributes flash) {
+        try {
+            Pedido p = pedidos.rechazar(id, motivo);
+            flash.addFlashAttribute("exito", "Pedido " + p.getNumero() + " rechazado; el cliente verá el motivo");
+        } catch (WokException ex) {
+            flash.addFlashAttribute("error", ex.getMessage());
         }
         return "redirect:/pedidos/" + id;
     }

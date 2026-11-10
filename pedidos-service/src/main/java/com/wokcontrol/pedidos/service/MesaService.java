@@ -76,13 +76,31 @@ public class MesaService {
     public List<MesaResponse> tablero(boolean incluirInactivas) {
         Map<String, int[]> conteo = new HashMap<>();
         Map<String, BigDecimal> consumo = new HashMap<>();
+        Map<String, Integer> sinEntregar = new HashMap<>();
         for (Pedido p : pedidos.findByEstadoInOrderByCreadoEnAsc(EstadoPedido.ACTIVOS)) {
             conteo.computeIfAbsent(p.getMesaId(), k -> new int[1])[0]++;
             consumo.merge(p.getMesaId(), p.getTotal(), BigDecimal::add);
+            sinEntregar.merge(p.getMesaId(), platosSinEntregar(p), Integer::sum);
         }
         return listar(incluirInactivas).stream().map(m -> new MesaResponse(m.getId(), m.getNumero(), m.getCapacidad(),
                 m.getZona(), m.getEstado(), m.isActiva(), m.getOcupadaDesde(),
-                conteo.getOrDefault(m.getId(), new int[1])[0], consumo.getOrDefault(m.getId(), BigDecimal.ZERO))).toList();
+                conteo.getOrDefault(m.getId(), new int[1])[0], consumo.getOrDefault(m.getId(), BigDecimal.ZERO),
+                m.getCuentaSolicitadaEn(), sinEntregar.getOrDefault(m.getId(), 0))).toList();
+    }
+
+    /** v2 · AC-035.2: unidades de un pedido activo que aún no llegan a la mesa. */
+    public static int platosSinEntregar(Pedido p) {
+        return p.getItems().stream().filter(i -> i.getEstado() != com.wokcontrol.pedidos.entity.ItemPedido.Estado.ENTREGADO)
+                .mapToInt(com.wokcontrol.pedidos.entity.ItemPedido::getCantidad).sum();
+    }
+
+    /**
+     * v2 · HU-035 (REQ-WOK-035): el cliente pidió la cuenta. La mesa queda como «Cuenta solicitada»
+     * para el cajero hasta que se cobre o se libere.
+     */
+    public void solicitarCuenta(String mesaId) {
+        mongo.updateFirst(Query.query(Criteria.where("_id").is(mesaId)), new Update().set("cuentaSolicitadaEn", Instant.now()),
+                Mesa.class);
     }
 
     public Mesa crear(MesaRequest req) {

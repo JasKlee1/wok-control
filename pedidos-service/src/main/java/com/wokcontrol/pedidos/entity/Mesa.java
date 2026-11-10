@@ -27,6 +27,8 @@ public class Mesa {
     /** v2 · HU-033: código aleatorio impreso en el QR de la mesa (no se deduce del número ni del id). */
     @Indexed(unique = true, sparse = true)
     private String codigoQr;
+    /** v2 · HU-035: momento en que el cliente pidió la cuenta desde el celular; se borra al cerrar la sesión. */
+    private Instant cuentaSolicitadaEn;
 
     @CreatedDate
     private Instant creadoEn;
@@ -51,6 +53,8 @@ public class Mesa {
     public void setOcupadaDesde(Instant ocupadaDesde) { this.ocupadaDesde = ocupadaDesde; }
     public String getCodigoQr() { return codigoQr; }
     public void setCodigoQr(String codigoQr) { this.codigoQr = codigoQr; }
+    public Instant getCuentaSolicitadaEn() { return cuentaSolicitadaEn; }
+    public void setCuentaSolicitadaEn(Instant cuentaSolicitadaEn) { this.cuentaSolicitadaEn = cuentaSolicitadaEn; }
     public Instant getCreadoEn() { return creadoEn; }
     public Instant getActualizadoEn() { return actualizadoEn; }
     public Long getVersion() { return version; }

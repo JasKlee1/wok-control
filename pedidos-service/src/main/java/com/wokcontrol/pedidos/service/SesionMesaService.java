@@ -98,6 +98,8 @@ public class SesionMesaService {
                 new Update().set("estado", SesionMesa.Estado.CERRADA).set("cerradaEn", Instant.now())
                         .set("motivoCierre", motivo),
                 SesionMesa.class).getModifiedCount();
+        // v2 · HU-035: con la cuenta cerrada, la mesa deja de figurar como «Cuenta solicitada»
+        mongo.updateFirst(Query.query(Criteria.where("_id").is(mesaId)), new Update().unset("cuentaSolicitadaEn"), Mesa.class);
         if (cerradas > 0) {
             auditoria.registrar("CERRAR_SESION_QR", "Mesa", mesaId, motivo + " (" + cerradas + " sesión/es)");
         }

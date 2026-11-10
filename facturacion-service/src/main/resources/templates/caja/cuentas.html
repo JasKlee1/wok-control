@@ -19,11 +19,15 @@
       <div class="row g-3">
         <div class="col-6 col-md-4 col-xl-3" th:each="m : ${mesas}">
           <a th:href="@{/caja/cuentas/{id}(id=${m.id})}" class="text-decoration-none text-reset">
-            <div class="wok-mesa ocupada">
+            <div class="wok-mesa ocupada" th:classappend="${m.cuentaSolicitada()} ? 'border border-2 border-warning'">
+              <!--/* v2 · HU-035: el cliente pidió la cuenta desde el celular */-->
+              <span th:if="${m.cuentaSolicitada()}" class="wok-badge alerta mb-1"><i class="bi bi-bell"></i> Cuenta solicitada</span>
               <div class="small text-suave">Mesa</div>
               <div class="wok-mesa-numero my-1" th:text="${m.numero}">1</div>
               <div class="h5 text-wok mb-1" th:text="${@fmt.dinero(m.consumoActual)}">$</div>
               <div class="small text-suave" th:text="${m.pedidosActivos} + ' pedido(s) activo(s)'">1</div>
+              <div th:if="${m.cuentaSolicitada() and m.platosSinEntregar > 0}" class="small text-danger fw-semibold mt-1">
+                <i class="bi bi-exclamation-triangle"></i> Hay platos sin entregar (<span th:text="${m.platosSinEntregar}">2</span>)</div>
               <span class="btn btn-sm btn-wok mt-2 w-100"><i class="bi bi-cash-coin"></i> Ver cuenta</span>
             </div>
           </a>

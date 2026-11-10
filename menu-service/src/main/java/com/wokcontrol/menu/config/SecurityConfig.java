@@ -24,6 +24,8 @@ public class SecurityConfig {
                     .hasAnyAuthority(MENU_VER, MENU_GESTIONAR, PEDIDOS_GESTIONAR, REPORTES_VER, SISTEMA)
                 .requestMatchers(HttpMethod.POST, "/api/menu/cotizacion")
                     .hasAnyAuthority(PEDIDOS_GESTIONAR, MENU_VER, SISTEMA)
+                // v2 · HU-038: el cocinero marca un plato agotado para avisar al cliente
+                .requestMatchers(HttpMethod.PATCH, "/api/menu/platos/*/disponibilidad").hasAnyAuthority(MENU_GESTIONAR, COCINA_OPERAR)
                 .requestMatchers("/api/menu/**").hasAuthority(MENU_GESTIONAR)
                 .anyRequest().denyAll());
         return http.build();
@@ -34,6 +36,8 @@ public class SecurityConfig {
     SecurityFilterChain webChain(HttpSecurity http, JwtDecoder decoder, JwtProperties props) throws Exception {
         WokSecurity.web(http, decoder, props).authorizeHttpRequests(a -> a
                 .requestMatchers(WokSecurity.RUTAS_PUBLICAS).permitAll()
+                // v2 · HU-038: el cocinero marca un plato agotado para avisar al cliente
+                .requestMatchers(HttpMethod.POST, "/menu/platos/*/disponibilidad").hasAnyAuthority(MENU_GESTIONAR, COCINA_OPERAR)
                 .requestMatchers(HttpMethod.POST, "/menu/**").hasAuthority(MENU_GESTIONAR)
                 // v2 · HU-033: el cliente con sesión de mesa ve las fotos de la carta
                 .requestMatchers(HttpMethod.GET, "/menu/imagenes/*").hasAnyAuthority(MENU_VER, MENU_GESTIONAR, CARTA_CLIENTE)

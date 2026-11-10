@@ -67,7 +67,7 @@ class FacturacionServiceTest {
         });
         when(repo.findByClaveIdempotencia(anyString())).thenReturn(Optional.empty());
         pedidos = mock(PedidosClient.class);
-        when(pedidos.mesa("m1")).thenReturn(new PedidosClient.Mesa("m1", 4, "OCUPADA", 1, new BigDecimal("75000")));
+        when(pedidos.mesa("m1")).thenReturn(new PedidosClient.Mesa("m1", 4, "OCUPADA", 1, new BigDecimal("75000"), null, 0));
         when(pedidos.facturables("m1")).thenReturn(List.of(new PedidosClient.Pedido("p1", "P-000001", "m1", 4, "ENTREGADO",
                 List.of(new PedidosClient.Item("arroz", "Arroz frito", new BigDecimal("25000"), 3, new BigDecimal("75000"))),
                 new BigDecimal("75000"), Instant.now())));

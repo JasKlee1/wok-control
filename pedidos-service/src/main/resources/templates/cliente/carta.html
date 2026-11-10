@@ -1,62 +1,55 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
-<!--/* v2 · Épica 7 · HU-033: carta del cliente por QR. Pensada para celular (360 px en adelante). */-->
-<head th:replace="~{fragments/layout :: head('Carta · Mesa ' + ${mesaNumero})}"></head>
-<body class="cliente-body">
+<!--/*
+  v2 · Épica 7 · Carta del cliente por QR.
+  HU-033: solo los platos disponibles, con foto, precio y categoría.
+  HU-032: «Agregar» suma el plato al pedido sin enviar.
+  HU-039: base liviana (cliente/base.html), fotos diferidas y con tamaño fijo, pensada desde 360 px.
+*/-->
+<head th:replace="~{cliente/base :: head('Carta · Mesa ' + ${mesaNumero})}"></head>
+<body>
 <style>
-  .cliente-body { background: #FFF8EE; }
-  .cliente-top { position: sticky; top: 0; z-index: 10; background: #242424; color: #fff; padding: .75rem 1rem;
-    display: flex; align-items: center; gap: .75rem; }
-  .cliente-top img { width: 34px; height: 34px; }
-  .cliente-top .mesa { margin-left: auto; background: #A61B1B; border-radius: 999px; padding: .2rem .8rem; font-weight: 600; }
-  .cliente-nav { display: flex; gap: .5rem; overflow-x: auto; padding: .6rem 1rem; background: #fff; border-bottom: 1px solid #eee; }
-  .cliente-nav a { white-space: nowrap; text-decoration: none; color: #A61B1B; border: 1px solid #e8c9c9; border-radius: 999px;
-    padding: .25rem .8rem; font-size: .9rem; }
-  .cliente-main { max-width: 760px; margin: 0 auto; padding: 1rem; }
-  .cliente-seccion h2 { font-size: 1.15rem; color: #A61B1B; margin: 1.2rem 0 .6rem; scroll-margin-top: 110px; }
-  .plato { display: flex; gap: .8rem; background: #fff; border-radius: 12px; padding: .7rem; margin-bottom: .7rem;
-    box-shadow: 0 1px 3px rgba(0,0,0,.06); }
-  .plato-foto { flex: 0 0 92px; width: 92px; height: 92px; border-radius: 10px; object-fit: cover; background: #f3e7d9;
+  .c-nav { display: flex; gap: .5rem; overflow-x: auto; padding: .6rem 1rem; background: #fff; border-bottom: 1px solid #eee;
+    position: sticky; top: 52px; z-index: 9; -webkit-overflow-scrolling: touch; }
+  .c-nav a { white-space: nowrap; text-decoration: none; color: #A61B1B; border: 1px solid #e8c9c9; border-radius: 999px;
+    padding: .3rem .8rem; font-size: .9rem; min-height: 36px; display: inline-flex; align-items: center; }
+  .c-seccion h2 { font-size: 1.15rem; color: #A61B1B; margin: 1.2rem 0 .6rem; scroll-margin-top: 110px; }
+  .plato { display: flex; gap: .75rem; }
+  .plato-foto { flex: 0 0 88px; width: 88px; height: 88px; border-radius: 10px; object-fit: cover; background: #f3e7d9;
     display: flex; align-items: center; justify-content: center; color: #c9a37b; font-size: 2rem; }
   .plato-info { flex: 1; min-width: 0; }
-  .plato-nombre { font-weight: 600; margin: 0; }
-  .plato-desc { font-size: .88rem; color: #666; margin: .15rem 0 .35rem; }
-  .plato-pie { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
-  .plato-precio { font-weight: 700; color: #242424; margin-right: auto; }
-  .chip { font-size: .72rem; border-radius: 999px; padding: .1rem .5rem; background: #f6efe6; color: #7a5b3a; }
+  .plato-nombre { font-weight: 600; margin: 0; overflow-wrap: anywhere; }
+  .plato-desc { font-size: .88rem; color: #666; margin: .15rem 0 .35rem; overflow-wrap: anywhere; }
+  .plato-pie { display: flex; align-items: center; gap: .4rem; flex-wrap: wrap; }
+  .plato-precio { font-weight: 700; margin-right: auto; }
   .picante { color: #d0342c; font-size: .85rem; }
-  .cliente-pie { text-align: center; color: #777; font-size: .85rem; padding: 1.5rem 1rem 2.5rem; }
+  .plato form { margin: 0; }
 </style>
 
-<header class="cliente-top">
-  <img th:src="@{/wok-static/images/logo.svg}" alt="">
-  <div>
-    <div class="fw-semibold">Wok Control</div>
-    <small class="opacity-75">Carta del restaurante</small>
-  </div>
-  <span class="mesa" th:text="'Mesa ' + ${mesaNumero}">Mesa 5</span>
-</header>
+<header th:replace="~{cliente/base :: top('Carta del restaurante')}"></header>
 
-<nav class="cliente-nav" aria-label="Categorías" th:if="${!secciones.isEmpty()}">
+<nav class="c-nav" aria-label="Categorías" th:if="${!secciones.isEmpty()}">
   <a th:each="s, i : ${secciones}" th:href="'#sec-' + ${i.index}" th:text="${s.nombre}">Arroces</a>
 </nav>
 
-<main class="cliente-main">
-  <div th:if="${secciones.isEmpty()}" class="text-center text-muted py-5">
-    <i class="bi bi-hourglass-split fs-1 d-block mb-2"></i>
+<main class="c-main">
+  <th:block th:replace="~{cliente/base :: mensajes}"></th:block>
+
+  <div th:if="${secciones.isEmpty()}" class="c-vacio">
+    <i class="bi bi-hourglass-split"></i>
     En este momento no hay platos disponibles. Pide ayuda al personal.
   </div>
 
-  <section class="cliente-seccion" th:each="s, i : ${secciones}" th:id="'sec-' + ${i.index}">
+  <section class="c-seccion" th:each="s, i : ${secciones}" th:id="'sec-' + ${i.index}">
     <h2 th:text="${s.nombre}">Arroces</h2>
-    <article class="plato" th:each="p : ${s.platos}">
-      <img th:if="${p.imagenId != null}" class="plato-foto" loading="lazy"
+    <article class="c-card plato" th:each="p : ${s.platos}" th:id="'p-' + ${p.id}">
+      <img th:if="${p.imagenId != null}" class="plato-foto" loading="lazy" decoding="async" width="88" height="88"
            th:src="@{/menu/imagenes/{id}(id=${p.imagenId})}" th:alt="${p.nombre}">
       <div th:unless="${p.imagenId != null}" class="plato-foto" aria-hidden="true"><i class="bi bi-egg-fried"></i></div>
       <div class="plato-info">
         <p class="plato-nombre">
           <span th:text="${p.nombre}">Arroz chino especial</span>
-          <span th:if="${p.combo}" class="chip ms-1">Combo</span>
+          <span th:if="${p.combo}" class="c-chip">Combo</span>
         </p>
         <p class="plato-desc" th:if="${p.descripcion != null and !#strings.isEmpty(p.descripcion)}" th:text="${p.descripcion}">Descripción</p>
         <div class="plato-pie">
@@ -64,16 +57,29 @@
           <span class="picante" th:if="${p.picante > 0}" th:title="'Picante nivel ' + ${p.picante}">
             <i class="bi bi-fire" th:each="n : ${#numbers.sequence(1, p.picante)}"></i>
           </span>
-          <span class="chip" th:each="a : ${p.alergenos}" th:text="${a}">MARISCOS</span>
+          <span class="c-chip" th:each="a : ${p.alergenos}" th:text="${a}">MARISCOS</span>
+          <form th:action="@{/cliente/carrito}" method="post">
+            <input type="hidden" name="tipo" th:value="${p.tipo}">
+            <input type="hidden" name="productoId" th:value="${p.id}">
+            <button type="submit" class="c-btn" th:attr="aria-label='Agregar ' + ${p.nombre}"><i class="bi bi-plus-lg"></i> Agregar</button>
+          </form>
         </div>
       </div>
     </article>
   </section>
 </main>
 
-<footer class="cliente-pie">
+<footer class="c-pie">
   Solo se muestran los platos disponibles en este momento.<br>
-  Para hacer tu pedido, llama a tu mesero.
+  Tu pedido llega a cocina cuando el mesero lo confirma.
 </footer>
+
+<div class="c-barra">
+  <a class="c-btn" th:href="@{/cliente/pedido}">
+    <i class="bi bi-bag"></i>
+    <span th:if="${unidadesCarrito > 0}" th:text="'Ver mi pedido (' + ${unidadesCarrito} + ') · ' + ${totalCarrito}">Ver mi pedido (2) · $56.000</span>
+    <span th:unless="${unidadesCarrito > 0}">Mi pedido y la cuenta</span>
+  </a>
+</div>
 </body>
 </html>

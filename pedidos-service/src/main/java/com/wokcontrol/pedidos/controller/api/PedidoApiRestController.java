@@ -89,11 +89,15 @@ public class PedidoApiRestController {
 
     @PatchMapping("/api/pedidos/{id}/estado")
     @Operation(summary = "Cambiar estado del pedido",
-            description = "ENVIADO: envía a cocina y descuenta inventario (idempotente). CANCELADO: requiere motivo; "
+            description = "ENVIADO: envía a cocina (o confirma un pedido QR) y descuenta inventario (idempotente). "
+                    + "RECHAZADO: rechaza un pedido QR; requiere motivo. CANCELADO: requiere motivo; "
                     + "solo antes de que cocina empiece. Los estados de preparación se cambian por ítem.")
     public PedidoResponse estado(@PathVariable String id, @Valid @RequestBody CambioEstadoRequest req) {
         return PedidoResponse.de(switch (req.estado()) {
-            case ENVIADO -> pedidos.enviarACocina(id);
+            // v2 · HU-037: un pedido QR POR_CONFIRMAR pasa a cocina con la confirmación del mesero
+            case ENVIADO -> pedidos.obtener(id).getEstado() == EstadoPedido.POR_CONFIRMAR ? pedidos.confirmar(id)
+                    : pedidos.enviarACocina(id);
+            case RECHAZADO -> pedidos.rechazar(id, req.motivo());
             case CANCELADO -> pedidos.cancelar(id, req.motivo());
             default -> throw new ReglaNegocioException("Use PATCH /api/pedidos/{id}/items/{itemId}/estado para avanzar la preparación; "
                     + "el pago lo registra facturación");

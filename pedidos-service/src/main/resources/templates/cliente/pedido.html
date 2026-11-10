@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<!--/*
+  v2 · Épica 7 · «Mi pedido» del cliente.
+  HU-032: editar cantidad y observación o quitar platos antes de enviar.
+  HU-034: enviar el pedido y seguir el estado de cada plato.
+  HU-037: ver si el mesero rechazó el pedido y por qué.
+  HU-038: aviso de plato agotado; no deja enviar hasta quitarlo.
+  HU-035: pedir la cuenta.
+  La página consulta /cliente/estado cada 8 s y se recarga sola si algo cambió.
+*/-->
+<head th:replace="~{cliente/base :: head('Mi pedido · Mesa ' + ${mesaNumero})}"></head>
+<body th:attr="data-huella=${huella}">
+<style>
+  h2 { font-size: 1.1rem; color: #A61B1B; margin: 1.2rem 0 .6rem; display: flex; align-items: center; gap: .4rem; }
+  .linea-cab { display: flex; gap: .5rem; align-items: baseline; }
+  .linea-nombre { font-weight: 600; flex: 1; min-width: 0; overflow-wrap: anywhere; }
+  .linea-precio { font-weight: 700; white-space: nowrap; }
+  .linea.agotado { border: 2px solid #d0342c; }
+  .agotado-msg { color: #8a1c1c; font-size: .9rem; margin: .3rem 0; display: flex; gap: .35rem; }
+  .linea form { margin: 0; }
+  .editar { display: grid; grid-template-columns: auto 1fr; gap: .5rem; margin-top: .6rem; align-items: center; }
+  .cantidad { display: flex; align-items: center; gap: .35rem; }
+  .cantidad input { width: 3.2rem; min-height: 44px; text-align: center; border: 1px solid #ddd; border-radius: 10px; }
+  .editar textarea { grid-column: 1 / -1; width: 100%; min-height: 44px; border: 1px solid #ddd; border-radius: 10px;
+    padding: .5rem .6rem; resize: vertical; }
+  .acciones { grid-column: 1 / -1; display: flex; gap: .5rem; flex-wrap: wrap; }
+  .acciones .c-btn { flex: 1 1 8rem; }
+  .total { display: flex; justify-content: space-between; font-size: 1.15rem; font-weight: 700; margin: .4rem 0 .8rem; }
+  .notas { color: #666; font-size: .88rem; margin: .1rem 0 0; overflow-wrap: anywhere; }
+  .enviado-cab { display: flex; justify-content: space-between; align-items: center; gap: .5rem; margin-bottom: .4rem; }
+  .plato-env { display: flex; gap: .5rem; align-items: center; padding: .45rem 0; border-top: 1px solid #f1ece6; }
+  .plato-env .nombre { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+  .plato-env form { margin: 0; }
+  .btn-x { min-height: 36px; min-width: 36px; border-radius: 8px; border: 1px solid #eee; background: #fff; color: #999; cursor: pointer; }
+  .rechazo { background: #fde8e8; color: #8a1c1c; border-radius: 10px; padding: .55rem .7rem; margin-bottom: .4rem; font-weight: 600; }
+</style>
+
+<header th:replace="~{cliente/base :: top('Mi pedido')}"></header>
+
+<main class="c-main">
+  <a class="c-btn sec" th:href="@{/cliente/carta}"><i class="bi bi-arrow-left"></i> Volver a la carta</a>
+  <div style="height:.8rem"></div>
+  <th:block th:replace="~{cliente/base :: mensajes}"></th:block>
+
+  <!--/* ---------------------------------------------- pedido sin enviar (HU-032, HU-038) */-->
+  <h2><i class="bi bi-bag"></i> Por enviar</h2>
+
+  <div class="c-msg warn" role="alert" th:if="${hayAgotados}">
+    <i class="bi bi-exclamation-octagon"></i>
+    <span>Un plato de tu pedido se agotó. Quítalo o cámbialo antes de enviar.</span>
+  </div>
+
+  <div th:if="${lineas.isEmpty()}" class="c-card c-vacio">
+    <i class="bi bi-basket"></i>
+    Aún no has agregado platos. Elige en la carta y vuelve aquí para enviarlos.
+  </div>
+
+  <article class="c-card linea" th:each="l : ${lineas}" th:classappend="${l.agotado} ? 'agotado'">
+    <div class="linea-cab">
+      <span class="linea-nombre" th:text="${l.nombre}">Arroz chino especial</span>
+      <span class="linea-precio" th:text="${l.subtotal}">$56.000</span>
+    </div>
+    <p class="agotado-msg" th:if="${l.agotado}"><i class="bi bi-slash-circle"></i>
+      <span>Agotado: ya no está disponible. Quítalo para poder enviar.</span></p>
+    <p class="notas" th:if="${l.notas != null}" th:text="'Observación: ' + ${l.notas}">sin cebolla</p>
+    <form class="editar" th:action="@{/cliente/carrito/{id}(id=${l.id})}" method="post" th:unless="${l.agotado}">
+      <label class="cantidad">
+        <span class="c-oculto">Cantidad</span>
+        <input type="number" name="cantidad" min="0" max="20" inputmode="numeric" th:value="${l.cantidad}">
+        <span th:text="'× ' + ${l.precio}">× $28.000</span>
+      </label>
+      <span></span>
+      <label class="c-oculto" th:for="'notas-' + ${l.id}">Observación</label>
+      <textarea name="notas" maxlength="200" rows="1" th:id="'notas-' + ${l.id}" placeholder="Observación (ej.: sin cebolla)"
+                th:text="${l.notas}"></textarea>
+      <div class="acciones">
+        <button type="submit" class="c-btn sec"><i class="bi bi-check2"></i> Guardar cambio</button>
+      </div>
+    </form>
+    <form th:action="@{/cliente/carrito/{id}/quitar(id=${l.id})}" method="post" style="margin-top:.5rem">
+      <button type="submit" class="c-btn gris ancho"><i class="bi bi-trash"></i> Quitar</button>
+    </form>
+  </article>
+
+  <th:block th:unless="${lineas.isEmpty()}">
+    <div class="total"><span>Total por enviar</span><span th:text="${totalCarrito}">$56.000</span></div>
+    <form th:action="@{/cliente/pedido/enviar}" method="post">
+      <button type="submit" class="c-btn ancho"><i class="bi bi-send"></i> Enviar pedido</button>
+    </form>
+  </th:block>
+
+  <!--/* ---------------------------------------------- pedidos enviados (HU-034, HU-037) */-->
+  <th:block th:unless="${pedidos.isEmpty()}">
+    <h2><i class="bi bi-clock-history"></i> Enviados</h2>
+    <article class="c-card" th:each="p : ${pedidos}">
+      <div class="enviado-cab">
+        <strong th:text="'Pedido ' + ${p.numero}">Pedido P-000123</strong>
+        <span class="c-chip" th:classappend="${p.clase}" th:text="${p.estado}">Por confirmar</span>
+      </div>
+      <div class="rechazo" th:if="${p.rechazado}" th:text="'Pedido rechazado: ' + ${p.motivoRechazo}">Pedido rechazado: motivo</div>
+      <div class="plato-env" th:each="i : ${p.platos}">
+        <span class="nombre">
+          <span th:text="${i.cantidad} + ' × ' + ${i.nombre}">2 × Arroz chino especial</span>
+          <span class="notas" th:if="${i.notas != null}" th:text="' · ' + ${i.notas}"></span>
+        </span>
+        <span class="c-chip" th:classappend="${i.clase}" th:text="${i.estado}">En cocina</span>
+        <form th:unless="${p.rechazado}" th:action="@{/cliente/pedidos/{p}/items/{i}/quitar(p=${p.id},i=${i.id})}" method="post">
+          <button type="submit" class="btn-x" th:attr="aria-label='Quitar ' + ${i.nombre}" title="Quitar"><i class="bi bi-x-lg"></i></button>
+        </form>
+      </div>
+      <div class="total" style="margin-bottom:0"><span>Total</span><span th:text="${p.total}">$56.000</span></div>
+    </article>
+  </th:block>
+
+  <!--/* ---------------------------------------------- la cuenta (HU-035) */-->
+  <h2><i class="bi bi-receipt"></i> La cuenta</h2>
+  <div class="c-msg ok" th:if="${cuentaSolicitada}"><i class="bi bi-check-circle"></i>
+    <span>Ya pediste la cuenta. El cajero la está preparando.</span></div>
+  <form th:action="@{/cliente/cuenta}" method="post" th:unless="${cuentaSolicitada}">
+    <button type="submit" class="c-btn sec ancho" th:disabled="${!puedePedirCuenta}"><i class="bi bi-receipt"></i> Pedir la cuenta</button>
+  </form>
+  <p class="notas" th:unless="${puedePedirCuenta or cuentaSolicitada}">Podrás pedir la cuenta cuando envíes tu primer pedido.</p>
+</main>
+
+<footer class="c-pie">Esta página se actualiza sola cuando cambia el estado de tu pedido.</footer>
+
+<script th:inline="javascript">
+  (function () {
+    var url = /*[[@{/cliente/estado}]]*/ '/cliente/estado';
+    var actual = document.body.getAttribute('data-huella');
+    function revisar() {
+      var el = document.activeElement;
+      if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA')) { return; }
+      fetch(url, { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
+        .then(function (r) { if (r.status === 401) { location.reload(); return null; } return r.ok ? r.json() : null; })
+        .then(function (d) { if (d && d.huella && d.huella !== actual) { location.reload(); } })
+        .catch(function () { /* sin red: se intenta en el próximo ciclo */ });
+    }
+    setInterval(revisar, 8000);
+  })();
+</script>
+</body>
+</html>

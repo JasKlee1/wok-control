@@ -63,6 +63,8 @@ class ClienteMesaWebTest {
     MesaService mesas;
     @MockitoBean
     ResumenService resumen;
+    @MockitoBean
+    com.wokcontrol.pedidos.service.PedidoClienteService cliente;
 
     private String tokenMesa5() {
         return tokens.emitirTokenMesa("s1", "m5", 5).token();

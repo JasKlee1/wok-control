@@ -46,6 +46,15 @@ public class Pedido {
     private String canceladoPor;
     private String motivoCancelacion;
     private List<CambioEstado> historial = new ArrayList<>();
+    /** v2 · HU-034: "QR" si lo envió el cliente desde su celular; null si lo tomó el mesero. */
+    private String origen;
+    /** v2 · HU-034: sesión de mesa que envió el pedido; el cliente solo ve los de su sesión. */
+    @Indexed(sparse = true)
+    private String sesionMesaId;
+    /** v2 · HU-037: motivo con el que el mesero rechazó el pedido QR. */
+    private String motivoRechazo;
+    private String rechazadoPor;
+    private Instant rechazadoEn;
 
     @CreatedDate
     @Indexed
@@ -145,6 +154,17 @@ public class Pedido {
     public Instant getCanceladoEn() { return canceladoEn; }
     public void setCanceladoEn(Instant canceladoEn) { this.canceladoEn = canceladoEn; }
     public Instant getActualizadoEn() { return actualizadoEn; }
+    public String getOrigen() { return origen; }
+    public void setOrigen(String origen) { this.origen = origen; }
+    public boolean esQr() { return "QR".equals(origen); }
+    public String getSesionMesaId() { return sesionMesaId; }
+    public void setSesionMesaId(String sesionMesaId) { this.sesionMesaId = sesionMesaId; }
+    public String getMotivoRechazo() { return motivoRechazo; }
+    public void setMotivoRechazo(String motivoRechazo) { this.motivoRechazo = motivoRechazo; }
+    public String getRechazadoPor() { return rechazadoPor; }
+    public void setRechazadoPor(String rechazadoPor) { this.rechazadoPor = rechazadoPor; }
+    public Instant getRechazadoEn() { return rechazadoEn; }
+    public void setRechazadoEn(Instant rechazadoEn) { this.rechazadoEn = rechazadoEn; }
     public Long getVersion() { return version; }
     public void setVersion(Long version) { this.version = version; }
 }

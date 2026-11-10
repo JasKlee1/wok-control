@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/layout :: head('Pedido ' + ${pedido.numero})}"></head>
-<body th:attr="data-wok-recargar=${pedido.estado.name() == 'ENVIADO' or pedido.estado.name() == 'EN_PREPARACION'} ? 30 : 0">
+<body th:attr="data-wok-recargar=${pedido.estado.name() == 'ENVIADO' or pedido.estado.name() == 'EN_PREPARACION' or pedido.estado.name() == 'POR_CONFIRMAR'} ? 30 : 0">
 <div class="wok-app">
   <aside th:replace="~{fragments/layout :: sidebar}"></aside>
   <div class="wok-main">
-    <header th:replace="~{fragments/layout :: topbar('Pedido ' + ${pedido.numero}, 'Mesa ' + ${pedido.mesaNumero} + ' · ' + ${pedido.meseroNombre})}"></header>
+    <header th:replace="~{fragments/layout :: topbar('Pedido ' + ${pedido.numero}, 'Mesa ' + ${pedido.mesaNumero} + ' · ' + (${pedido.meseroNombre} ?: 'Pedido por QR'))}"></header>
     <main class="wok-content">
       <div th:replace="~{fragments/layout :: mensajes}"></div>
       <th:block th:with="gestiona=${usuarioActual.tiene('PEDIDOS_GESTIONAR')}">
@@ -20,12 +20,34 @@
             <button class="btn btn-wok btn-sm" type="submit"><i class="bi bi-send"></i> Enviar a cocina</button>
           </form>
         </th:block>
+        <!--/* v2 · HU-037: el mesero confirma o rechaza el pedido que llegó por QR */-->
+        <th:block th:if="${gestiona and pedido.estado.name() == 'POR_CONFIRMAR'}">
+          <span class="wok-badge info"><i class="bi bi-qr-code"></i> Enviado por el cliente</span>
+          <a th:href="@{/pedidos/{id}/editar(id=${pedido.id})}" class="btn btn-light btn-sm"><i class="bi bi-pencil"></i> Corregir</a>
+          <form th:action="@{/pedidos/{id}/confirmar(id=${pedido.id})}" method="post"
+                data-wok-confirmar="El pedido pasará a cocina como comanda y se descontarán los insumos del inventario. ¿Confirmar?"
+                data-wok-confirmar-boton="Confirmar y enviar a cocina">
+            <button class="btn btn-wok btn-sm" type="submit"><i class="bi bi-check2-circle"></i> Confirmar y enviar a cocina</button>
+          </form>
+          <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="collapse" data-bs-target="#rechazar">
+            <i class="bi bi-x-octagon"></i> Rechazar</button>
+        </th:block>
         <form th:if="${gestiona and pedido.estado.name() == 'LISTO'}" th:action="@{/pedidos/{id}/items/entregar-todos(id=${pedido.id})}" method="post">
           <button class="btn btn-success btn-sm" type="submit"><i class="bi bi-check2-all"></i> Entregar todo lo listo</button>
         </form>
         <a th:if="${pedido.estado.name() == 'ENTREGADO' and usuarioActual.tiene('FACTURACION_COBRAR')}" th:href="@{/caja/cuentas/{m}(m=${pedido.mesaId})}" class="btn btn-dorado btn-sm"><i class="bi bi-cash-coin"></i> Cobrar</a>
         <button th:if="${gestiona and pedido.estado.permiteCancelar()}" type="button" class="btn btn-outline-danger btn-sm ms-auto"
                 data-bs-toggle="collapse" data-bs-target="#cancelar"><i class="bi bi-x-circle"></i> Cancelar pedido</button>
+      </div>
+      <div class="collapse mb-3" id="rechazar" th:if="${gestiona and pedido.estado.name() == 'POR_CONFIRMAR'}">
+        <form th:action="@{/pedidos/{id}/rechazar(id=${pedido.id})}" method="post" class="wok-card wok-card-body d-flex gap-2 flex-wrap align-items-end">
+          <div class="flex-grow-1"><label class="form-label" for="motivoRechazo">Motivo del rechazo (el cliente lo verá en su celular)</label>
+            <input id="motivoRechazo" name="motivo" class="form-control" maxlength="200" required placeholder="La mesa está vacía, pedido duplicado…"></div>
+          <button class="btn btn-danger" type="submit">Rechazar pedido</button>
+        </form>
+      </div>
+      <div class="alert alert-danger wok-alerta" th:if="${pedido.estado.name() == 'RECHAZADO'}">
+        <i class="bi bi-x-octagon"></i><div>Rechazado por <strong th:text="${pedido.rechazadoPor}">u</strong>: <span th:text="${pedido.motivoRechazo}">m</span></div>
       </div>
       <div class="collapse mb-3" id="cancelar" th:if="${gestiona and pedido.estado.permiteCancelar()}">
         <form th:action="@{/pedidos/{id}/cancelar(id=${pedido.id})}" method="post" class="wok-card wok-card-body d-flex gap-2 flex-wrap align-items-end"

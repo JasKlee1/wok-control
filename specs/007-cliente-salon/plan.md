@@ -71,12 +71,22 @@ Esta épica no agrega microservicios, bases de datos ni dependencias de Maven. S
 - Cada petición del cliente hace una consulta a la base para validar la sesión. Es aceptable para el volumen de un restaurante.
 - Para invalidar todos los QR impresos de una mesa basta con borrar su `codigoQr`: se genera uno nuevo.
 
+## 3.1 Decisiones del Sprint 1 para T005 a T016
+
+1. **El pedido sin enviar vive en la sesión de mesa** (`sesiones_mesa.carrito`), no en `pedidos`. Así no ocupa la mesa, no aparece al mesero ni a cocina y vence con la sesión. Al enviarlo se crea el `Pedido` con `origen=QR` en estado `POR_CONFIRMAR`, y los precios se vuelven a tomar de menu-service.
+2. **Dos estados nuevos del pedido:** `POR_CONFIRMAR`, que es activo y ocupa la mesa pero no está en cocina, y `RECHAZADO`, que no es activo y guarda el motivo. Confirmar reutiliza el envío a cocina de la v1, con el mismo descuento idempotente de inventario.
+3. **Aviso de agotado sin dependencias nuevas.** El pedido sin enviar se vuelve a cotizar con menu-service cada vez que se muestra. «Mi pedido» consulta `GET /cliente/estado` cada 8 s y se recarga solo si cambió la huella, que cubre agotados, estados de cocina, rechazo y cuenta. No se usan WebSockets, para no agregar infraestructura (constitución 3).
+4. **El cocinero puede marcar un plato agotado o disponible** en menu-service (`COCINA_OPERAR`), pero sigue sin poder editarlo.
+5. **«Cuenta solicitada»** es un campo de la mesa (`cuentaSolicitadaEn`) que se borra cuando se cierran sus sesiones (cobro o liberación). facturacion-service lo recibe en `GET /api/mesas` junto con `platosSinEntregar`.
+
 ## 4. Datos
 
 | Colección (wok_pedidos) | Campos nuevos |
 |---|---|
 | `mesas` | `codigoQr` (único, disperso) |
-| `sesiones_mesa` (nueva) | `mesaId`, `mesaNumero`, `estado` (ACTIVA o CERRADA), `abiertaEn`, `cerradaEn`, `motivoCierre`; índice `mesa_estado` |
+| `sesiones_mesa` (nueva) | `mesaId`, `mesaNumero`, `estado` (ACTIVA o CERRADA), `abiertaEn`, `cerradaEn`, `motivoCierre`; índice `mesa_estado` · `carrito[]` (HU-032) |
+| `mesas` | `cuentaSolicitadaEn` (HU-035) |
+| `pedidos` | `origen`, `sesionMesaId` (índice disperso), `motivoRechazo`, `rechazadoPor`, `rechazadoEn`; estados `POR_CONFIRMAR` y `RECHAZADO` |
 
 ## 5. Contrato (rutas nuevas del Sprint 1)
 
@@ -102,4 +112,9 @@ Se registran tres eventos nuevos:
 |---|---|
 | REQ-WOK-033 | `ClienteMesaWebController`, `SesionMesaService.abrir`, `MenuClient.carta`, `cliente/carta.html` |
 | REQ-WOK-036 · NFR-WOK-003 | `Roles.CLIENTE`, `Permisos.CARTA_CLIENTE`, `SecurityConfig` de pedidos y menu, `SesionMesaService.validar` y `cerrarDeMesa`, `RolService.validarAsignables` |
-| REQ-WOK-032, 034, 035, 037, 038 · NFR-WOK-001 | Pendientes (T005 a T016) |
+| REQ-WOK-032 | `PedidoClienteService.agregar`, `cambiar`, `quitar` y `modificarEnviado`, `SesionMesa.carrito`, `cliente/pedido.html` |
+| REQ-WOK-034 | `PedidoService.crearDesdeQr` y `porConfirmar`, `EstadoPedido.POR_CONFIRMAR`, `PedidoClienteService.enviar` y `estadoPlato`, bandeja en `pedidos/lista.html`, `GET /cliente/estado` |
+| REQ-WOK-035 | `PedidoClienteService.pedirCuenta`, `MesaService.solicitarCuenta` y `platosSinEntregar`, `Mesa.cuentaSolicitadaEn`, `MesaResponse`, `caja/cuentas.html` (facturacion-service) |
+| REQ-WOK-037 | `PedidoService.confirmar` y `rechazar`, `EstadoPedido.RECHAZADO`, `PedidoWebController` y `PATCH /api/pedidos/{id}/estado`, `pedidos/detalle.html` |
+| REQ-WOK-038 | `PedidoClienteService.carrito` y `huella`, `SecurityConfig` y `platos/lista.html` de menu-service (el cocinero marca agotado) |
+| NFR-WOK-001 | `cliente/base.html` (sin Bootstrap, CSS en línea), fotos `loading=lazy` con tamaño fijo, `scripts/medir-carta.ps1` |

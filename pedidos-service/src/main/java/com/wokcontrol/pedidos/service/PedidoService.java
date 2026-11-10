@@ -53,6 +53,11 @@ import com.wokcontrol.pedidos.repository.PedidoRepository;
 @Service
 public class PedidoService {
 
+    /** AC-034.3 */
+    public static final String MENSAJE_PEDIDO_VACIO = "Agrega al menos un plato";
+    /** AC-037.2 */
+    public static final String MENSAJE_MOTIVO_RECHAZO = "Indica el motivo del rechazo";
+
     private final PedidoRepository repo;
     private final MesaService mesas;
     private final MenuClient menu;
@@ -136,6 +141,47 @@ public class PedidoService {
         return g;
     }
 
+    /**
+     * v2 · HU-034 (REQ-WOK-034): pedido que el cliente envía desde su celular. Queda POR_CONFIRMAR,
+     * sin llegar a cocina, hasta que el mesero lo confirme (RN-01). Precios, alérgenos y receta se
+     * vuelven a tomar de menu-service, igual que en los pedidos del mesero.
+     */
+    public Pedido crearDesdeQr(String mesaId, String sesionMesaId, List<ItemRequest> items) {
+        if (items == null || items.isEmpty()) {
+            throw new ReglaNegocioException(MENSAJE_PEDIDO_VACIO);
+        }
+        Mesa mesa = mesas.obtener(mesaId);
+        if (!mesa.isActiva() || mesa.getEstado() == Mesa.Estado.FUERA_DE_SERVICIO) {
+            throw new ReglaNegocioException("La mesa " + mesa.getNumero() + " no está disponible para recibir pedidos");
+        }
+        Pedido p = new Pedido();
+        p.setNumero(secuencias.siguienteFormateado("pedidos", "P-"));
+        p.setMesaId(mesa.getId());
+        p.setMesaNumero(mesa.getNumero());
+        p.setOrigen("QR");
+        p.setSesionMesaId(sesionMesaId);
+        // [SUPUESTO] La mesa aún no tiene mesero asignado (HU-042, Sprint 2): el pedido QR queda con el
+        // mesero que ya atiende la mesa, si lo hay; si no, lo ven todos los meseros en «Por confirmar».
+        repo.findByMesaIdAndEstadoInOrderByCreadoEnAsc(mesa.getId(), EstadoPedido.ACTIVOS).stream()
+                .filter(x -> x.getMesero() != null && !x.esQr()).reduce((a, b) -> b)
+                .ifPresent(x -> {
+                    p.setMesero(x.getMesero());
+                    p.setMeseroNombre(x.getMeseroNombre());
+                });
+        p.setItems(construirItems(items));
+        p.setEstado(EstadoPedido.POR_CONFIRMAR);
+        p.registrar(EstadoPedido.POR_CONFIRMAR.name(), "Cliente mesa " + mesa.getNumero(), "Pedido enviado por QR");
+        Pedido g = repo.save(p);
+        mesas.actualizarOcupacion(mesa.getId());
+        auditoria.registrar("CREAR_QR", "Pedido", g.getNumero(), "Mesa " + mesa.getNumero() + " · " + g.getUnidades() + " productos");
+        return g;
+    }
+
+    /** Pedidos QR que esperan la confirmación de un mesero, del más antiguo al más reciente. */
+    public List<Pedido> porConfirmar() {
+        return repo.findByEstadoInOrderByCreadoEnAsc(Set.of(EstadoPedido.POR_CONFIRMAR));
+    }
+
     public Pedido actualizar(String id, PedidoDtos.ActualizarPedidoRequest req) {
         Pedido p = obtener(id);
         if (!p.getEstado().permiteEditarItems()) {
@@ -199,6 +245,49 @@ public class PedidoService {
         if (p.getEstado() != EstadoPedido.ABIERTO) {
             throw new ReglaNegocioException("Solo se envían a cocina pedidos abiertos (estado actual: " + p.getEstado().etiqueta() + ")");
         }
+        return despachar(p, "ENVIAR_COCINA", null);
+    }
+
+    /**
+     * v2 · HU-037 (AC-037.1): el mesero confirma un pedido QR y pasa a cocina como comanda, con el
+     * mismo descuento de inventario que un pedido tomado por el mesero.
+     */
+    public Pedido confirmar(String id) {
+        Pedido p = obtener(id);
+        if (p.getEstado() != EstadoPedido.POR_CONFIRMAR) {
+            throw new ReglaNegocioException("Solo se confirman pedidos por confirmar (estado actual: " + p.getEstado().etiqueta() + ")");
+        }
+        UsuarioActual u = UsuarioActual.requerido();
+        if (p.getMesero() == null) {
+            p.setMesero(u.responsable());
+            p.setMeseroNombre(u.nombre());
+        }
+        return despachar(p, "CONFIRMAR_QR", "Confirmado por " + u.responsable());
+    }
+
+    /** v2 · HU-037 (AC-037.2): el rechazo exige motivo; el cliente lo ve en su celular. */
+    public Pedido rechazar(String id, String motivo) {
+        Pedido p = obtener(id);
+        if (p.getEstado() != EstadoPedido.POR_CONFIRMAR) {
+            throw new ReglaNegocioException("Solo se rechazan pedidos por confirmar (estado actual: " + p.getEstado().etiqueta() + ")");
+        }
+        if (motivo == null || motivo.isBlank()) {
+            throw new ReglaNegocioException(MENSAJE_MOTIVO_RECHAZO);
+        }
+        String usuario = UsuarioActual.responsableActual();
+        String m = motivo.trim().length() > 200 ? motivo.trim().substring(0, 200) : motivo.trim();
+        p.setEstado(EstadoPedido.RECHAZADO);
+        p.setMotivoRechazo(m);
+        p.setRechazadoPor(usuario);
+        p.setRechazadoEn(Instant.now());
+        p.registrar(EstadoPedido.RECHAZADO.name(), usuario, m);
+        Pedido g = repo.save(p);
+        mesas.actualizarOcupacion(p.getMesaId());
+        auditoria.registrar("RECHAZAR_QR", "Pedido", g.getNumero(), m);
+        return g;
+    }
+
+    private Pedido despachar(Pedido p, String accion, String detalleExtra) {
         if (p.getItems().isEmpty()) {
             throw new ReglaNegocioException("El pedido no tiene productos");
         }
@@ -210,10 +299,11 @@ public class PedidoService {
         }
         p.setEstado(EstadoPedido.ENVIADO);
         p.setEnviadoEn(Instant.now());
+        String detalle = lineas.isEmpty() ? "Sin receta: no descuenta inventario" : "Inventario descontado (" + lineas.size() + " insumos)";
         p.registrar(EstadoPedido.ENVIADO.name(), UsuarioActual.responsableActual(),
-                lineas.isEmpty() ? "Sin receta: no descuenta inventario" : "Inventario descontado (" + lineas.size() + " insumos)");
+                detalleExtra == null ? detalle : detalleExtra + " · " + detalle);
         Pedido g = repo.save(p);
-        auditoria.registrar("ENVIAR_COCINA", "Pedido", g.getNumero(), null);
+        auditoria.registrar(accion, "Pedido", g.getNumero(), detalleExtra);
         return g;
     }
 

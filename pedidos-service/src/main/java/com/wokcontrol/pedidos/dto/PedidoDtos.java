@@ -36,8 +36,13 @@ public final class PedidoDtos {
             boolean activa) {
     }
 
+    /**
+     * v2 · HU-035: {@code cuentaSolicitadaEn} y {@code platosSinEntregar} le muestran al cajero las mesas
+     * que pidieron la cuenta desde el celular y si aún tienen platos por entregar.
+     */
     public record MesaResponse(String id, int numero, int capacidad, String zona, Mesa.Estado estado, boolean activa,
-            Instant ocupadaDesde, int pedidosActivos, BigDecimal consumoActual) {
+            Instant ocupadaDesde, int pedidosActivos, BigDecimal consumoActual, Instant cuentaSolicitadaEn,
+            int platosSinEntregar) {
     }
 
     // ---------- Pedidos ----------
@@ -91,14 +96,14 @@ public final class PedidoDtos {
             String meseroNombre, EstadoPedido estado, List<ItemResponse> items, BigDecimal total, String observaciones,
             Set<String> alergias, Pedido.EstadoConsumo consumoInventario, String facturaId, String canceladoPor,
             String motivoCancelacion, Instant creadoEn, Instant enviadoEn, Instant listoEn, Instant entregadoEn,
-            Instant pagadoEn, List<Pedido.CambioEstado> historial) {
+            Instant pagadoEn, List<Pedido.CambioEstado> historial, String origen, String motivoRechazo) {
 
         public static PedidoResponse de(Pedido p) {
             return new PedidoResponse(p.getId(), p.getNumero(), p.getMesaId(), p.getMesaNumero(), p.getMesero(),
                     p.getMeseroNombre(), p.getEstado(), p.getItems().stream().map(ItemResponse::de).toList(), p.getTotal(),
                     p.getObservaciones(), p.getAlergias(), p.getConsumoInventario(), p.getFacturaId(), p.getCanceladoPor(),
                     p.getMotivoCancelacion(), p.getCreadoEn(), p.getEnviadoEn(), p.getListoEn(), p.getEntregadoEn(),
-                    p.getPagadoEn(), p.getHistorial());
+                    p.getPagadoEn(), p.getHistorial(), p.getOrigen(), p.getMotivoRechazo());
         }
     }
 

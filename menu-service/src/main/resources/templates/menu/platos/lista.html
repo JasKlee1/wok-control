@@ -62,8 +62,9 @@
             </div>
             <div class="wok-card-body border-top d-flex align-items-center justify-content-between gap-2 py-2">
               <span class="h5 mb-0 text-wok" th:text="${@fmt.dinero(p.precio)}">$ 0</span>
-              <div class="wok-acciones" th:if="${puedeGestionar}">
-                <a th:href="@{/menu/platos/{id}/editar(id=${p.id})}" class="btn btn-sm btn-light" title="Editar"><i class="bi bi-pencil"></i></a>
+              <!--/* v2 · HU-038: el cocinero también marca un plato agotado o disponible */-->
+              <div class="wok-acciones" th:if="${puedeGestionar or usuarioActual.tiene('COCINA_OPERAR')}">
+                <a th:if="${puedeGestionar}" th:href="@{/menu/platos/{id}/editar(id=${p.id})}" class="btn btn-sm btn-light" title="Editar"><i class="bi bi-pencil"></i></a>
                 <form th:action="@{/menu/platos/{id}/disponibilidad(id=${p.id})}" method="post">
                   <input type="hidden" name="disponible" th:value="${!p.disponible}">
                   <button type="submit" class="btn btn-sm" th:classappend="${p.disponible} ? 'btn-outline-warning' : 'btn-outline-success'"

@@ -101,7 +101,11 @@ public class CajaWebController {
     @GetMapping("/cuentas")
     public String cuentas(Model model) {
         try {
-            model.addAttribute("mesas", pedidos.mesas().stream().filter(m -> m.pedidosActivos() > 0).toList());
+            // v2 · HU-035: primero las mesas que pidieron la cuenta desde el celular, en orden de solicitud
+            model.addAttribute("mesas", pedidos.mesas().stream().filter(m -> m.pedidosActivos() > 0)
+                    .sorted(java.util.Comparator.comparing(PedidosClient.Mesa::cuentaSolicitadaEn,
+                            java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder())))
+                    .toList());
         } catch (WokException ex) {
             model.addAttribute("mesas", List.of());
             model.addAttribute("advertencia", "No fue posible consultar las mesas: " + ex.getMessage());

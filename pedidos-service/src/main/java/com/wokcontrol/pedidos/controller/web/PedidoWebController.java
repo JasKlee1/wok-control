@@ -118,7 +118,10 @@ public class PedidoWebController {
         model.addAttribute("mesaId", mesaId);
         model.addAttribute("fecha", dia);
         model.addAttribute("mios", mios);
-        model.addAttribute("porConfirmar", pedidos.porConfirmar());
+        // v2 · HU-042: el mesero ve los pedidos QR de sus mesas y los de mesas sin mesero
+        var usuario = com.wokcontrol.common.security.UsuarioActual.requerido();
+        model.addAttribute("porConfirmar", usuario.tiene(com.wokcontrol.common.security.Permisos.PEDIDOS_GESTIONAR)
+                ? pedidos.porConfirmar(usuario.username()) : pedidos.porConfirmar());
         return "pedidos/lista";
     }
 

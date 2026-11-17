@@ -11,6 +11,7 @@ y el gateway las bloquea desde el exterior.
 | | `GET/POST /api/usuarios` · `GET/PUT /api/usuarios/{id}` · `PATCH /api/usuarios/{id}/estado` · `POST /api/usuarios/{id}/restablecer-password` · `PUT /api/usuarios/yo/password` | Gestión de usuarios |
 | | `GET/POST /api/roles` · `GET/PUT /api/roles/{codigo}` · `GET /api/permisos` | Roles y permisos |
 | | `GET/PUT /api/parametros` · `GET /api/auditoria` · `POST /api/auditoria/eventos` (interno) | Parámetros y auditoría |
+| | `GET /api/usuarios/internos/meseros` (interno) | v2 · HU-042: usuario y nombre de los meseros activos, para el anfitrión |
 | menu | `GET/POST /api/menu/categorias` · `GET/PUT /api/menu/categorias/{id}` | Categorías |
 | | `GET/POST /api/menu/platos` · `GET/PUT/DELETE /api/menu/platos/{id}` · `PATCH .../precio` · `PATCH .../disponibilidad` | Platos (DELETE = retiro lógico) |
 | | `GET/POST /api/menu/combos` · `GET/PUT/DELETE /api/menu/combos/{id}` · `PATCH .../disponibilidad` | Combos |
@@ -19,6 +20,7 @@ y el gateway las bloquea desde el exterior.
 | pedidos | `GET/POST /api/mesas` · `GET/PUT /api/mesas/{id}` · `GET .../pedidos` · `PATCH .../liberar` · `PATCH .../servicio` | Mesas |
 | | `GET/POST /api/pedidos` · `GET/PUT /api/pedidos/{id}` · `PATCH /api/pedidos/{id}/estado` (ENVIADO, CANCELADO) | Pedidos |
 | | `PATCH /api/pedidos/{id}/items/{itemId}/estado` · `GET /api/cocina/comandas` | Cocina |
+| | `GET /api/salon/mapa` · `GET/POST /api/salon/espera` · `GET/PUT/DELETE /api/salon/espera/{id}` · `GET /api/salon/meseros` · `POST /api/salon/asignaciones` · `PATCH /api/salon/mesas/{id}/limpia` · `PATCH /api/salon/mesas/{id}/liberar` | v2 · épica 8: anfitrión (ver abajo) |
 | | `GET /api/pedidos/facturables?mesaId=` · `GET /api/pedidos/resumen` · `POST /api/pedidos/{id}/pago` (interno) · `POST .../reversion-pago` (interno) | Facturación y panel |
 | inventario | `GET/POST /api/insumos` · `GET/PUT /api/insumos/{id}` · `PATCH .../estado` · `GET /api/insumos/resumen` | Insumos |
 | | `POST /api/insumos/{id}/movimientos` · `POST /api/insumos/{id}/ajustes` · `GET /api/insumos/{id}/movimientos` · `POST /api/insumos/{id}/reportes-agotado` | Movimientos |
@@ -56,6 +58,29 @@ El detalle de la sesión está en [seguridad.md](seguridad.md#sesión-de-mesa-de
 | `GET /mesas/{id}/qr` | `MESAS_GESTIONAR` | QR imprimible de la mesa (genera el código la primera vez) |
 | `GET /menu/imagenes/{id}` | `MENU_VER`, `MENU_GESTIONAR` o `CARTA_CLIENTE` | Foto del plato |
 
+## Anfitrión y salón (v2 · épica 8)
+
+API y rutas Thymeleaf de pedidos-service (`pedidos-api` con `/api/salon/**` y `pedidos-web` con `/salon/**`). Las decisiones están en [specs/008-anfitrion-salon/plan.md](../specs/008-anfitrion-salon/plan.md) (ADR-003).
+
+| Método y ruta | Permiso | Respuesta |
+|---|---|---|
+| `GET /api/salon/mapa` | `SALON_OPERAR` | HU-041: mesas activas con estado (`DISPONIBLE` = libre, `OCUPADA`, `POR_LIMPIAR`), capacidad, grupo, mesero y unión; totales y `huella` |
+| `GET /api/salon/espera` · `GET /api/salon/espera/{id}` | `SALON_OPERAR` | HU-040: grupos en espera por orden de llegada, con `minutosEspera` |
+| `POST /api/salon/espera` · `PUT /api/salon/espera/{id}` | `SALON_OPERAR` | HU-040: `{nombre, personas, llegada (HH:mm, opcional), notas}` · 400 con `errores.nombre` o `errores.personas` |
+| `DELETE /api/salon/espera/{id}?motivo=` | `SALON_OPERAR` | 204; el grupo queda RETIRADO (no se borra) |
+| `GET /api/salon/meseros` | `SALON_OPERAR` | Meseros activos para asignar |
+| `POST /api/salon/asignaciones` | `SALON_OPERAR` | HU-042/045: `{grupoId \| nombre+personas, mesaIds[], mesero}` · 201 · 422 con `codigo` `CAPACIDAD_INSUFICIENTE` o `MESA_NO_DISPONIBLE` |
+| `PATCH /api/salon/mesas/{id}/limpia` | `SALON_OPERAR` o `PEDIDOS_GESTIONAR` | HU-044: de `POR_LIMPIAR` a libre |
+| `PATCH /api/salon/mesas/{id}/liberar` | `SALON_OPERAR` | HU-044: mesa ocupada sin pedidos (el grupo se fue) → `POR_LIMPIAR`; separa la unión |
+| `GET /salon` | `SALON_OPERAR` | Pantalla del anfitrión: «Llegó un grupo», mapa y lista de espera |
+| `GET /salon/estado` · `GET /salon/vivo` | `SALON_OPERAR` | HU-046: JSON `{huella, intervaloMs}` (la tablet lo consulta cada 3 s) y fragmento HTML del mapa |
+| `GET/POST /salon/sentar` | `SALON_OPERAR` | Elegir grupo, una o varias mesas libres y el mesero |
+| `POST /salon/espera` · `POST /salon/espera/{id}` · `POST /salon/espera/{id}/retirar` · `GET /salon/espera/{id}/editar` | `SALON_OPERAR` | Lista de espera desde la web |
+| `POST /salon/mesas/{id}/limpia` · `POST /salon/mesas/{id}/liberar` · `POST /mesas/{id}/limpia` | `SALON_OPERAR` (la de `/mesas` también `PEDIDOS_GESTIONAR`) | Marcar limpia o «el grupo se fue» |
+| `GET /mesas?mias=true` | `MESAS_VER` | AC-042.1: las mesas que el anfitrión le asignó al mesero de la sesión |
+
+Al cobrar la última cuenta de una mesa (`POST /api/pedidos/{id}/pago`, interno) la mesa y su unión pasan a `POR_LIMPIAR` (HU-044).
+
 Códigos de respuesta usados en todas las API:
 
 | Código | Significado |
@@ -66,5 +91,5 @@ Códigos de respuesta usados en todas las API:
 | 403 | Sin permiso |
 | 404 | Recurso no encontrado |
 | 409 | Duplicado o modificación concurrente |
-| 422 | Regla de negocio incumplida |
+| 422 | Regla de negocio incumplida (v2: con `codigo` cuando la regla lo tiene, p. ej. `MESA_NO_DISPONIBLE`) |
 | 503 | Otro servicio no disponible |

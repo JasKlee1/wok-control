@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Sentar grupo')}"></head>
+<body>
+<div class="wok-app">
+  <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+  <div class="wok-main">
+    <header th:replace="~{fragments/layout :: topbar('Sentar grupo', 'Elige una mesa libre (o varias para unirlas) y el mesero')}"></header>
+    <main class="wok-content">
+      <style>
+        .sentar-mesas { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 8.5rem), 1fr)); gap: .6rem; }
+        .sentar-mesa { display: block; border: 2px solid var(--wok-borde); border-radius: var(--wok-radio); padding: .6rem .75rem;
+          cursor: pointer; background: #fff; min-height: 44px; }
+        .sentar-mesa:has(input:checked) { border-color: var(--wok-exito); background: rgba(46, 125, 50, .06); }
+        .sentar-mesa input { width: 1.2rem; height: 1.2rem; vertical-align: middle; }
+        .sentar-num { font-family: var(--wok-fuente-titulos); font-size: 1.4rem; margin-left: .3rem; }
+        .sentar .form-control, .sentar .form-select, .sentar .btn { min-height: 44px; }
+      </style>
+      <div th:replace="~{fragments/layout :: mensajes}"></div>
+
+      <form th:action="@{/salon/sentar}" th:object="${form}" method="post" class="wok-card sentar" style="max-width: 900px" id="formSentar">
+        <input type="hidden" th:field="*{grupoId}">
+        <div class="wok-card-body">
+          <h2 class="h6 wok-titulo">1 · Grupo</h2>
+          <div th:if="${grupo != null}" class="mb-3" id="grupoElegido" th:attr="data-personas=${grupo.personas}">
+            <strong th:text="${grupo.nombre}">Familia Rojas</strong> ·
+            <span th:text="${grupo.personas} + ' personas'">4 personas</span> ·
+            <span class="text-suave" th:text="'espera ' + ${grupo.minutosEspera} + ' min'">espera</span>
+          </div>
+          <div th:if="${grupo == null}" class="row g-2 mb-3">
+            <div class="col-12" th:unless="${espera.isEmpty()}">
+              <div class="small text-suave mb-1">¿Es un grupo de la lista? Elígelo:</div>
+              <div class="d-flex flex-wrap gap-2">
+                <a th:each="g : ${espera}" class="btn btn-light btn-sm"
+                   th:href="@{/salon/sentar(grupoId=${g.id},mesaId=${form.mesaIds.isEmpty() ? null : form.mesaIds[0]})}"
+                   th:text="${g.nombre} + ' (' + ${g.personas} + ')'">Grupo</a>
+              </div>
+              <div class="small text-suave mt-2">O llegó y encontró mesa:</div>
+            </div>
+            <div class="col-8">
+              <label class="form-label small mb-1" for="nombre">Nombre del grupo</label>
+              <input th:field="*{nombre}" type="text" maxlength="60" class="form-control" placeholder="Familia Rojas">
+            </div>
+            <div class="col-4">
+              <label class="form-label small mb-1" for="personas">Personas</label>
+              <input th:field="*{personas}" type="number" min="1" max="50" inputmode="numeric" class="form-control" id="personas">
+            </div>
+          </div>
+
+          <h2 class="h6 wok-titulo">2 · Mesa libre <small class="text-suave fw-normal">(elige varias para unirlas)</small></h2>
+          <p th:if="${libres.isEmpty()}" class="text-suave">No hay mesas libres. Anota al grupo en la lista de espera.</p>
+          <div class="sentar-mesas mb-2">
+            <label th:each="m : ${libres}" class="sentar-mesa">
+              <input type="checkbox" name="mesaIds" th:value="${m.id}" th:checked="${form.mesaIds.contains(m.id)}" th:attr="data-capacidad=${m.capacidad}">
+              <span class="sentar-num" th:text="${m.numero}">3</span>
+              <span class="small text-suave d-block"><i class="bi bi-people"></i> <span th:text="${m.capacidad}">4</span> · <span th:text="${m.zona}">SALON</span></span>
+            </label>
+          </div>
+          <p class="small mb-3" id="puestos" aria-live="polite"></p>
+
+          <h2 class="h6 wok-titulo">3 · Mesero</h2>
+          <div th:if="${errorMeseros}" class="alert alert-warning py-2" th:text="${errorMeseros}">error</div>
+          <select th:field="*{mesero}" class="form-select" style="max-width: 24rem" required>
+            <option value="">Elige el mesero…</option>
+            <option th:each="x : ${meseros}" th:value="${x.username}" th:text="${x.nombre}">Carlos</option>
+          </select>
+        </div>
+        <div class="wok-card-body border-top d-flex justify-content-end gap-2 flex-wrap">
+          <a th:href="@{/salon}" class="btn btn-light">Cancelar</a>
+          <button type="submit" class="btn btn-wok"><i class="bi bi-check2-circle"></i> Sentar grupo</button>
+        </div>
+      </form>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+  </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<script>
+  /* Ayuda visual: puestos elegidos frente a personas del grupo (el servidor valida CAPACIDAD_INSUFICIENTE). */
+  (function () {
+    var form = document.getElementById('formSentar');
+    var salida = document.getElementById('puestos');
+    if (!form || !salida) return;
+    function personas() {
+      var g = document.getElementById('grupoElegido');
+      if (g) return parseInt(g.getAttribute('data-personas'), 10) || 0;
+      var p = document.getElementById('personas');
+      return p ? parseInt(p.value, 10) || 0 : 0;
+    }
+    function actualizar() {
+      var puestos = 0, n = 0;
+      form.querySelectorAll('input[name=mesaIds]:checked').forEach(function (c) { puestos += parseInt(c.getAttribute('data-capacidad'), 10) || 0; n++; });
+      var p = personas();
+      if (!n) { salida.textContent = ''; return; }
+      salida.textContent = (n > 1 ? n + ' mesas unidas: ' : '') + puestos + ' puestos' + (p ? ' para ' + p + ' personas' : '')
+        + (p && puestos < p ? ' · no alcanza' : '');
+      salida.className = 'small mb-3 ' + (p && puestos < p ? 'text-danger' : 'text-success');
+    }
+    form.addEventListener('change', actualizar);
+    form.addEventListener('input', actualizar);
+    actualizar();
+  })();
+</script>
+</body>
+</html>

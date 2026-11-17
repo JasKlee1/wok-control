@@ -40,7 +40,8 @@ public class GatewaySecurityConfig {
     /** Endpoints que solo se invocan entre microservicios con token de servicio. */
     static final String[] RUTAS_INTERNAS = {
             "/api/inventario/consumos/**", "/api/inventario/recepciones/**",
-            "/api/auditoria/eventos/**", "/api/pedidos/*/pago", "/api/pedidos/*/reversion-pago" };
+            "/api/auditoria/eventos/**", "/api/pedidos/*/pago", "/api/pedidos/*/reversion-pago",
+            "/api/usuarios/internos/**" };
 
     @Bean
     SecurityWebFilterChain gatewayChain(ServerHttpSecurity http, ReactiveJwtDecoder decoder) {

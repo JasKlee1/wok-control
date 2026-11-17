@@ -16,4 +16,7 @@ public interface MesaRepository extends MongoRepository<Mesa, String> {
     List<Mesa> findByActivaTrueOrderByNumeroAsc();
 
     Optional<Mesa> findByCodigoQr(String codigoQr);
+
+    /** v2 · HU-045: las mesas de una misma unión. */
+    List<Mesa> findByAsignacionUnionId(String unionId);
 }

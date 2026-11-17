@@ -160,14 +160,19 @@ public class PedidoService {
         p.setMesaNumero(mesa.getNumero());
         p.setOrigen("QR");
         p.setSesionMesaId(sesionMesaId);
-        // [SUPUESTO] La mesa aún no tiene mesero asignado (HU-042, Sprint 2): el pedido QR queda con el
-        // mesero que ya atiende la mesa, si lo hay; si no, lo ven todos los meseros en «Por confirmar».
-        repo.findByMesaIdAndEstadoInOrderByCreadoEnAsc(mesa.getId(), EstadoPedido.ACTIVOS).stream()
-                .filter(x -> x.getMesero() != null && !x.esQr()).reduce((a, b) -> b)
-                .ifPresent(x -> {
-                    p.setMesero(x.getMesero());
-                    p.setMeseroNombre(x.getMeseroNombre());
-                });
+        // v2 · HU-042 (RN-07): el pedido QR va al mesero que el anfitrión asignó a la mesa. Si la mesa no
+        // tiene asignación, queda con el mesero que ya la atiende y, si no hay, lo ven todos los meseros.
+        if (mesa.getAsignacion() != null && mesa.getAsignacion().mesero() != null) {
+            p.setMesero(mesa.getAsignacion().mesero());
+            p.setMeseroNombre(mesa.getAsignacion().meseroNombre());
+        } else {
+            repo.findByMesaIdAndEstadoInOrderByCreadoEnAsc(mesa.getId(), EstadoPedido.ACTIVOS).stream()
+                    .filter(x -> x.getMesero() != null && !x.esQr()).reduce((a, b) -> b)
+                    .ifPresent(x -> {
+                        p.setMesero(x.getMesero());
+                        p.setMeseroNombre(x.getMeseroNombre());
+                    });
+        }
         p.setItems(construirItems(items));
         p.setEstado(EstadoPedido.POR_CONFIRMAR);
         p.registrar(EstadoPedido.POR_CONFIRMAR.name(), "Cliente mesa " + mesa.getNumero(), "Pedido enviado por QR");
@@ -180,6 +185,14 @@ public class PedidoService {
     /** Pedidos QR que esperan la confirmación de un mesero, del más antiguo al más reciente. */
     public List<Pedido> porConfirmar() {
         return repo.findByEstadoInOrderByCreadoEnAsc(Set.of(EstadoPedido.POR_CONFIRMAR));
+    }
+
+    /**
+     * v2 · HU-042 (RN-07): la bandeja de un mesero muestra los pedidos QR de sus mesas y los de mesas
+     * sin mesero asignado.
+     */
+    public List<Pedido> porConfirmar(String mesero) {
+        return porConfirmar().stream().filter(p -> p.getMesero() == null || p.getMesero().equals(mesero)).toList();
     }
 
     public Pedido actualizar(String id, PedidoDtos.ActualizarPedidoRequest req) {
@@ -413,8 +426,8 @@ public class PedidoService {
         p.setFacturaId(facturaId);
         p.registrar(EstadoPedido.PAGADO.name(), UsuarioActual.responsableActual(), "Comprobante " + facturaId);
         Pedido g = repo.save(p);
-        mesas.actualizarOcupacion(p.getMesaId());
-        mesas.cerrarSesionesSiLibre(p.getMesaId());
+        // v2 · HU-044: si era la última cuenta, la mesa (y su unión) pasa a POR_LIMPIAR y vencen las sesiones QR
+        mesas.alCobrar(p.getMesaId());
         return g;
     }
 

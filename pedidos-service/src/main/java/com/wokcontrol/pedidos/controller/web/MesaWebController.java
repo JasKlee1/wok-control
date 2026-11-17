@@ -60,15 +60,36 @@ public class MesaWebController {
         public boolean esNueva() { return id == null || id.isBlank(); }
     }
 
+    /**
+     * Tablero de mesas. v2 · HU-042 (AC-042.1): con {@code mias=true} el mesero ve solo las mesas que el
+     * anfitrión le asignó.
+     */
     @GetMapping
-    public String tablero(@RequestParam(required = false) String zona, Model model) {
-        var tablero = mesas.tablero(false).stream().filter(m -> zona == null || zona.isBlank() || zona.equals(m.zona())).toList();
+    public String tablero(@RequestParam(required = false) String zona, @RequestParam(defaultValue = "false") boolean mias,
+            Model model) {
+        String yo = mias ? com.wokcontrol.common.security.UsuarioActual.requerido().username() : null;
+        var tablero = mesas.tablero(false).stream().filter(m -> zona == null || zona.isBlank() || zona.equals(m.zona()))
+                .filter(m -> yo == null || yo.equals(m.meseroAsignado())).toList();
         model.addAttribute("mesas", tablero);
         model.addAttribute("zonas", PedidoDtos.ZONAS);
         model.addAttribute("zona", zona);
+        model.addAttribute("mias", mias);
         model.addAttribute("disponibles", tablero.stream().filter(m -> m.estado() == Mesa.Estado.DISPONIBLE).count());
         model.addAttribute("ocupadas", tablero.stream().filter(m -> m.estado() == Mesa.Estado.OCUPADA).count());
+        model.addAttribute("porLimpiar", tablero.stream().filter(m -> m.estado() == Mesa.Estado.POR_LIMPIAR).count());
         return "mesas/tablero";
+    }
+
+    /** v2 · HU-044: el mesero (o el anfitrión) marca limpia una mesa por limpiar. */
+    @PostMapping("/{id}/limpia")
+    public String limpia(@PathVariable String id, RedirectAttributes flash) {
+        try {
+            Mesa m = mesas.marcarLimpia(id);
+            flash.addFlashAttribute("exito", "Mesa " + m.getNumero() + " limpia y libre");
+        } catch (WokException ex) {
+            flash.addFlashAttribute("error", ex.getMessage());
+        }
+        return "redirect:/mesas";
     }
 
     @GetMapping("/{id}")
@@ -128,7 +149,7 @@ public class MesaWebController {
     public String liberar(@PathVariable String id, RedirectAttributes flash) {
         try {
             Mesa m = mesas.liberar(id);
-            flash.addFlashAttribute("exito", "Mesa " + m.getNumero() + " disponible");
+            flash.addFlashAttribute("exito", "Mesa " + m.getNumero() + " " + m.getEstado().etiqueta().toLowerCase());
         } catch (WokException ex) {
             flash.addFlashAttribute("error", ex.getMessage());
         }

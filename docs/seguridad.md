@@ -19,23 +19,26 @@
 
 ## Matriz de roles
 
-| Permiso | Admin | Mesero | Cocinero | Cajero | Proveedor | Inventario | Admin plataforma |
-|---|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
-| Panel | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Reportes, costos | ✓ | | | | | | |
-| Gestionar carta y precios | ✓ | | | | | | |
-| Ver carta | ✓ | ✓ | ✓ | ✓ | | ✓ | |
-| Mesas: ver / gestionar | ✓/✓ | ✓/ | | ✓/ | | | |
-| Pedidos: ver / registrar | ✓/ | ✓/✓ | ✓/ | ✓/ | | | |
-| Operar cocina | | | ✓ | | | | |
-| Inventario: ver / insumos / movimientos / ajustes | ✓/✓// | | ✓/// | | | ✓/✓/✓/✓ | |
-| Reportar agotado | | | ✓ | | | | |
-| Proveedores: ver / gestionar | ✓/✓ | | | | | ✓/ | |
-| Órdenes de compra | ✓ | | | | | ✓ | |
-| Portal del proveedor (solo lo propio) | | | | | ✓ | | |
-| Facturación: ver / cobrar / cerrar caja | ✓// | | | ✓/✓/✓ | | | |
-| Autorizar descuentos, anular comprobantes | ✓ | | | | | | |
-| Usuarios, roles, parámetros, auditoría | | | | | | | ✓ |
+| Permiso | Admin | Mesero | Cocinero | Cajero | Proveedor | Inventario | Admin plataforma | Anfitrión (v2) |
+|---|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
+| Panel | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Reportes, costos | ✓ | | | | | | | |
+| Gestionar carta y precios | ✓ | | | | | | | |
+| Ver carta | ✓ | ✓ | ✓ | ✓ | | ✓ | | |
+| Mesas: ver / gestionar | ✓/✓ | ✓/ | | ✓/ | | | | |
+| Salón: mapa, lista de espera, sentar, marcar limpia (`SALON_OPERAR`) | ✓ | (solo marcar limpia) | | | | | | ✓ |
+| Pedidos: ver / registrar | ✓/ | ✓/✓ | ✓/ | ✓/ | | | | |
+| Operar cocina | | | ✓ | | | | | |
+| Inventario: ver / insumos / movimientos / ajustes | ✓/✓// | | ✓/// | | | ✓/✓/✓/✓ | | |
+| Reportar agotado | | | ✓ | | | | | |
+| Proveedores: ver / gestionar | ✓/✓ | | | | | ✓/ | | |
+| Órdenes de compra | ✓ | | | | | ✓ | | |
+| Portal del proveedor (solo lo propio) | | | | | ✓ | | | |
+| Facturación: ver / cobrar / cerrar caja | ✓// | | | ✓/✓/✓ | | | | |
+| Autorizar descuentos, anular comprobantes | ✓ | | | | | | | |
+| Usuarios, roles, parámetros, auditoría | | | | | | | ✓ | |
+
+**Anfitrión (v2 · HU-043).** Recibe a los grupos: ve el mapa del salón y la lista de espera, sienta grupos con su mesero (uniendo mesas si hace falta) y marca mesas limpias. No crea ni edita mesas (403, es del Administrador), no toma pedidos ni cobra (acceso no permitido). La lista de meseros la consulta pedidos-service en `GET /api/usuarios/internos/meseros`, que solo acepta tokens de servicio, devuelve solo usuario y nombre y está bloqueada en el gateway.
 
 El **Administrador** opera el restaurante y el **Administrador de plataforma** administra accesos.
 Se mantuvieron separados para no mezclar la operación con la gestión de usuarios.

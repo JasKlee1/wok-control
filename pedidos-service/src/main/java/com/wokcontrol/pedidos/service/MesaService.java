@@ -2,9 +2,11 @@ package com.wokcontrol.pedidos.service;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -57,11 +59,61 @@ public class MesaService {
         return m.getCodigoQr();
     }
 
-    /** v2 · AC-036.2: al cobrar la última cuenta de la mesa, vencen las sesiones de los clientes. */
-    public void cerrarSesionesSiLibre(String mesaId) {
-        if (!tienePedidosActivos(mesaId)) {
-            sesiones.cerrarDeMesa(mesaId, "Cuenta cobrada");
+    /**
+     * v2 · HU-044 (REQ-WOK-044) y AC-036.2: al cobrar la última cuenta de la mesa (y de su unión), la
+     * mesa pasa a POR_LIMPIAR, la unión se separa y vencen las sesiones QR de los clientes.
+     */
+    public void alCobrar(String mesaId) {
+        dejarPorLimpiar(obtener(mesaId), "Cuenta cobrada");
+    }
+
+    /**
+     * v2 · HU-044 (RN-08): el grupo se fue. Si la mesa y las de su unión ya no tienen pedidos activos,
+     * todas pasan a POR_LIMPIAR. Devuelve las mesas que cambiaron (vacío si aún hay pedidos).
+     */
+    List<Mesa> dejarPorLimpiar(Mesa mesa, String motivo) {
+        List<Mesa> grupo = mesasDeLaUnion(mesa);
+        if (grupo.stream().anyMatch(m -> tienePedidosActivos(m.getId()))) {
+            return List.of();
         }
+        Instant ahora = Instant.now();
+        List<Mesa> cambiadas = new ArrayList<>();
+        for (Mesa m : grupo) {
+            if (m.getEstado() != Mesa.Estado.FUERA_DE_SERVICIO) {
+                m.setEstado(Mesa.Estado.POR_LIMPIAR);
+                m.setPorLimpiarDesde(ahora);
+            }
+            m.setOcupadaDesde(null);
+            m.setAsignacion(null);
+            cambiadas.add(repo.save(m));
+            sesiones.cerrarDeMesa(m.getId(), motivo);
+        }
+        auditoria.registrar("MESA_POR_LIMPIAR", "Mesa", mesa.getId(), motivo + " · mesa(s) "
+                + cambiadas.stream().map(m -> String.valueOf(m.getNumero())).collect(Collectors.joining(", ")));
+        return cambiadas;
+    }
+
+    /** v2 · HU-045: la mesa y las demás de su unión, si la tiene. */
+    public List<Mesa> mesasDeLaUnion(Mesa mesa) {
+        if (mesa.getAsignacion() == null || !mesa.getAsignacion().esUnion()) {
+            return List.of(mesa);
+        }
+        List<Mesa> union = repo.findByAsignacionUnionId(mesa.getAsignacion().unionId());
+        return union.isEmpty() ? List.of(mesa) : union;
+    }
+
+    /** v2 · HU-044 (AC-044.2): la mesa ya está limpia y vuelve a estar libre para sentar a otro grupo. */
+    public Mesa marcarLimpia(String id) {
+        Mesa m = obtener(id);
+        if (m.getEstado() != Mesa.Estado.POR_LIMPIAR) {
+            throw new ReglaNegocioException("La mesa " + m.getNumero() + " no está por limpiar (estado: "
+                    + m.getEstado().etiqueta().toLowerCase() + ")");
+        }
+        m.setEstado(Mesa.Estado.DISPONIBLE);
+        m.setPorLimpiarDesde(null);
+        Mesa g = repo.save(m);
+        auditoria.registrar("MARCAR_LIMPIA", "Mesa", id, "Mesa " + m.getNumero());
+        return g;
     }
 
     public List<Mesa> listar(boolean incluirInactivas) {
@@ -82,10 +134,18 @@ public class MesaService {
             consumo.merge(p.getMesaId(), p.getTotal(), BigDecimal::add);
             sinEntregar.merge(p.getMesaId(), platosSinEntregar(p), Integer::sum);
         }
-        return listar(incluirInactivas).stream().map(m -> new MesaResponse(m.getId(), m.getNumero(), m.getCapacidad(),
-                m.getZona(), m.getEstado(), m.isActiva(), m.getOcupadaDesde(),
-                conteo.getOrDefault(m.getId(), new int[1])[0], consumo.getOrDefault(m.getId(), BigDecimal.ZERO),
-                m.getCuentaSolicitadaEn(), sinEntregar.getOrDefault(m.getId(), 0))).toList();
+        return listar(incluirInactivas).stream().map(m -> respuesta(m, conteo.getOrDefault(m.getId(), new int[1])[0],
+                consumo.getOrDefault(m.getId(), BigDecimal.ZERO), sinEntregar.getOrDefault(m.getId(), 0))).toList();
+    }
+
+    /** Respuesta de una mesa con su ocupación; v2 · HU-042 agrega el grupo, el mesero y la unión. */
+    public static MesaResponse respuesta(Mesa m, int pedidosActivos, BigDecimal consumo, int sinEntregar) {
+        Mesa.Asignacion a = m.getAsignacion();
+        return new MesaResponse(m.getId(), m.getNumero(), m.getCapacidad(), m.getZona(), m.getEstado(), m.isActiva(),
+                m.getOcupadaDesde(), pedidosActivos, consumo, m.getCuentaSolicitadaEn(), sinEntregar,
+                a == null ? null : a.grupo(), a == null ? 0 : a.personas(), a == null ? null : a.mesero(),
+                a == null ? null : a.meseroNombre(), a == null ? null : a.unionId(),
+                a == null || a.unionNumeros() == null ? List.of() : a.unionNumeros(), m.getPorLimpiarDesde());
     }
 
     /** v2 · AC-035.2: unidades de un pedido activo que aún no llegan a la mesa. */
@@ -128,6 +188,9 @@ public class MesaService {
         if (!req.activa() && tienePedidosActivos(id)) {
             throw new ReglaNegocioException("No se puede desactivar una mesa con pedidos activos");
         }
+        if (!req.activa() && m.getAsignacion() != null) {
+            throw new ReglaNegocioException("No se puede desactivar una mesa con un grupo sentado");
+        }
         m.setNumero(req.numero());
         m.setCapacidad(req.capacidad());
         m.setZona(req.zona());
@@ -142,19 +205,31 @@ public class MesaService {
         if (fuera && tienePedidosActivos(id)) {
             throw new ReglaNegocioException("La mesa tiene pedidos activos");
         }
+        if (fuera && m.getAsignacion() != null) {
+            throw new ReglaNegocioException("La mesa tiene un grupo sentado");
+        }
         m.setEstado(fuera ? Mesa.Estado.FUERA_DE_SERVICIO : Mesa.Estado.DISPONIBLE);
         m.setOcupadaDesde(null);
+        m.setPorLimpiarDesde(null);
         return repo.save(m);
     }
 
-    /** Libera manualmente una mesa ocupada solo si ya no tiene pedidos activos. */
+    /**
+     * Libera manualmente una mesa ocupada solo si ya no tiene pedidos activos (ni las de su unión).
+     * v2 · HU-044 (RN-08): el grupo se fue, así que la mesa pasa a POR_LIMPIAR.
+     */
     public Mesa liberar(String id) {
         Mesa m = obtener(id);
-        if (tienePedidosActivos(id)) {
-            throw new ReglaNegocioException("La mesa " + m.getNumero() + " tiene pedidos sin pagar o en curso; no se puede liberar");
+        for (Mesa x : mesasDeLaUnion(m)) {
+            if (tienePedidosActivos(x.getId())) {
+                throw new ReglaNegocioException("La mesa " + x.getNumero() + " tiene pedidos sin pagar o en curso; no se puede liberar");
+            }
         }
-        actualizarOcupacion(id);
-        sesiones.cerrarDeMesa(id, "Mesa liberada");
+        if (m.getEstado() == Mesa.Estado.OCUPADA) {
+            dejarPorLimpiar(m, "Mesa liberada");
+        } else {
+            sesiones.cerrarDeMesa(id, "Mesa liberada");
+        }
         auditoria.registrar("LIBERAR", "Mesa", id, "Mesa " + m.getNumero());
         return obtener(id);
     }
@@ -163,15 +238,26 @@ public class MesaService {
         return pedidos.countByMesaIdAndEstadoIn(mesaId, EstadoPedido.ACTIVOS) > 0;
     }
 
-    /** Recalcula la ocupación según los pedidos activos (no altera mesas fuera de servicio). */
+    /**
+     * Recalcula la ocupación según los pedidos activos (no altera mesas fuera de servicio).
+     * <ul>
+     * <li>Con pedidos activos, una mesa libre o por limpiar pasa a OCUPADA.</li>
+     * <li>v2 · HU-042/044: sin pedidos activos, solo vuelve a libre una mesa OCUPADA sin grupo sentado
+     * (cuando se cancela su único pedido). Una mesa con grupo sigue ocupada y una por limpiar sigue
+     * por limpiar hasta que alguien la marque limpia (RN-08).</li>
+     * </ul>
+     */
     public void actualizarOcupacion(String mesaId) {
         boolean ocupada = tienePedidosActivos(mesaId);
-        Query q = Query.query(Criteria.where("_id").is(mesaId).and("estado").ne(Mesa.Estado.FUERA_DE_SERVICIO));
         if (ocupada) {
-            mongo.updateFirst(Query.query(Criteria.where("_id").is(mesaId).and("estado").is(Mesa.Estado.DISPONIBLE)),
-                    new Update().set("estado", Mesa.Estado.OCUPADA).set("ocupadaDesde", Instant.now()), Mesa.class);
+            mongo.updateFirst(Query.query(Criteria.where("_id").is(mesaId)
+                    .and("estado").in(Mesa.Estado.DISPONIBLE, Mesa.Estado.POR_LIMPIAR)),
+                    new Update().set("estado", Mesa.Estado.OCUPADA).set("ocupadaDesde", Instant.now()).unset("porLimpiarDesde"),
+                    Mesa.class);
         } else {
-            mongo.updateFirst(q, new Update().set("estado", Mesa.Estado.DISPONIBLE).unset("ocupadaDesde"), Mesa.class);
+            mongo.updateFirst(Query.query(Criteria.where("_id").is(mesaId).and("estado").is(Mesa.Estado.OCUPADA)
+                    .and("asignacion").exists(false)),
+                    new Update().set("estado", Mesa.Estado.DISPONIBLE).unset("ocupadaDesde"), Mesa.class);
         }
     }
 

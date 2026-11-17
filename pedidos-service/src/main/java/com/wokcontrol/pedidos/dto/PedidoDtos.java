@@ -42,7 +42,13 @@ public final class PedidoDtos {
      */
     public record MesaResponse(String id, int numero, int capacidad, String zona, Mesa.Estado estado, boolean activa,
             Instant ocupadaDesde, int pedidosActivos, BigDecimal consumoActual, Instant cuentaSolicitadaEn,
-            int platosSinEntregar) {
+            int platosSinEntregar, String grupo, int personas, String meseroAsignado, String meseroAsignadoNombre,
+            String unionId, List<Integer> unionNumeros, Instant porLimpiarDesde) {
+
+        /** v2 · HU-041: texto del estado como lo ve el anfitrión (Libre, Ocupada, Por limpiar). */
+        public String estadoEtiqueta() {
+            return estado.etiqueta();
+        }
     }
 
     // ---------- Pedidos ----------

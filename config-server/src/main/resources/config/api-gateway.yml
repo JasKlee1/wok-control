@@ -20,7 +20,7 @@ spring:
             - id: pedidos-api
               uri: lb://pedidos-service
               predicates:
-                - Path=/api/mesas/**,/api/pedidos/**,/api/cocina/**
+                - Path=/api/mesas/**,/api/pedidos/**,/api/cocina/**,/api/salon/**
             - id: inventario-api
               uri: lb://inventario-service
               predicates:
@@ -94,7 +94,7 @@ spring:
             - id: pedidos-web
               uri: lb://pedidos-service
               predicates:
-                - Path=/mesas/**,/pedidos/**,/cocina/**,/cliente/**
+                - Path=/mesas/**,/pedidos/**,/cocina/**,/cliente/**,/salon/**
             - id: inventario-web
               uri: lb://inventario-service
               predicates:

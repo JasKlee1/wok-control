@@ -46,6 +46,9 @@ public final class Permisos {
     /** v2 · HU-036: cliente con sesión de mesa abierta desde el QR. */
     public static final String CARTA_CLIENTE = "CARTA_CLIENTE";
 
+    /** v2 · HU-043: mapa del salón, lista de espera, sentar grupos y marcar mesas limpias. */
+    public static final String SALON_OPERAR = "SALON_OPERAR";
+
     /** Permiso reservado a los tokens internos emitidos entre microservicios. */
     public static final String SISTEMA = "SISTEMA";
 
@@ -80,6 +83,7 @@ public final class Permisos {
         d.put(DESCUENTOS_AUTORIZAR, "Autorizar descuentos");
         d.put(FACTURAS_ANULAR, "Anular comprobantes con motivo");
         d.put(CAJA_CERRAR, "Realizar cierres de caja");
+        d.put(SALON_OPERAR, "Ver el mapa del salón, manejar la lista de espera, sentar grupos y marcar mesas limpias");
         d.put(CARTA_CLIENTE, "Ver la carta y el pedido de su propia mesa desde el QR (sesión de mesa)");
         DESCRIPCIONES = Map.copyOf(d);
     }

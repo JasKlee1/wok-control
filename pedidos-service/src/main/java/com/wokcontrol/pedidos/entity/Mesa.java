@@ -1,6 +1,7 @@
 package com.wokcontrol.pedidos.entity;
 
 import java.time.Instant;
+import java.util.List;
 
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
@@ -12,7 +13,35 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document("mesas")
 public class Mesa {
 
-    public enum Estado { DISPONIBLE, OCUPADA, FUERA_DE_SERVICIO }
+    /**
+     * v2 · HU-044: POR_LIMPIAR es la mesa cuyo grupo ya se fue y aún no está limpia. DISPONIBLE es la
+     * mesa «Libre» de la épica 8 (no se renombra para no migrar datos).
+     */
+    public enum Estado {
+        DISPONIBLE("Libre"), OCUPADA("Ocupada"), POR_LIMPIAR("Por limpiar"), FUERA_DE_SERVICIO("Fuera de servicio");
+
+        private final String etiqueta;
+
+        Estado(String etiqueta) {
+            this.etiqueta = etiqueta;
+        }
+
+        public String etiqueta() {
+            return etiqueta;
+        }
+    }
+
+    /**
+     * v2 · HU-042/045: grupo sentado por el anfitrión, con su mesero. Si es una unión, todas las mesas
+     * unidas comparten {@code unionId}. Solo existe mientras el grupo está sentado.
+     */
+    public record Asignacion(String grupoId, String grupo, int personas, String mesero, String meseroNombre,
+            Instant sentadaEn, String unionId, List<Integer> unionNumeros) {
+
+        public boolean esUnion() {
+            return unionId != null;
+        }
+    }
 
     @Id
     private String id;
@@ -29,6 +58,10 @@ public class Mesa {
     private String codigoQr;
     /** v2 · HU-035: momento en que el cliente pidió la cuenta desde el celular; se borra al cerrar la sesión. */
     private Instant cuentaSolicitadaEn;
+    /** v2 · HU-042: grupo y mesero asignados por el anfitrión. */
+    private Asignacion asignacion;
+    /** v2 · HU-044: desde cuándo la mesa espera que la limpien. */
+    private Instant porLimpiarDesde;
 
     @CreatedDate
     private Instant creadoEn;
@@ -55,6 +88,10 @@ public class Mesa {
     public void setCodigoQr(String codigoQr) { this.codigoQr = codigoQr; }
     public Instant getCuentaSolicitadaEn() { return cuentaSolicitadaEn; }
     public void setCuentaSolicitadaEn(Instant cuentaSolicitadaEn) { this.cuentaSolicitadaEn = cuentaSolicitadaEn; }
+    public Asignacion getAsignacion() { return asignacion; }
+    public void setAsignacion(Asignacion asignacion) { this.asignacion = asignacion; }
+    public Instant getPorLimpiarDesde() { return porLimpiarDesde; }
+    public void setPorLimpiarDesde(Instant porLimpiarDesde) { this.porLimpiarDesde = porLimpiarDesde; }
     public Instant getCreadoEn() { return creadoEn; }
     public Instant getActualizadoEn() { return actualizadoEn; }
     public Long getVersion() { return version; }

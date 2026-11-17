@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Salón y espera')}"></head>
+<body>
+<div class="wok-app">
+  <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+  <div class="wok-main">
+    <header th:replace="~{fragments/layout :: topbar('Salón y espera', 'Recibe, anota y sienta a cada grupo')}"></header>
+    <main class="wok-content salon">
+      <!--/* v2 · HU-046 (NFR-WOK-005): rejilla fluida para tablets de 768 px; sin anchos fijos y con botones de 44 px. */-->
+      <style>
+        .salon .salon-totales { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: .75rem; }
+        .salon .salon-total { border-radius: 999px; padding: .35rem .8rem; font-size: .9rem; background: #EFEAE3; }
+        .salon .salon-total strong { font-size: 1.05rem; }
+        .salon .salon-total.libre { background: rgba(46, 125, 50, .12); color: #1E5E22; }
+        .salon .salon-total.ocupada { background: rgba(166, 27, 27, .1); color: #8A1616; }
+        .salon .salon-total.por-limpiar { background: rgba(224, 161, 0, .18); color: #7A5600; }
+        .salon .salon-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; }
+        @media (min-width: 1100px) { .salon .salon-layout { grid-template-columns: minmax(0, 1fr) minmax(0, 22rem); } }
+        .salon .salon-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 9.5rem), 1fr)); gap: .75rem; }
+        .salon .salon-mesa { background: #fff; border: 1px solid var(--wok-borde); border-radius: var(--wok-radio); padding: .75rem;
+          box-shadow: var(--wok-sombra); display: flex; flex-direction: column; gap: .35rem; min-width: 0; }
+        .salon .salon-mesa.libre { border-top: 5px solid var(--wok-exito); }
+        .salon .salon-mesa.ocupada { border-top: 5px solid var(--wok-rojo); background: #FFFBF6; }
+        .salon .salon-mesa.por-limpiar { border-top: 5px solid #E0A100; background: #FFFCF2; }
+        .salon .salon-mesa.fuera { border-top: 5px solid #9E9E9E; opacity: .7; }
+        .salon .salon-mesa-cab { display: flex; justify-content: space-between; align-items: baseline; }
+        .salon .salon-mesa-num { font-family: var(--wok-fuente-titulos); font-size: 1.8rem; line-height: 1; }
+        .salon .salon-mesa-estado { font-weight: 600; font-size: .9rem; }
+        .salon .salon-mesa-info { font-size: .85rem; overflow-wrap: anywhere; }
+        .salon .salon-mesa-acciones { margin-top: auto; }
+        .salon .salon-btn { min-height: 44px; min-width: 44px; display: inline-flex; align-items: center; justify-content: center; gap: .3rem; }
+        .salon .salon-mesa-acciones .salon-btn { width: 100%; }
+        .salon .salon-espera { background: #fff; border: 1px solid var(--wok-borde); border-radius: var(--wok-radio); padding: .9rem; align-self: start; }
+        .salon .salon-cola { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: .6rem; }
+        .salon .salon-grupo { border-bottom: 1px solid var(--wok-borde); padding-bottom: .6rem; }
+        .salon .salon-grupo:last-child { border-bottom: 0; padding-bottom: 0; }
+        .salon .salon-grupo-cab { display: flex; gap: .6rem; }
+        .salon .salon-grupo-pos { width: 1.8rem; height: 1.8rem; border-radius: 50%; background: var(--wok-rojo); color: #fff;
+          display: inline-flex; align-items: center; justify-content: center; font-weight: 700; flex: none; }
+        .salon .salon-grupo-acciones { display: flex; gap: .4rem; margin-top: .4rem; flex-wrap: wrap; }
+        .salon .salon-grupo-acciones .btn-wok { flex: 1 1 auto; }
+        .salon .salon-registro .form-control { min-height: 44px; }
+        .salon .salon-vivo-estado { font-size: .8rem; }
+      </style>
+
+      <div th:replace="~{fragments/layout :: mensajes}"></div>
+
+      <form th:action="@{/salon/espera}" th:object="${form}" method="post" class="wok-card salon-registro mb-3" novalidate>
+        <div class="wok-card-body">
+          <div class="d-flex align-items-center mb-2">
+            <h2 class="h6 wok-titulo mb-0"><i class="bi bi-door-open"></i> Llegó un grupo</h2>
+            <span class="ms-auto text-suave salon-vivo-estado"><i class="bi bi-broadcast"></i> Actualizado <span id="salon-hora">ahora</span></span>
+          </div>
+          <div class="row g-2 align-items-start">
+            <div class="col-12 col-md-4">
+              <label class="form-label small mb-1" for="nombre">Nombre del grupo</label>
+              <input th:field="*{nombre}" type="text" maxlength="60" class="form-control" placeholder="Familia Rojas" autocomplete="off"
+                     th:classappend="${#fields.hasErrors('nombre')} ? 'is-invalid'">
+              <div class="invalid-feedback" th:errors="*{nombre}"></div>
+            </div>
+            <div class="col-4 col-md-2">
+              <label class="form-label small mb-1" for="personas">Personas</label>
+              <input th:field="*{personas}" type="number" min="1" max="50" inputmode="numeric" class="form-control"
+                     th:classappend="${#fields.hasErrors('personas')} ? 'is-invalid'">
+              <div class="invalid-feedback" th:errors="*{personas}"></div>
+            </div>
+            <div class="col-8 col-md-2">
+              <label class="form-label small mb-1" for="llegada">Llegada</label>
+              <input th:field="*{llegada}" type="time" class="form-control" th:classappend="${#fields.hasErrors('llegada')} ? 'is-invalid'">
+              <div class="invalid-feedback" th:errors="*{llegada}"></div>
+            </div>
+            <div class="col-12 col-md-4">
+              <label class="form-label small mb-1" for="notas">Notas</label>
+              <div class="d-flex gap-2">
+                <input th:field="*{notas}" type="text" maxlength="200" class="form-control" placeholder="Silla para bebé, terraza…">
+                <button type="submit" class="btn btn-wok salon-btn flex-none"><i class="bi bi-plus-lg"></i> Anotar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
+
+      <div id="salon-contenedor" th:attr="data-intervalo=${intervaloMs}">
+        <div th:replace="~{salon/vivo :: vivo}"></div>
+      </div>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+  </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<script>
+  /* v2 · HU-046 (NFR-WOK-004): consulta la huella cada 3 s y, si cambió, reemplaza el mapa sin recargar. */
+  (function () {
+    'use strict';
+    var contenedor = document.getElementById('salon-contenedor');
+    if (!contenedor || !window.fetch) return;
+    var intervalo = parseInt(contenedor.getAttribute('data-intervalo'), 10) || 3000;
+    var hora = document.getElementById('salon-hora');
+    var ocupado = false;
+
+    function huellaActual() {
+      var v = document.getElementById('salon-vivo');
+      return v ? v.getAttribute('data-huella') : '';
+    }
+    function marcarHora() {
+      if (hora) hora.textContent = new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }
+    function minutosEspera() {
+      var ahora = Date.now();
+      document.querySelectorAll('[data-wok-desde]').forEach(function (el) {
+        var desde = parseInt(el.getAttribute('data-wok-desde'), 10);
+        if (desde) el.textContent = Math.max(0, Math.floor((ahora - desde) / 60000)) + ' min';
+      });
+    }
+    function consultar() {
+      if (ocupado || document.hidden) return;
+      ocupado = true;
+      fetch('/salon/estado', { credentials: 'same-origin', cache: 'no-store', headers: { 'Accept': 'application/json' } })
+        .then(function (r) {
+          if (r.redirected || !r.ok) { throw new Error('sesion'); }
+          return r.json();
+        })
+        .then(function (d) {
+          marcarHora();
+          if (d.huella === huellaActual()) return null;
+          return fetch('/salon/vivo', { credentials: 'same-origin', cache: 'no-store' }).then(function (r) {
+            if (r.redirected || !r.ok) { throw new Error('sesion'); }
+            return r.text();
+          }).then(function (html) {
+            // no interrumpe una confirmación abierta: espera al siguiente ciclo
+            if (document.querySelector('.modal.show')) return;
+            contenedor.innerHTML = html;
+            minutosEspera();
+          });
+        })
+        .catch(function () { if (hora) hora.textContent = 'sin conexión'; })
+        .then(function () { ocupado = false; });
+    }
+    marcarHora();
+    setInterval(consultar, intervalo);
+    setInterval(minutosEspera, 30000);
+    document.addEventListener('visibilitychange', function () { if (!document.hidden) consultar(); });
+  })();
+</script>
+</body>
+</html>

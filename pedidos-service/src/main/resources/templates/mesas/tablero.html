@@ -9,30 +9,40 @@
     <main class="wok-content">
       <div th:replace="~{fragments/layout :: mensajes}"></div>
       <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
-        <span class="wok-badge exito" th:text="${disponibles} + ' disponibles'">0</span>
+        <span class="wok-badge exito" th:text="${disponibles} + ' libres'">0</span>
         <span class="wok-badge rojo" th:text="${ocupadas} + ' ocupadas'">0</span>
+        <span class="wok-badge alerta" th:if="${porLimpiar > 0}" th:text="${porLimpiar} + ' por limpiar'">0</span>
+        <a th:if="${usuarioActual.tiene('PEDIDOS_GESTIONAR')}" th:href="@{/mesas(mias=${!mias})}" class="btn btn-sm ms-2"
+           th:classappend="${mias} ? 'btn-wok' : 'btn-light'"><i class="bi bi-person-check"></i> Mis mesas</a>
         <div class="btn-group btn-group-sm ms-2" role="group" aria-label="Zonas">
-          <a th:href="@{/mesas}" class="btn" th:classappend="${zona == null or zona == ''} ? 'btn-wok' : 'btn-light'">Todas</a>
-          <a th:each="z : ${zonas}" th:href="@{/mesas(zona=${z})}" class="btn" th:classappend="${z == zona} ? 'btn-wok' : 'btn-light'" th:text="${z}">Z</a>
+          <a th:href="@{/mesas(mias=${mias})}" class="btn" th:classappend="${zona == null or zona == ''} ? 'btn-wok' : 'btn-light'">Todas</a>
+          <a th:each="z : ${zonas}" th:href="@{/mesas(zona=${z},mias=${mias})}" class="btn" th:classappend="${z == zona} ? 'btn-wok' : 'btn-light'" th:text="${z}">Z</a>
         </div>
         <a th:if="${usuarioActual.tiene('MESAS_GESTIONAR')}" th:href="@{/mesas/nueva}" class="btn btn-sm btn-wok-outline ms-auto"><i class="bi bi-plus-lg"></i> Nueva mesa</a>
       </div>
 
       <div th:if="${mesas.isEmpty()}" class="wok-card">
-        <div th:replace="~{fragments/layout :: vacio('bi-grid-3x3-gap', 'No hay mesas registradas', 'El administrador debe registrar las mesas del salón para empezar a tomar pedidos.')}"></div>
+        <div th:if="${!mias}" th:replace="~{fragments/layout :: vacio('bi-grid-3x3-gap', 'No hay mesas registradas', 'El administrador debe registrar las mesas del salón para empezar a tomar pedidos.')}"></div>
+        <div th:if="${mias}" th:replace="~{fragments/layout :: vacio('bi-person-check', 'No tienes mesas asignadas', 'Cuando el anfitrión siente un grupo contigo, la mesa aparece aquí.')}"></div>
       </div>
 
       <div class="row g-3">
         <div class="col-6 col-md-4 col-xl-3 col-xxl-2" th:each="m : ${mesas}">
-          <div class="wok-mesa" th:classappend="${m.estado.name() == 'DISPONIBLE'} ? 'disponible' : (${m.estado.name() == 'OCUPADA'} ? 'ocupada' : 'fuera')">
+          <div class="wok-mesa" th:classappend="${m.estado.name() == 'DISPONIBLE'} ? 'disponible' : (${m.estado.name() == 'OCUPADA'} ? 'ocupada' : (${m.estado.name() == 'POR_LIMPIAR'} ? 'por-limpiar' : 'fuera'))">
             <div class="d-flex justify-content-between small text-suave">
               <span th:text="${m.zona}">Zona</span><span><i class="bi bi-people"></i> <span th:text="${m.capacidad}">4</span></span>
             </div>
             <div class="wok-mesa-numero my-2" th:text="${m.numero}">1</div>
             <div th:switch="${m.estado.name()}" class="mb-2">
-              <span th:case="'DISPONIBLE'" class="wok-badge exito">Disponible</span>
+              <span th:case="'DISPONIBLE'" class="wok-badge exito">Libre</span>
               <span th:case="'OCUPADA'" class="wok-badge rojo">Ocupada</span>
+              <span th:case="'POR_LIMPIAR'" class="wok-badge alerta">Por limpiar</span>
               <span th:case="*" class="wok-badge neutro">Fuera de servicio</span>
+            </div>
+            <div class="small mb-1" th:if="${m.grupo != null}">
+              <strong th:text="${m.grupo}">Grupo</strong> · <span th:text="${m.personas} + ' p.'">4 p.</span>
+              <div class="text-suave" th:text="'Atiende ' + ${m.meseroAsignadoNombre}">Atiende</div>
+              <div class="text-suave" th:if="${m.unionId != null}" th:text="'Unida: ' + ${#strings.listJoin(m.unionNumeros, ' + ')}">Unida</div>
             </div>
             <div class="small" th:if="${m.pedidosActivos > 0}">
               <span th:text="${m.pedidosActivos} + (${m.pedidosActivos == 1} ? ' pedido' : ' pedidos')">1 pedido</span> ·
@@ -40,11 +50,15 @@
               <div class="text-suave" th:if="${m.ocupadaDesde}" th:text="'Desde ' + ${@fmt.hora(m.ocupadaDesde)}">desde</div>
             </div>
             <div class="d-grid gap-1 mt-2">
-              <a th:if="${m.estado.name() != 'FUERA_DE_SERVICIO' and usuarioActual.tiene('PEDIDOS_GESTIONAR')}"
+              <a th:if="${m.estado.name() != 'FUERA_DE_SERVICIO' and m.estado.name() != 'POR_LIMPIAR' and usuarioActual.tiene('PEDIDOS_GESTIONAR')}"
                  th:href="@{/pedidos/nuevo(mesaId=${m.id})}" class="btn btn-sm btn-wok"><i class="bi bi-plus-circle"></i> Pedido</a>
               <a th:if="${m.pedidosActivos > 0}" th:href="@{/mesas/{id}(id=${m.id})}" class="btn btn-sm btn-light">Ver pedidos</a>
-              <form th:if="${m.estado.name() == 'OCUPADA' and m.pedidosActivos == 0}" th:action="@{/mesas/{id}/liberar(id=${m.id})}" method="post">
+              <form th:if="${m.estado.name() == 'OCUPADA' and m.pedidosActivos == 0 and usuarioActual.tieneAlguno('PEDIDOS_GESTIONAR', 'MESAS_GESTIONAR')}" th:action="@{/mesas/{id}/liberar(id=${m.id})}" method="post"
+                    data-wok-confirmar="¿El grupo ya se fue? La mesa quedará por limpiar.">
                 <button type="submit" class="btn btn-sm btn-outline-success w-100">Liberar</button>
+              </form>
+              <form th:if="${m.estado.name() == 'POR_LIMPIAR' and usuarioActual.tieneAlguno('PEDIDOS_GESTIONAR', 'SALON_OPERAR')}" th:action="@{/mesas/{id}/limpia(id=${m.id})}" method="post">
+                <button type="submit" class="btn btn-sm btn-outline-success w-100"><i class="bi bi-stars"></i> Marcar limpia</button>
               </form>
             </div>
             <div class="d-flex justify-content-center gap-1 mt-2" th:if="${usuarioActual.tiene('MESAS_GESTIONAR')}">

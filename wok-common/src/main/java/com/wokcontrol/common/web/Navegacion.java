@@ -27,6 +27,7 @@ public final class Navegacion {
                     new Item("Panel de control", "bi-speedometer2", "/dashboard", new String[] { DASHBOARD_VER }),
                     new Item("Reportes", "bi-bar-chart-line", "/reportes", new String[] { REPORTES_VER }))),
             new Seccion("Servicio", List.of(
+                    new Item("Salón y espera", "bi-door-open", "/salon", new String[] { SALON_OPERAR }),
                     new Item("Mesas", "bi-grid-3x3-gap", "/mesas", new String[] { MESAS_VER }),
                     new Item("Pedidos", "bi-receipt", "/pedidos", new String[] { PEDIDOS_VER }),
                     new Item("Cocina", "bi-fire", "/cocina", new String[] { COCINA_OPERAR }))),

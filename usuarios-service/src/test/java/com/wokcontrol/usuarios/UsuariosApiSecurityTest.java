@@ -166,4 +166,24 @@ class UsuariosApiSecurityTest {
                 "Bearer " + tokens.emitirTokenServicio("menu-service", "x")))
                 .andExpect(status().isForbidden());
     }
+
+    /** v2 · HU-042 (T007): pedidos-service lista los meseros activos; solo usuario y nombre, solo con token de servicio. */
+    @Test
+    void elTokenDeServicioSoloVeUsuarioYNombreDeLosMeserosActivos() throws Exception {
+        com.wokcontrol.usuarios.entity.Usuario carlos = new com.wokcontrol.usuarios.entity.Usuario();
+        carlos.setUsername("carlos");
+        carlos.setNombre("Carlos Pérez");
+        carlos.setEmail("carlos@wok.test");
+        when(usuarios.buscar(org.mockito.ArgumentMatchers.isNull(), org.mockito.ArgumentMatchers.eq(Roles.MESERO),
+                org.mockito.ArgumentMatchers.eq(true), any())).thenReturn(new PageImpl<>(List.of(carlos)));
+
+        mvc.perform(get("/api/usuarios/internos/meseros").header("Authorization",
+                "Bearer " + tokens.emitirTokenServicio("pedidos-service", "lina")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].username").value("carlos"))
+                .andExpect(jsonPath("$[0].nombre").value("Carlos Pérez"))
+                .andExpect(jsonPath("$[0].email").doesNotExist());
+        mvc.perform(get("/api/usuarios/internos/meseros").header("Authorization", token(Roles.ADMIN_PLATAFORMA)))
+                .andExpect(status().isForbidden());
+    }
 }

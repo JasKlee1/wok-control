@@ -41,7 +41,11 @@ public class ApiExceptionHandler {
         if (ex.getStatus().is5xxServerError()) {
             log.warn("Error {} en {}: {}", ex.getStatus().value(), req.getRequestURI(), ex.getMessage());
         }
-        return problema(ex.getStatus(), ex.getStatus().getReasonPhrase(), ex.getMessage(), req);
+        ProblemDetail pd = problema(ex.getStatus(), ex.getStatus().getReasonPhrase(), ex.getMessage(), req);
+        if (ex instanceof com.wokcontrol.common.exception.ReglaNegocioException rn && rn.getCodigo() != null) {
+            pd.setProperty("codigo", rn.getCodigo());
+        }
+        return pd;
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

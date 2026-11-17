@@ -21,6 +21,9 @@ public class SecurityConfig {
     SecurityFilterChain apiChain(HttpSecurity http, JwtDecoder decoder) throws Exception {
         WokSecurity.api(http, decoder).authorizeHttpRequests(a -> a
                 .requestMatchers(HttpMethod.POST, "/api/pedidos/*/pago", "/api/pedidos/*/reversion-pago").hasAuthority(SISTEMA)
+                // v2 · HU-043/044: el anfitrión opera el salón; el mesero también puede marcar una mesa limpia
+                .requestMatchers(HttpMethod.PATCH, "/api/salon/mesas/*/limpia").hasAnyAuthority(SALON_OPERAR, PEDIDOS_GESTIONAR)
+                .requestMatchers("/api/salon/**").hasAuthority(SALON_OPERAR)
                 .requestMatchers(HttpMethod.GET, "/api/mesas/**").hasAnyAuthority(MESAS_VER, MESAS_GESTIONAR, FACTURACION_VER, REPORTES_VER, SISTEMA)
                 .requestMatchers(HttpMethod.PATCH, "/api/mesas/*/liberar").hasAnyAuthority(PEDIDOS_GESTIONAR, MESAS_GESTIONAR)
                 .requestMatchers("/api/mesas/**").hasAuthority(MESAS_GESTIONAR)
@@ -40,6 +43,9 @@ public class SecurityConfig {
                 // v2 · HU-033/036: el QR abre la sesión de mesa sin usuario ni contraseña
                 .requestMatchers(HttpMethod.GET, "/cliente/mesa/*").permitAll()
                 .requestMatchers("/cliente/**").hasAuthority(CARTA_CLIENTE)
+                // v2 · HU-043: mapa, lista de espera y asignación solo con SALON_OPERAR (rol ANFITRION)
+                .requestMatchers("/salon", "/salon/**").hasAuthority(SALON_OPERAR)
+                .requestMatchers(HttpMethod.POST, "/mesas/*/limpia").hasAnyAuthority(SALON_OPERAR, PEDIDOS_GESTIONAR)
                 .requestMatchers("/mesas/*/qr").hasAuthority(MESAS_GESTIONAR)
                 .requestMatchers("/mesas/nueva", "/mesas/*/editar", "/mesas/guardar", "/mesas/*/servicio").hasAuthority(MESAS_GESTIONAR)
                 .requestMatchers(HttpMethod.POST, "/mesas/*/liberar").hasAnyAuthority(PEDIDOS_GESTIONAR, MESAS_GESTIONAR)

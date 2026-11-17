@@ -389,6 +389,7 @@ h1, h2, h3, .wok-titulo {
 .wok-mesa.disponible { border-top: 4px solid var(--wok-exito); }
 .wok-mesa.ocupada { border-top: 4px solid var(--wok-rojo); background: #FFFBF6; }
 .wok-mesa.fuera { border-top: 4px solid #9E9E9E; opacity: .75; }
+.wok-mesa.por-limpiar { border-top: 4px solid #E0A100; background: #FFFCF2; }
 
 /* Cocina */
 .wok-comanda {

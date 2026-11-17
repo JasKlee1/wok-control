@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Editar grupo')}"></head>
+<body>
+<div class="wok-app">
+  <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+  <div class="wok-main">
+    <header th:replace="~{fragments/layout :: topbar('Editar grupo', 'Lista de espera')}"></header>
+    <main class="wok-content">
+      <div th:replace="~{fragments/layout :: mensajes}"></div>
+      <form th:action="@{/salon/espera/{id}(id=${grupo.id})}" th:object="${form}" method="post" class="wok-card" style="max-width: 640px" novalidate>
+        <div class="wok-card-body row g-3">
+          <div class="col-sm-8">
+            <label class="form-label" for="nombre">Nombre del grupo</label>
+            <input th:field="*{nombre}" type="text" maxlength="60" class="form-control" th:classappend="${#fields.hasErrors('nombre')} ? 'is-invalid'">
+            <div class="invalid-feedback" th:errors="*{nombre}"></div>
+          </div>
+          <div class="col-sm-4">
+            <label class="form-label" for="personas">Personas</label>
+            <input th:field="*{personas}" type="number" min="1" max="50" class="form-control" th:classappend="${#fields.hasErrors('personas')} ? 'is-invalid'">
+            <div class="invalid-feedback" th:errors="*{personas}"></div>
+          </div>
+          <div class="col-sm-4">
+            <label class="form-label" for="llegada">Hora de llegada</label>
+            <input th:field="*{llegada}" type="time" class="form-control" th:classappend="${#fields.hasErrors('llegada')} ? 'is-invalid'">
+            <div class="invalid-feedback" th:errors="*{llegada}"></div>
+          </div>
+          <div class="col-sm-8">
+            <label class="form-label" for="notas">Notas</label>
+            <input th:field="*{notas}" type="text" maxlength="200" class="form-control">
+          </div>
+        </div>
+        <div class="wok-card-body border-top d-flex justify-content-end gap-2">
+          <a th:href="@{/salon}" class="btn btn-light">Cancelar</a>
+          <button type="submit" class="btn btn-wok"><i class="bi bi-save"></i> Guardar</button>
+        </div>
+      </form>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+  </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

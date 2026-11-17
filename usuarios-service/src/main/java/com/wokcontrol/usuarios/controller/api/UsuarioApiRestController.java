@@ -52,6 +52,18 @@ public class UsuarioApiRestController {
         return servicio.buscar(q, rol, activo, PageRequest.of(page, size)).map(UsuarioResponse::de);
     }
 
+    /** v2 · HU-042: meseros activos y no bloqueados (solo usuario y nombre). Interno: token de servicio. */
+    @GetMapping("/internos/meseros")
+    @Operation(summary = "Meseros activos (interno)", description = "Solo con token de servicio (permiso SISTEMA). Bloqueado en el gateway.")
+    public java.util.List<MeseroResponse> meseros() {
+        return servicio.buscar(null, com.wokcontrol.common.security.Roles.MESERO, true, PageRequest.of(0, 100)).getContent()
+                .stream().filter(u -> !u.estaBloqueado(java.time.Instant.now()))
+                .map(u -> new MeseroResponse(u.getUsername(), u.getNombre())).toList();
+    }
+
+    public record MeseroResponse(String username, String nombre) {
+    }
+
     @GetMapping("/{id}")
     @Operation(summary = "Consultar un usuario")
     public UsuarioResponse obtener(@PathVariable String id) {

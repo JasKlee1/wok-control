@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<body>
+<!--/* v2 · HU-041/046: mapa del salón y lista de espera. La tablet pide este fragmento cuando cambia la huella. */-->
+<div id="salon-vivo" th:fragment="vivo" th:attr="data-huella=${mapa.huella}">
+  <div class="salon-totales" role="status" aria-live="polite">
+    <span class="salon-total libre"><strong data-total="libres" th:text="${mapa.libres}">0</strong> libres</span>
+    <span class="salon-total ocupada"><strong data-total="ocupadas" th:text="${mapa.ocupadas}">0</strong> ocupadas</span>
+    <span class="salon-total por-limpiar"><strong data-total="porLimpiar" th:text="${mapa.porLimpiar}">0</strong> por limpiar</span>
+    <span class="salon-total espera"><strong data-total="enEspera" th:text="${mapa.enEspera}">0</strong> en espera</span>
+    <span class="salon-total fuera" th:if="${mapa.fueraDeServicio > 0}"><strong th:text="${mapa.fueraDeServicio}">0</strong> fuera de servicio</span>
+  </div>
+
+  <div class="salon-layout">
+    <section class="salon-mapa" aria-label="Mapa del salón">
+      <div th:if="${mapa.mesas.isEmpty()}" class="wok-card">
+        <div th:replace="~{fragments/layout :: vacio('bi-grid-3x3-gap', 'No hay mesas activas', 'El administrador debe registrar las mesas del salón.')}"></div>
+      </div>
+      <div class="salon-grid">
+        <article th:each="m : ${mapa.mesas}" class="salon-mesa" th:attr="data-mesa=${m.numero},data-estado=${m.estado.name()}"
+                 th:classappend="${m.estado.name() == 'DISPONIBLE'} ? 'libre' : (${m.estado.name() == 'OCUPADA'} ? 'ocupada' : (${m.estado.name() == 'POR_LIMPIAR'} ? 'por-limpiar' : 'fuera'))">
+          <header class="salon-mesa-cab">
+            <span class="salon-mesa-num" th:text="${m.numero}">3</span>
+            <span class="salon-mesa-cap" th:title="'Capacidad: ' + ${m.capacidad} + ' personas'"><i class="bi bi-people"></i> <span th:text="${m.capacidad}">4</span></span>
+          </header>
+          <div class="salon-mesa-estado" th:text="${m.estadoEtiqueta()}">Libre</div>
+          <div class="salon-mesa-info" th:if="${m.grupo != null}">
+            <strong th:text="${m.grupo}">Familia Rojas</strong> · <span th:text="${m.personas} + ' p.'">4 p.</span><br>
+            <span class="text-suave" th:text="${m.meseroAsignadoNombre}">Carlos</span>
+            <div class="salon-union" th:if="${m.unionId != null}"><i class="bi bi-link-45deg"></i> <span th:text="${#strings.listJoin(m.unionNumeros, ' + ')}">4 + 5</span></div>
+          </div>
+          <div class="salon-mesa-info text-suave" th:if="${m.grupo == null and m.estado.name() == 'OCUPADA'}">Sin anfitrión · <span th:text="${m.pedidosActivos} + ' pedido(s)'">1</span></div>
+          <div class="salon-mesa-info text-suave" th:if="${m.estado.name() == 'POR_LIMPIAR' and m.porLimpiarDesde != null}" th:text="'Desde ' + ${@fmt.hora(m.porLimpiarDesde)}">Desde</div>
+          <div class="salon-mesa-acciones">
+            <a th:if="${m.estado.name() == 'DISPONIBLE'}" th:href="@{/salon/sentar(mesaId=${m.id})}" class="btn btn-wok salon-btn">Sentar aquí</a>
+            <form th:if="${m.estado.name() == 'POR_LIMPIAR'}" th:action="@{/salon/mesas/{id}/limpia(id=${m.id})}" method="post">
+              <button type="submit" class="btn btn-outline-success salon-btn w-100"><i class="bi bi-stars"></i> Marcar limpia</button>
+            </form>
+            <form th:if="${m.estado.name() == 'OCUPADA' and m.pedidosActivos == 0}" th:action="@{/salon/mesas/{id}/liberar(id=${m.id})}" method="post"
+                  data-wok-confirmar="¿El grupo ya se fue? La mesa (y su unión) quedará por limpiar.">
+              <button type="submit" class="btn btn-light salon-btn w-100">El grupo se fue</button>
+            </form>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="salon-espera" aria-label="Lista de espera">
+      <h2 class="h6 wok-titulo mb-2"><i class="bi bi-hourglass-split"></i> Lista de espera</h2>
+      <p th:if="${espera.isEmpty()}" class="text-suave small mb-0">Nadie está esperando.</p>
+      <ol class="salon-cola" th:unless="${espera.isEmpty()}">
+        <li th:each="g, st : ${espera}" class="salon-grupo" th:attr="data-grupo=${g.nombre}">
+          <div class="salon-grupo-cab">
+            <span class="salon-grupo-pos" th:text="${st.count}">1</span>
+            <div class="flex-grow-1">
+              <strong th:text="${g.nombre}">Familia Rojas</strong> · <span th:text="${g.personas} + ' personas'">4 personas</span>
+              <div class="small text-suave">
+                Llegó <span th:text="${@fmt.hora(g.llegadaEn)}">19:05</span> ·
+                espera <span th:attr="data-wok-desde=${g.llegadaEn.toEpochMilli()}" th:text="${g.minutosEspera} + ' min'">0 min</span>
+              </div>
+              <div class="small text-suave" th:if="${g.notas != null}" th:text="${g.notas}">notas</div>
+            </div>
+          </div>
+          <div class="salon-grupo-acciones">
+            <a th:href="@{/salon/sentar(grupoId=${g.id})}" class="btn btn-wok salon-btn">Sentar</a>
+            <a th:href="@{/salon/espera/{id}/editar(id=${g.id})}" class="btn btn-light salon-btn" title="Editar"><i class="bi bi-pencil"></i></a>
+            <form th:action="@{/salon/espera/{id}/retirar(id=${g.id})}" method="post" th:attr="data-wok-confirmar='¿Retirar a ' + ${g.nombre} + ' de la lista?'">
+              <button type="submit" class="btn btn-light salon-btn" title="Retirar de la lista"><i class="bi bi-x-lg"></i></button>
+            </form>
+          </div>
+        </li>
+      </ol>
+    </section>
+  </div>
+</div>
+</body>
+</html>

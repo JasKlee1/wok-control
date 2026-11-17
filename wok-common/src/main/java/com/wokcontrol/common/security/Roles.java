@@ -25,6 +25,8 @@ public final class Roles {
     public static final String ADMIN_PLATAFORMA = "ADMIN_PLATAFORMA";
     /** v2 · HU-036: cliente sentado en una mesa; entra con el QR, sin usuario ni contraseña. */
     public static final String CLIENTE = "CLIENTE";
+    /** v2 · HU-043: recibe a los grupos en la puerta; ve el salón y cambia la ocupación, sin crear mesas, pedir ni cobrar. */
+    public static final String ANFITRION = "ANFITRION";
 
     /** Roles que existen solo como sesión temporal y nunca se asignan a usuarios del personal. */
     public static final Set<String> SOLO_SESION = Set.of(CLIENTE);
@@ -40,7 +42,7 @@ public final class Roles {
                 "Administrador operativo del restaurante: carta, ventas, costos, inventario y proveedores",
                 Set.of(DASHBOARD_VER, REPORTES_VER, MENU_VER, MENU_GESTIONAR, MESAS_VER, MESAS_GESTIONAR,
                         PEDIDOS_VER, INVENTARIO_VER, INVENTARIO_GESTIONAR, PROVEEDORES_VER, PROVEEDORES_GESTIONAR,
-                        COMPRAS_GESTIONAR, FACTURACION_VER, DESCUENTOS_AUTORIZAR, FACTURAS_ANULAR)));
+                        COMPRAS_GESTIONAR, FACTURACION_VER, DESCUENTOS_AUTORIZAR, FACTURAS_ANULAR, SALON_OPERAR)));
         r.put(MESERO, new DefinicionRol(MESERO, "Mesero",
                 "Atiende mesas, registra pedidos y consulta el estado de las comandas",
                 Set.of(DASHBOARD_VER, MENU_VER, MESAS_VER, PEDIDOS_VER, PEDIDOS_GESTIONAR)));
@@ -60,6 +62,9 @@ public final class Roles {
         r.put(ADMIN_PLATAFORMA, new DefinicionRol(ADMIN_PLATAFORMA, "Administrador de plataforma",
                 "Gestiona usuarios, roles, parámetros generales y auditoría. No opera el restaurante",
                 Set.of(DASHBOARD_VER, USUARIOS_GESTIONAR, ROLES_GESTIONAR, AUDITORIA_VER, PARAMETROS_GESTIONAR)));
+        r.put(ANFITRION, new DefinicionRol(ANFITRION, "Anfitrión",
+                "Recibe a los grupos en la puerta: ve el mapa del salón, maneja la lista de espera, sienta grupos con su mesero y marca mesas limpias. No crea ni edita mesas, no toma pedidos ni cobra",
+                Set.of(DASHBOARD_VER, SALON_OPERAR)));
         r.put(CLIENTE, new DefinicionRol(CLIENTE, "Cliente (sesión de mesa)",
                 "Cliente en el salón: entra con el QR de su mesa, sin usuario ni contraseña; solo ve la carta y el pedido de su mesa",
                 Set.of(CARTA_CLIENTE)));

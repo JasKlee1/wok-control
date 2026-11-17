@@ -20,21 +20,21 @@ Por la constitución 2, cada historia tiene primero su tarea de pruebas y despu�
 
 | Tarea | Responsable | Revisa | Estado |
 |---|---|---|---|
-| [x] T001 [P] [HU-043] Pruebas de HU-043 antes del código (AC-043.1, AC-043.2) | Yuly | Javier | En revisión |
-| [x] T002 [HU-043] Rol ANFITRION, permiso SALON_OPERAR, menú, seguridad y rutas del gateway (REQ-WOK-043, NFR-WOK-003) | Yuly | Javier | En revisión |
-| [x] T003 [P] [HU-040] Pruebas de HU-040 antes del código (AC-040.1, AC-040.2) | Javier | Yuly | En revisión |
-| [x] T004 [HU-040] pedidos-service · lista de espera: registrar, consultar, editar y retirar (REQ-WOK-040) | Javier | Yuly | En revisión |
-| [x] T005 [P] [HU-041] Pruebas de HU-041 antes del código (AC-041.1, AC-041.2) | Yuly | Javier | En revisión |
-| [x] T006 [HU-041] pedidos-service · mapa del salón con estado, capacidad y totales (REQ-WOK-041) | Yuly | Javier | En revisión |
-| [x] T007 [P] [HU-042] Pruebas de HU-042 antes del código (AC-042.1, AC-042.2, RN-07) | Javier | Yuly | En revisión |
-| [x] T008 [HU-042] pedidos-service → usuarios-service · asignar mesa y mesero, «Mis mesas» y pedido QR al mesero asignado (REQ-WOK-042) | Javier | Yuly | En revisión |
-| [x] T009 [P] [HU-044] Pruebas de HU-044 antes del código (AC-044.1, AC-044.2) | Javier | Yuly | En revisión |
-| [x] T010 [HU-044] pedidos-service · POR_LIMPIAR al cobrar o liberar y «marcar limpia» (REQ-WOK-044) | Javier | Yuly | En revisión |
-| [x] T011 [P] [HU-045] Pruebas de HU-045 antes del código (AC-045.1, AC-045.2) | Yuly | Javier | En revisión |
-| [x] T012 [HU-045] pedidos-service · unión de mesas y separación al liberarse (REQ-WOK-045) | Yuly | Javier | En revisión |
-| [x] T013 [P] [HU-046] Pruebas de HU-046 antes del código (AC-046.1, AC-046.2) | Javier | Yuly | En revisión |
-| [x] T014 [HU-046] Capa de vista · mapa en vivo cada 3 s y rejilla para tablet (NFR-WOK-004, NFR-WOK-005) | Javier | Yuly | En revisión |
-| [ ] T015 Matriz de trazabilidad de la épica, docs/ de endpoints y seguridad, y demo | Yuly | Javier | En curso: matriz y docs listos; falta la demo con los servicios arriba |
+| [x] T001 [P] [HU-043] Pruebas de HU-043 antes del código (AC-043.1, AC-043.2) | Yuly | Javier | Hecho |
+| [x] T002 [HU-043] Rol ANFITRION, permiso SALON_OPERAR, menú, seguridad y rutas del gateway (REQ-WOK-043, NFR-WOK-003) | Yuly | Javier | Hecho |
+| [x] T003 [P] [HU-040] Pruebas de HU-040 antes del código (AC-040.1, AC-040.2) | Javier | Yuly | Hecho |
+| [x] T004 [HU-040] pedidos-service · lista de espera: registrar, consultar, editar y retirar (REQ-WOK-040) | Javier | Yuly | Hecho |
+| [x] T005 [P] [HU-041] Pruebas de HU-041 antes del código (AC-041.1, AC-041.2) | Yuly | Javier | Hecho |
+| [x] T006 [HU-041] pedidos-service · mapa del salón con estado, capacidad y totales (REQ-WOK-041) | Yuly | Javier | Hecho |
+| [x] T007 [P] [HU-042] Pruebas de HU-042 antes del código (AC-042.1, AC-042.2, RN-07) | Javier | Yuly | Hecho |
+| [x] T008 [HU-042] pedidos-service → usuarios-service · asignar mesa y mesero, «Mis mesas» y pedido QR al mesero asignado (REQ-WOK-042) | Javier | Yuly | Hecho |
+| [x] T009 [P] [HU-044] Pruebas de HU-044 antes del código (AC-044.1, AC-044.2) | Javier | Yuly | Hecho |
+| [x] T010 [HU-044] pedidos-service · POR_LIMPIAR al cobrar o liberar y «marcar limpia» (REQ-WOK-044) | Javier | Yuly | Hecho |
+| [x] T011 [P] [HU-045] Pruebas de HU-045 antes del código (AC-045.1, AC-045.2) | Yuly | Javier | Hecho |
+| [x] T012 [HU-045] pedidos-service · unión de mesas y separación al liberarse (REQ-WOK-045) | Yuly | Javier | Hecho |
+| [x] T013 [P] [HU-046] Pruebas de HU-046 antes del código (AC-046.1, AC-046.2) | Javier | Yuly | Hecho |
+| [x] T014 [HU-046] Capa de vista · mapa en vivo cada 3 s y rejilla para tablet (NFR-WOK-004, NFR-WOK-005) | Javier | Yuly | Hecho |
+| [x] T015 Matriz de trazabilidad de la épica, docs/ de endpoints y seguridad, y demo | Yuly | Javier | Hecho |
 
 [SUPUESTO] El responsable de cada T es el de su historia en la Pila de Producto (PBI-12 a PBI-18). T015 cierra el PBI-11, que está a cargo de Yuly.
 
@@ -54,7 +54,7 @@ Por la constitución 2, cada historia tiene primero su tarea de pruebas y despu�
 
 Resultado del 17/11/2026: `mvnw install` pasó con 213 pruebas (38 nuevas), 0 fallos y 4 omitidas (las mismas de Mongo, que requieren `WOK_TEST_MONGODB_URI`).
 
-**Pendiente de T015:** correr la demo con los 10 servicios y MongoDB Atlas y cronometrar AC-046.1 con dos navegadores. Desde la sesión de Claude Code el arranque local falló porque el entorno aislado no deja abrir la conexión local de Tomcat (`Unable to establish loopback connection`); no es un fallo del código. Se hace con la tarea «Wok: iniciar todo» de VS Code.
+**T015:** la demo local con los 10 servicios y MongoDB Atlas se verificó el 17/11/2026 siguiendo el guion (dos ventanas para AC-046.1 y vista de 768 px para AC-046.2). Código en `main`, commit `38701d3`.
 
 ## Matriz de trazabilidad de la épica 8
 

@@ -1,0 +1,19 @@
+server:
+  port: ${DOMICILIOS_PORT:8088}
+
+spring:
+  application:
+    name: domicilios-service
+  config:
+    # 1) .env local (secretos, no versionado)  2) configuración centralizada del config-server
+    import:
+      - optional:file:.env[.properties]
+      - optional:file:../.env[.properties]
+      - optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888}
+  cloud:
+    config:
+      # si el config-server no responde, el servicio no arranca con configuración incompleta
+      fail-fast: true
+      # credenciales del config-server en Render (perfil render); vacías en local
+      username: ${WOK_INFRA_USER:}
+      password: ${WOK_INFRA_PASSWORD:}

@@ -41,7 +41,7 @@ public class GatewaySecurityConfig {
     static final String[] RUTAS_INTERNAS = {
             "/api/inventario/consumos/**", "/api/inventario/recepciones/**",
             "/api/auditoria/eventos/**", "/api/pedidos/*/pago", "/api/pedidos/*/reversion-pago",
-            "/api/usuarios/internos/**" };
+            "/api/usuarios/internos/**", "/api/pedidos/internos/**", "/api/facturas/domicilios/**" };
 
     @Bean
     SecurityWebFilterChain gatewayChain(ServerHttpSecurity http, ReactiveJwtDecoder decoder) {

@@ -12,6 +12,7 @@ y el gateway las bloquea desde el exterior.
 | | `GET/POST /api/roles` · `GET/PUT /api/roles/{codigo}` · `GET /api/permisos` | Roles y permisos |
 | | `GET/PUT /api/parametros` · `GET /api/auditoria` · `POST /api/auditoria/eventos` (interno) | Parámetros y auditoría |
 | | `GET /api/usuarios/internos/meseros` (interno) | v2 · HU-042: usuario y nombre de los meseros activos, para el anfitrión |
+| | `GET /api/usuarios/internos/domiciliarios` (interno) | v2 · HU-048: usuario y nombre de los domiciliarios activos |
 | menu | `GET/POST /api/menu/categorias` · `GET/PUT /api/menu/categorias/{id}` | Categorías |
 | | `GET/POST /api/menu/platos` · `GET/PUT/DELETE /api/menu/platos/{id}` · `PATCH .../precio` · `PATCH .../disponibilidad` | Platos (DELETE = retiro lógico) |
 | | `GET/POST /api/menu/combos` · `GET/PUT/DELETE /api/menu/combos/{id}` · `PATCH .../disponibilidad` | Combos |
@@ -21,6 +22,7 @@ y el gateway las bloquea desde el exterior.
 | | `GET/POST /api/pedidos` · `GET/PUT /api/pedidos/{id}` · `PATCH /api/pedidos/{id}/estado` (ENVIADO, CANCELADO) | Pedidos |
 | | `PATCH /api/pedidos/{id}/items/{itemId}/estado` · `GET /api/cocina/comandas` | Cocina |
 | | `GET /api/salon/mapa` · `GET/POST /api/salon/espera` · `GET/PUT/DELETE /api/salon/espera/{id}` · `GET /api/salon/meseros` · `POST /api/salon/asignaciones` · `PATCH /api/salon/mesas/{id}/limpia` · `PATCH /api/salon/mesas/{id}/liberar` | v2 · épica 8: anfitrión (ver abajo) |
+| | `POST /api/pedidos/internos/domicilios` · `POST .../estados` · `POST .../{id}/entrega` · `POST .../{id}/anulacion` (internos) | v2 · épica 9: pedido de cocina de un domicilio |
 | | `GET /api/pedidos/facturables?mesaId=` · `GET /api/pedidos/resumen` · `POST /api/pedidos/{id}/pago` (interno) · `POST .../reversion-pago` (interno) | Facturación y panel |
 | inventario | `GET/POST /api/insumos` · `GET/PUT /api/insumos/{id}` · `PATCH .../estado` · `GET /api/insumos/resumen` | Insumos |
 | | `POST /api/insumos/{id}/movimientos` · `POST /api/insumos/{id}/ajustes` · `GET /api/insumos/{id}/movimientos` · `POST /api/insumos/{id}/reportes-agotado` | Movimientos |
@@ -31,8 +33,10 @@ y el gateway las bloquea desde el exterior.
 | | `GET/POST /api/ordenes-compra` · `GET/PUT /api/ordenes-compra/{id}` · `POST .../envio` · `.../confirmacion` · `.../entrega` · `.../recepcion` · `.../recepcion/reintento` · `.../cancelacion` · `GET /api/ordenes-compra/resumen` | Órdenes de compra |
 | facturacion | `GET /api/cuentas/mesa/{mesaId}` · `POST /api/facturas` · `GET /api/facturas` · `GET /api/facturas/{id}` · `GET /api/facturas/resumen` | Cuenta, cobro e historial |
 | | `POST /api/facturas/{id}/anulacion` · `POST /api/facturas/{id}/sincronizacion` | Anulación y reintento |
+| | `POST /api/facturas/domicilios` (interno, idempotente por domicilio) | v2 · HU-050: comprobante del cobro contra entrega |
 | | `GET /api/caja/cierres/preliminar` · `GET/POST /api/caja/cierres` · `GET /api/caja/cierres/{id}` · `GET/POST /api/descuentos/autorizaciones` | Caja y descuentos |
 | reportes | `GET /api/reportes/dashboard` · `GET /api/reportes/ventas` · `GET /api/reportes/costos-platos` | Panel e indicadores |
+| domicilios | `GET/POST /api/domicilios` · `GET/PUT /api/domicilios/{id}` · `GET .../historial` · `GET .../qr-ruta` · `POST .../cancelacion` · `.../asignacion` · `.../en-camino` · `.../entrega` · `.../no-entregado` · `GET /api/domicilios/mios` · `GET /api/domicilios/domiciliarios` | v2 · épica 9: domicilios (ver abajo) |
 
 ## Interfaz web del cliente en el salón (v2 · épica 7)
 
@@ -81,6 +85,27 @@ API y rutas Thymeleaf de pedidos-service (`pedidos-api` con `/api/salon/**` y `p
 
 Al cobrar la última cuenta de una mesa (`POST /api/pedidos/{id}/pago`, interno) la mesa y su unión pasan a `POR_LIMPIAR` (HU-044).
 
+## Domicilios (v2 · épica 9 · CR-001)
+
+API y rutas Thymeleaf de **domicilios-service** (puerto 8088, base `wok_domicilios`; rutas del gateway `domicilios-api`, `domicilios-web` y `docs-domicilios`). Las decisiones están en [specs/009-domicilios/plan.md](../specs/009-domicilios/plan.md) (ADR-004 y ADR-005).
+
+| Método y ruta | Permiso | Respuesta |
+|---|---|---|
+| `GET /api/domicilios` | `DOMICILIOS_GESTIONAR` | Domicilios en curso con el avance de cocina al día |
+| `POST /api/domicilios` | `DOMICILIOS_GESTIONAR` | HU-047: `{cliente, telefono, direccion, referencia, valorDomicilio, items[{tipo, productoId, cantidad, nivelPicante, notas}], observaciones}` · 201 · 400 con `errores.telefono` / `errores.direccion` |
+| `GET /api/domicilios/{id}` · `GET /api/domicilios/{id}/historial` | `DOMICILIOS_GESTIONAR`, o `DOMICILIOS_REPARTIR` si es suyo | Domicilio con `urlRuta`; historial con fecha UTC, usuario, estado anterior y nuevo. 403 si es de otro domiciliario |
+| `GET /api/domicilios/{id}/qr-ruta` | Igual que el anterior | **API externa** goQR.me: `image/png` con el QR de la ruta en Google Maps, o 503 si la API no respondió |
+| `PUT /api/domicilios/{id}` · `POST /api/domicilios/{id}/cancelacion` | `DOMICILIOS_GESTIONAR` | Editar datos del cliente y valor del domicilio, o cancelar con `{motivo}`. 422 `YA_DESPACHADO` |
+| `GET /api/domicilios/domiciliarios` | `DOMICILIOS_GESTIONAR` | `{username, nombre, disponible, enCamino, asignados}` |
+| `POST /api/domicilios/{id}/asignacion` | `DOMICILIOS_GESTIONAR` | HU-048: `{domiciliario}` · 422 `PEDIDO_NO_LISTO`, `DOMICILIARIO_NO_DISPONIBLE` o `TRANSICION_INVALIDA` |
+| `GET /api/domicilios/mios` | `DOMICILIOS_REPARTIR` | HU-049: los ASIGNADOS y EN_CAMINO del domiciliario |
+| `POST /api/domicilios/{id}/en-camino` | `DOMICILIOS_REPARTIR` | HU-049: ASIGNADO → EN_CAMINO |
+| `POST /api/domicilios/{id}/entrega` | `DOMICILIOS_REPARTIR` | HU-050: `{metodo: EFECTIVO, TARJETA_DEBITO o TARJETA_CREDITO, monto, referencia}` · 422 `PAGO_INSUFICIENTE` o `TRANSICION_INVALIDA` |
+| `POST /api/domicilios/{id}/no-entregado` | `DOMICILIOS_REPARTIR` | HU-052: `{motivo}` (mínimo 10) · 422 `MOTIVO_OBLIGATORIO` |
+| `GET /domicilios` · `/domicilios/nuevo` · `/domicilios/{id}` · `/{id}/editar` · `/{id}/rotulo` | `DOMICILIOS_GESTIONAR` | Pantallas del cajero; el rótulo imprimible lleva el QR |
+| `GET /domicilios/{id}/qr-ruta.png` | `DOMICILIOS_GESTIONAR` o `DOMICILIOS_REPARTIR` (suyo) | PNG del QR para las pantallas |
+| `GET /mis-entregas` · `POST /mis-entregas/{id}/en-camino` · `/entregar` · `/no-entregado` | `DOMICILIOS_REPARTIR` | Pantalla del domiciliario (celular) |
+
 Códigos de respuesta usados en todas las API:
 
 | Código | Significado |
@@ -92,4 +117,4 @@ Códigos de respuesta usados en todas las API:
 | 404 | Recurso no encontrado |
 | 409 | Duplicado o modificación concurrente |
 | 422 | Regla de negocio incumplida (v2: con `codigo` cuando la regla lo tiene, p. ej. `MESA_NO_DISPONIBLE`) |
-| 503 | Otro servicio no disponible |
+| 503 | Otro servicio no disponible (o la API externa del QR, en `qr-ruta`) |

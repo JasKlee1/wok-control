@@ -5,7 +5,7 @@
 <div class="wok-app">
   <aside th:replace="~{fragments/layout :: sidebar}"></aside>
   <div class="wok-main">
-    <header th:replace="~{fragments/layout :: topbar('Comprobante ' + ${f.numero}, 'Mesa ' + ${f.mesaNumero})}"></header>
+    <header th:replace="~{fragments/layout :: topbar('Comprobante ' + ${f.numero}, ${f.destino})}"></header>
     <main class="wok-content">
       <div th:replace="~{fragments/layout :: mensajes}"></div>
       <div class="d-flex gap-2 mb-3 flex-wrap no-imprimir">
@@ -45,7 +45,11 @@
         </div>
         <hr>
         <div class="d-flex justify-content-between small"><span>Fecha</span><span th:text="${@fmt.fechaHora(f.emitidaEn)}">f</span></div>
-        <div class="d-flex justify-content-between small"><span>Mesa</span><span th:text="${f.mesaNumero}">1</span></div>
+        <div class="d-flex justify-content-between small" th:unless="${f.esDomicilio()}"><span>Mesa</span><span th:text="${f.mesaNumero}">1</span></div>
+        <th:block th:if="${f.esDomicilio()}">
+          <div class="d-flex justify-content-between small"><span>Domicilio</span><span th:text="${f.domicilio.numero}">D</span></div>
+          <div class="d-flex justify-content-between small"><span>Cobró (contra entrega)</span><span th:text="${f.domicilio.domiciliarioNombre} ?: ${f.domicilio.domiciliario}">d</span></div>
+        </th:block>
         <div class="d-flex justify-content-between small"><span>Cajero</span><span th:text="${f.cajeroNombre}">c</span></div>
         <hr>
         <div class="d-flex justify-content-between small" th:each="l : ${f.lineas}">
@@ -56,6 +60,7 @@
         <div class="d-flex justify-content-between" th:if="${f.descuento}">
           <span th:text="'Descuento ' + ${@fmt.numero(f.descuento.porcentaje)} + '%'">D</span><span th:text="'− ' + ${@fmt.dinero(f.descuento.valor)}">$</span></div>
         <div class="d-flex justify-content-between"><span th:text="'Impuesto al consumo ' + ${@fmt.numero(f.impuestoPorcentaje)} + '%'">INC</span><span th:text="${@fmt.dinero(f.impuestoValor)}">$</span></div>
+        <div class="d-flex justify-content-between" th:if="${f.esDomicilio()}"><span>Valor del domicilio</span><span th:text="${@fmt.dinero(f.domicilio.valorDomicilio)}">$</span></div>
         <div class="d-flex justify-content-between h5 mt-2"><span>TOTAL</span><span th:text="${@fmt.dinero(f.total)}">$</span></div>
         <hr>
         <div class="d-flex justify-content-between small" th:each="p : ${f.pagos}">

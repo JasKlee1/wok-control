@@ -17,7 +17,7 @@
             <div class="col-md-6 col-xxl-4" th:each="p : ${comandas}" th:with="minutos=${@fmt.minutosDesde(p.enviadoEn)}">
               <div class="wok-comanda" th:classappend="${minutos >= minutosUrgente and p.estado.name() != 'LISTO'} ? 'urgente'">
                 <div class="wok-comanda-cabecera">
-                  <div><strong th:text="'Mesa ' + ${p.mesaNumero}">Mesa</strong> <span class="small wok-mono ms-1" th:text="${p.numero}">P</span></div>
+                  <div><strong th:text="${p.destino}">Mesa</strong> <span th:if="${p.esDomicilio()}" class="wok-badge dorado ms-1"><i class="bi bi-bicycle"></i> Domicilio</span> <span class="small wok-mono ms-1" th:text="${p.numero}">P</span></div>
                   <div class="tiempo"><i class="bi bi-stopwatch"></i> <span th:text="${minutos} + ' min'">0 min</span></div>
                 </div>
                 <div class="px-3 pt-2" th:unless="${p.alergias.isEmpty()}">

@@ -78,7 +78,7 @@ Esperar-Salud 'discovery-service' 8761
 
 Write-Host '3/4 Servicios de negocio'
 $negocio = [ordered]@{ 'usuarios-service' = 8081; 'menu-service' = 8082; 'pedidos-service' = 8083; 'inventario-service' = 8084;
-    'proveedores-service' = 8085; 'facturacion-service' = 8086; 'reportes-service' = 8087 }
+    'proveedores-service' = 8085; 'facturacion-service' = 8086; 'reportes-service' = 8087; 'domicilios-service' = 8088 }
 foreach ($m in $negocio.Keys) { $pids += Iniciar-Servicio $m }
 foreach ($m in $negocio.Keys) { Esperar-Salud $m $negocio[$m] 180 }
 

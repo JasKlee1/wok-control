@@ -22,4 +22,7 @@ public interface PedidoRepository extends MongoRepository<Pedido, String> {
     List<Pedido> findByEstadoInOrderByEnviadoEnAsc(Collection<EstadoPedido> estados);
 
     List<Pedido> findByEstadoInOrderByCreadoEnAsc(Collection<EstadoPedido> estados);
+
+    /** v2 · HU-047: pedido vigente de un domicilio (idempotencia del registro). */
+    java.util.Optional<Pedido> findFirstByDomicilioIdAndEstadoNot(String domicilioId, EstadoPedido estado);
 }

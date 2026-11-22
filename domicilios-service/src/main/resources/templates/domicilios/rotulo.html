@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title th:text="'Rótulo ' + ${d.numero}">Rótulo</title>
+  <style>
+    body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background: #f4efe8; margin: 0; padding: 1.5rem; color: #242424; }
+    .rotulo { background: #fff; max-width: 360px; margin: 0 auto; border: 2px dashed #A61B1B; border-radius: 12px; padding: 1.25rem; text-align: center; }
+    .numero { font-size: 2rem; font-weight: 800; letter-spacing: 1px; color: #A61B1B; }
+    .dato { text-align: left; margin: .35rem 0; font-size: .95rem; }
+    .total { font-size: 1.4rem; font-weight: 700; margin-top: .75rem; }
+    .qr { width: 220px; height: 220px; margin: .75rem auto .25rem; display: block; }
+    .pie { font-size: .7rem; color: #6B625A; margin-top: .5rem; }
+    .acciones { text-align: center; margin-top: 1rem; }
+    .falla { display: none; font-size: .8rem; color: #8A6200; }
+    @media print { body { background: #fff; padding: 0; } .acciones { display: none; } }
+  </style>
+</head>
+<body>
+<!--/* v2 · HU-049: rótulo para pegar en la bolsa. El QR (API externa goQR.me) abre la ruta en Google Maps. */-->
+<div class="rotulo">
+  <div>Wok Control · Domicilio</div>
+  <div class="numero" th:text="${d.numero}">D-0001</div>
+  <img class="qr" th:src="@{/domicilios/{id}/qr-ruta.png(id=${d.id})}" alt="QR con la ruta en Google Maps"
+       onerror="this.style.display='none';document.getElementById('falla').style.display='block'">
+  <div id="falla" class="falla">QR no disponible: abra la ruta con el enlace del sistema.</div>
+  <div style="font-size:.8rem">Escanee para abrir la ruta</div>
+  <hr>
+  <div class="dato"><strong th:text="${d.cliente.nombre}">Cliente</strong></div>
+  <div class="dato" th:text="${d.cliente.direccion}">Dirección</div>
+  <div class="dato" th:if="${d.cliente.referencia}" th:text="${d.cliente.referencia}">Ref</div>
+  <div class="dato" th:text="'Tel. ' + ${d.cliente.telefono}">Tel</div>
+  <div class="dato" th:text="${d.unidades} + ' productos · pedido ' + ${d.pedidoNumero}">n</div>
+  <div class="total" th:text="'Cobrar ' + ${@fmt.dinero(d.total)}">$</div>
+  <div class="pie">QR generado por <span th:text="${qrProveedor}">api.qrserver.com</span> (goQR.me)</div>
+</div>
+<div class="acciones"><button type="button" onclick="window.print()">Imprimir</button></div>
+</body>
+</html>

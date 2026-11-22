@@ -1,0 +1,17 @@
+# v2 · CR-001 (épica 9): microservicio de domicilios con su propia base (HU-053).
+spring:
+  mongodb:
+    database: wok_domicilios
+
+wok:
+  openapi:
+    titulo: "Wok Control · Domicilios"
+    descripcion: "Pedidos a domicilio por teléfono, asignación al domiciliario, entrega, cobro contra entrega y QR de la ruta (API externa goQR.me)."
+  domicilios:
+    # Se agrega a la dirección para que Google Maps encuentre la ruta (el cliente solo dicta calle y número).
+    ciudad: ${WOK_DOMICILIOS_CIUDAD:Girón, Santander, Colombia}
+    qr:
+      # API externa pública y gratuita, sin llave: https://goqr.me/api/ (ver ADR-005 en specs/009-domicilios/plan.md)
+      habilitado: ${WOK_QR_HABILITADO:true}
+      url: ${WOK_QR_URL:https://api.qrserver.com/v1/create-qr-code/}
+      timeout: 5s

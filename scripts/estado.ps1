@@ -4,7 +4,7 @@
 #>
 $servicios = [ordered]@{ 'config-server' = 8888; 'discovery-service' = 8761; 'api-gateway' = 8080; 'usuarios-service' = 8081;
     'menu-service' = 8082; 'pedidos-service' = 8083; 'inventario-service' = 8084; 'proveedores-service' = 8085;
-    'facturacion-service' = 8086; 'reportes-service' = 8087 }
+    'facturacion-service' = 8086; 'reportes-service' = 8087; 'domicilios-service' = 8088 }
 foreach ($s in $servicios.Keys) {
     $estado = 'DETENIDO'
     try {

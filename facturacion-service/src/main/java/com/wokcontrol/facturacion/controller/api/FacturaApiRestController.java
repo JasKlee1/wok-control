@@ -57,6 +57,17 @@ public class FacturaApiRestController {
         return ResponseEntity.created(URI.create("/api/facturas/" + r.id())).body(r);
     }
 
+    @PostMapping("/api/facturas/domicilios")
+    @Operation(summary = "Cobro contra entrega de un domicilio (interno, HU-050)",
+            description = "Solo domicilios-service con token de servicio. Total = platos + impuesto al consumo + valor del domicilio. "
+                    + "422 con codigo PAGO_INSUFICIENTE si el pago no cubre el total. Idempotente por domicilio")
+    @ApiResponse(responseCode = "201", description = "Comprobante emitido")
+    public ResponseEntity<FacturaResponse> cobrarDomicilio(
+            @Valid @RequestBody com.wokcontrol.facturacion.dto.FacturacionDtos.CobroDomicilioRequest req) {
+        FacturaResponse r = FacturaResponse.de(servicio.cobrarDomicilio(req));
+        return ResponseEntity.created(URI.create("/api/facturas/" + r.id())).body(r);
+    }
+
     @GetMapping("/api/facturas")
     @Operation(summary = "Historial de comprobantes", description = "Filtros por fechas, estado, cajero y mesa")
     public List<FacturaResponse> listar(

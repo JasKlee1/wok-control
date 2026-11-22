@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Domicilios')}"></head>
+<body>
+<!--/* v2 · HU-047/048 (CR-001): domicilios en curso para el cajero, con asignación rápida al domiciliario. */-->
+<div class="wok-app">
+  <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+  <div class="wok-main">
+    <header th:replace="~{fragments/layout :: topbar('Domicilios', 'Pedidos por teléfono: cocina, despacho y cobro contra entrega')}"></header>
+    <main class="wok-content">
+      <div th:replace="~{fragments/layout :: mensajes}"></div>
+
+      <div class="row g-3 mb-3">
+        <div class="col-6 col-lg-3" th:each="c : ${conteo}">
+          <div class="wok-stat">
+            <div class="wok-stat-valor" th:text="${c.value}">0</div>
+            <div class="wok-stat-etiqueta" th:text="${c.key}">E</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="wok-card mb-3">
+        <div class="wok-card-header">
+          <h2 class="me-auto"><i class="bi bi-bicycle text-wok"></i> Domicilios en curso</h2>
+          <a th:href="@{/domicilios}" class="btn btn-sm btn-wok-outline"><i class="bi bi-arrow-clockwise"></i> Actualizar</a>
+          <a th:href="@{/domicilios/nuevo}" class="btn btn-wok btn-sm"><i class="bi bi-telephone-plus"></i> Nuevo domicilio</a>
+        </div>
+        <div th:if="${activos.isEmpty()}">
+          <div th:replace="~{fragments/layout :: vacio('bi-bicycle', 'Sin domicilios en curso', 'Registre el pedido cuando el cliente llame.')}"></div>
+        </div>
+        <div class="table-responsive" th:unless="${activos.isEmpty()}">
+          <table class="table table-wok table-hover align-middle">
+            <thead><tr><th>Domicilio</th><th>Cliente</th><th>Hora</th><th class="text-end">A cobrar</th><th>Estado</th><th>Domiciliario</th></tr></thead>
+            <tbody>
+              <tr th:each="d : ${activos}">
+                <td><a th:href="@{/domicilios/{id}(id=${d.id})}" class="fw-semibold wok-mono" th:text="${d.numero}">D</a>
+                  <div class="small text-suave wok-mono" th:text="${d.pedidoNumero}">P</div></td>
+                <td><div th:text="${d.cliente.nombre}">c</div><div class="small text-suave" th:text="${d.cliente.direccion}">dir</div></td>
+                <td class="small" th:text="${@fmt.hora(d.creadoEn)}">h</td>
+                <td class="text-end fw-semibold" th:text="${@fmt.dinero(d.total)}">$</td>
+                <td><span class="wok-badge" th:classappend="${d.estado.claseCss()}" th:text="${d.estado.etiqueta()}">E</span></td>
+                <td>
+                  <form th:if="${d.estado.name() == 'LISTO'}" th:action="@{/domicilios/{id}/asignar(id=${d.id})}" method="post" class="d-flex gap-1">
+                    <input type="hidden" name="volver" value="lista">
+                    <select name="domiciliario" class="form-select form-select-sm" aria-label="Domiciliario" required>
+                      <option value="">Elegir…</option>
+                      <option th:each="x : ${domiciliarios}" th:value="${x.username}" th:disabled="${!x.disponible}"
+                              th:text="${x.nombre} + (${x.disponible} ? ' · disponible' : ' · en camino')">L</option>
+                    </select>
+                    <button class="btn btn-sm btn-wok" type="submit">Asignar</button>
+                  </form>
+                  <span th:unless="${d.estado.name() == 'LISTO'}" class="small" th:text="${d.domiciliarioNombre} ?: '—'">—</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="row g-3">
+        <div class="col-lg-5">
+          <div class="wok-card">
+            <div class="wok-card-header"><h2><i class="bi bi-people text-wok"></i> Domiciliarios</h2></div>
+            <div th:if="${domiciliarios.isEmpty()}" class="wok-card-body small text-suave">No hay usuarios activos con el rol Domiciliario.</div>
+            <ul class="list-group list-group-flush" th:unless="${domiciliarios.isEmpty()}">
+              <li class="list-group-item d-flex justify-content-between align-items-center" th:each="x : ${domiciliarios}">
+                <span><i class="bi bi-person-badge"></i> <span th:text="${x.nombre}">L</span></span>
+                <span>
+                  <span class="wok-badge" th:classappend="${x.disponible} ? 'exito' : 'rojo'" th:text="${x.disponible} ? 'Disponible' : 'En camino'">D</span>
+                  <span class="small text-suave ms-1" th:if="${x.asignados > 0}" th:text="${x.asignados} + ' por salir'">1</span>
+                </span>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="col-lg-7">
+          <div class="wok-card">
+            <div class="wok-card-header"><h2><i class="bi bi-clock-history text-wok"></i> Cerrados recientemente</h2></div>
+            <div th:if="${cerrados.isEmpty()}" class="wok-card-body small text-suave">Todavía no hay domicilios cerrados.</div>
+            <div class="table-responsive" th:unless="${cerrados.isEmpty()}">
+              <table class="table table-wok table-sm mb-0">
+                <tbody>
+                  <tr th:each="d : ${cerrados}">
+                    <td><a th:href="@{/domicilios/{id}(id=${d.id})}" class="wok-mono" th:text="${d.numero}">D</a></td>
+                    <td class="small" th:text="${d.cliente.nombre}">c</td>
+                    <td class="text-end small" th:text="${@fmt.dinero(d.total)}">$</td>
+                    <td><span class="wok-badge" th:classappend="${d.estado.claseCss()}" th:text="${d.estado.etiqueta()}">E</span></td>
+                    <td class="small wok-mono" th:text="${d.cobro?.facturaNumero}">TIQ</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+  </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

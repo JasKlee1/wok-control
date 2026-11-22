@@ -64,6 +64,15 @@ public class UsuarioApiRestController {
     public record MeseroResponse(String username, String nombre) {
     }
 
+    /** v2 · HU-048: domiciliarios activos y no bloqueados (solo usuario y nombre). Interno: token de servicio. */
+    @GetMapping("/internos/domiciliarios")
+    @Operation(summary = "Domiciliarios activos (interno)", description = "Solo con token de servicio (permiso SISTEMA). Bloqueado en el gateway.")
+    public java.util.List<MeseroResponse> domiciliarios() {
+        return servicio.buscar(null, com.wokcontrol.common.security.Roles.DOMICILIARIO, true, PageRequest.of(0, 100)).getContent()
+                .stream().filter(u -> !u.estaBloqueado(java.time.Instant.now()))
+                .map(u -> new MeseroResponse(u.getUsername(), u.getNombre())).toList();
+    }
+
     @GetMapping("/{id}")
     @Operation(summary = "Consultar un usuario")
     public UsuarioResponse obtener(@PathVariable String id) {

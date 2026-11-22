@@ -22,6 +22,8 @@ public class SecurityConfig {
         WokSecurity.api(http, decoder).authorizeHttpRequests(a -> a
                 .requestMatchers(HttpMethod.GET, "/api/cuentas/**").hasAnyAuthority(FACTURACION_COBRAR, FACTURACION_VER)
                 .requestMatchers(HttpMethod.POST, "/api/facturas").hasAuthority(FACTURACION_COBRAR)
+                // v2 · HU-050: el cobro contra entrega llega solo desde domicilios-service (bloqueado en el gateway)
+                .requestMatchers(HttpMethod.POST, "/api/facturas/domicilios").hasAuthority(SISTEMA)
                 .requestMatchers(HttpMethod.POST, "/api/facturas/*/anulacion").hasAuthority(FACTURAS_ANULAR)
                 .requestMatchers(HttpMethod.POST, "/api/facturas/*/sincronizacion").hasAnyAuthority(FACTURACION_COBRAR, FACTURAS_ANULAR)
                 .requestMatchers(HttpMethod.GET, "/api/facturas/**").hasAnyAuthority(FACTURACION_VER, REPORTES_VER)

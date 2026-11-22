@@ -49,6 +49,11 @@ public final class Permisos {
     /** v2 · HU-043: mapa del salón, lista de espera, sentar grupos y marcar mesas limpias. */
     public static final String SALON_OPERAR = "SALON_OPERAR";
 
+    /** v2 · HU-047/048 (CR-001): registrar, editar, cancelar y asignar pedidos a domicilio. */
+    public static final String DOMICILIOS_GESTIONAR = "DOMICILIOS_GESTIONAR";
+    /** v2 · HU-049/050/051 (CR-001): ver y entregar solo los domicilios asignados a uno mismo. */
+    public static final String DOMICILIOS_REPARTIR = "DOMICILIOS_REPARTIR";
+
     /** Permiso reservado a los tokens internos emitidos entre microservicios. */
     public static final String SISTEMA = "SISTEMA";
 
@@ -84,6 +89,8 @@ public final class Permisos {
         d.put(FACTURAS_ANULAR, "Anular comprobantes con motivo");
         d.put(CAJA_CERRAR, "Realizar cierres de caja");
         d.put(SALON_OPERAR, "Ver el mapa del salón, manejar la lista de espera, sentar grupos y marcar mesas limpias");
+        d.put(DOMICILIOS_GESTIONAR, "Registrar, editar, cancelar y asignar pedidos a domicilio");
+        d.put(DOMICILIOS_REPARTIR, "Ver los domicilios asignados a uno mismo, marcarlos en camino, cobrarlos y entregarlos");
         d.put(CARTA_CLIENTE, "Ver la carta y el pedido de su propia mesa desde el QR (sesión de mesa)");
         DESCRIPCIONES = Map.copyOf(d);
     }

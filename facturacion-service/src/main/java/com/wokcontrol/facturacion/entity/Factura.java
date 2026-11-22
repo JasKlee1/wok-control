@@ -54,6 +54,15 @@ public class Factura {
     public record Anulacion(Instant fecha, String usuario, String motivo) {
     }
 
+    /**
+     * v2 · HU-050 (CR-001): datos del domicilio cobrado contra entrega. El valor del domicilio es un cargo
+     * aparte, sin impuesto al consumo; el comprobante queda a nombre del cajero que registró el domicilio
+     * para que entre en su cierre de caja.
+     */
+    public record DatosDomicilio(String domicilioId, String numero, BigDecimal valorDomicilio, String domiciliario,
+            String domiciliarioNombre) {
+    }
+
     @Id
     private String id;
     @Indexed(unique = true)
@@ -88,6 +97,8 @@ public class Factura {
     private String errorSincronizacion;
     @Indexed
     private String cierreId;
+    /** v2 · HU-050: solo en los comprobantes de domicilios (sin mesa). */
+    private DatosDomicilio domicilio;
     @Version
     private Long version;
 
@@ -152,6 +163,11 @@ public class Factura {
     public String getErrorSincronizacion() { return errorSincronizacion; }
     public void setErrorSincronizacion(String e) { this.errorSincronizacion = e; }
     public String getCierreId() { return cierreId; }
+    public DatosDomicilio getDomicilio() { return domicilio; }
+    public void setDomicilio(DatosDomicilio domicilio) { this.domicilio = domicilio; }
+    public boolean esDomicilio() { return domicilio != null; }
+    /** «Mesa 4» o «Domicilio D-0001», para listados y el comprobante. */
+    public String getDestino() { return domicilio != null ? "Domicilio " + domicilio.numero() : "Mesa " + mesaNumero; }
     public void setCierreId(String cierreId) { this.cierreId = cierreId; }
     public Long getVersion() { return version; }
     public void setVersion(Long version) { this.version = version; }

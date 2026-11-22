@@ -292,6 +292,38 @@ services:
       - fromGroup: wok-secretos
 
   - type: web
+    name: wokcontrol-exito-domicilios
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /actuator/health
+    autoDeployTrigger: commit
+    buildFilter:
+      paths:
+        - domicilios-service/**
+        - wok-common/**
+        - pom.xml
+        - Dockerfile
+        - .mvn/**
+        - mvnw
+    envVars:
+      - key: MODULO
+        value: "domicilios-service"
+      - key: SPRING_PROFILES_ACTIVE
+        value: "render"
+      - key: DOMICILIOS_PORT
+        value: "10000"
+      - key: WOK_INFRA_USER
+        value: "wok"
+      - key: CONFIG_SERVER_URL
+        value: "https://wokcontrol-exito-config.onrender.com"
+      - key: EUREKA_HOST
+        value: "wokcontrol-exito-eureka.onrender.com"
+      - fromGroup: wok-secretos
+
+  - type: web
     name: wokcontrol-exito-gateway
     runtime: docker
     plan: free

@@ -50,6 +50,10 @@ services:
     <<: *servicio
     build: { context: ., args: { MODULO: reportes-service } }
 
+  domicilios-service:
+    <<: *servicio
+    build: { context: ., args: { MODULO: domicilios-service } }
+
   api-gateway:
     <<: *servicio
     build: { context: ., args: { MODULO: api-gateway } }

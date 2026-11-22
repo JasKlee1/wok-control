@@ -27,6 +27,9 @@ public class Pedido {
     public record CambioEstado(Instant fecha, String estado, String usuario, String detalle) {
     }
 
+    /** v2 · HU-047: origen de los pedidos a domicilio que registra el cajero. */
+    public static final String ORIGEN_DOMICILIO = "DOMICILIO";
+
     @Id
     private String id;
     @Indexed(unique = true)
@@ -55,6 +58,10 @@ public class Pedido {
     private String motivoRechazo;
     private String rechazadoPor;
     private Instant rechazadoEn;
+    /** v2 · HU-047 (CR-001): domicilio de domicilios-service al que pertenece; el pedido no tiene mesa. */
+    @Indexed(sparse = true)
+    private String domicilioId;
+    private String domicilioNumero;
 
     @CreatedDate
     @Indexed
@@ -165,6 +172,14 @@ public class Pedido {
     public void setRechazadoPor(String rechazadoPor) { this.rechazadoPor = rechazadoPor; }
     public Instant getRechazadoEn() { return rechazadoEn; }
     public void setRechazadoEn(Instant rechazadoEn) { this.rechazadoEn = rechazadoEn; }
+    public String getDomicilioId() { return domicilioId; }
+    public void setDomicilioId(String domicilioId) { this.domicilioId = domicilioId; }
+    public String getDomicilioNumero() { return domicilioNumero; }
+    public void setDomicilioNumero(String domicilioNumero) { this.domicilioNumero = domicilioNumero; }
+    /** v2 · HU-047: pedido a domicilio, sin mesa. */
+    public boolean esDomicilio() { return ORIGEN_DOMICILIO.equals(origen); }
+    /** Texto corto para cocina y listados: «Mesa 4» o «Domicilio D-0001». */
+    public String getDestino() { return esDomicilio() ? "Domicilio " + domicilioNumero : "Mesa " + mesaNumero; }
     public Long getVersion() { return version; }
     public void setVersion(Long version) { this.version = version; }
 }

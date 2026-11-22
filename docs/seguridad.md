@@ -11,7 +11,7 @@
   - se impiden las redirecciones abiertas tras el login.
 - **Gateway:**
   - rechaza `/api/**` sin un JWT válido;
-  - bloquea desde el exterior `/api/inventario/consumos/**`, `/api/inventario/recepciones/**`, `/api/auditoria/eventos` y `/api/pedidos/*/pago`;
+  - bloquea desde el exterior `/api/inventario/consumos/**`, `/api/inventario/recepciones/**`, `/api/auditoria/eventos`, `/api/pedidos/*/pago`, `/api/usuarios/internos/**` y, desde la v2 · épica 9, `/api/pedidos/internos/**` y `/api/facturas/domicilios/**`;
   - CORS restringido a `WOK_CORS_ORIGINS`.
 - **Defensa en profundidad:** cada servicio vuelve a autorizar por permiso (`SecurityConfig` de cada módulo). Ocultar un botón nunca es el control.
 - **Auditoría:** las operaciones importantes se envían a la auditoría central de usuarios-service (quién, qué, cuándo y en qué servicio). Para cuentas bloqueadas y las acciones de plataforma también.
@@ -19,26 +19,32 @@
 
 ## Matriz de roles
 
-| Permiso | Admin | Mesero | Cocinero | Cajero | Proveedor | Inventario | Admin plataforma | Anfitrión (v2) |
-|---|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
-| Panel | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Reportes, costos | ✓ | | | | | | | |
-| Gestionar carta y precios | ✓ | | | | | | | |
-| Ver carta | ✓ | ✓ | ✓ | ✓ | | ✓ | | |
-| Mesas: ver / gestionar | ✓/✓ | ✓/ | | ✓/ | | | | |
-| Salón: mapa, lista de espera, sentar, marcar limpia (`SALON_OPERAR`) | ✓ | (solo marcar limpia) | | | | | | ✓ |
-| Pedidos: ver / registrar | ✓/ | ✓/✓ | ✓/ | ✓/ | | | | |
-| Operar cocina | | | ✓ | | | | | |
-| Inventario: ver / insumos / movimientos / ajustes | ✓/✓// | | ✓/// | | | ✓/✓/✓/✓ | | |
-| Reportar agotado | | | ✓ | | | | | |
-| Proveedores: ver / gestionar | ✓/✓ | | | | | ✓/ | | |
-| Órdenes de compra | ✓ | | | | | ✓ | | |
-| Portal del proveedor (solo lo propio) | | | | | ✓ | | | |
-| Facturación: ver / cobrar / cerrar caja | ✓// | | | ✓/✓/✓ | | | | |
-| Autorizar descuentos, anular comprobantes | ✓ | | | | | | | |
-| Usuarios, roles, parámetros, auditoría | | | | | | | ✓ | |
+| Permiso | Admin | Mesero | Cocinero | Cajero | Proveedor | Inventario | Admin plataforma | Anfitrión (v2) | Domiciliario (v2) |
+|---|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
+| Panel | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Reportes, costos | ✓ | | | | | | | | |
+| Gestionar carta y precios | ✓ | | | | | | | | |
+| Ver carta | ✓ | ✓ | ✓ | ✓ | | ✓ | | | |
+| Mesas: ver / gestionar | ✓/✓ | ✓/ | | ✓/ | | | | | |
+| Salón: mapa, lista de espera, sentar, marcar limpia (`SALON_OPERAR`) | ✓ | (solo marcar limpia) | | | | | | ✓ | |
+| Domicilios: registrar, editar, cancelar, asignar (`DOMICILIOS_GESTIONAR`) | ✓ | | | ✓ | | | | | |
+| Domicilios: mis entregas, en camino, cobrar, no entregado (`DOMICILIOS_REPARTIR`, solo los suyos) | | | | | | | | | ✓ |
+| Pedidos: ver / registrar | ✓/ | ✓/✓ | ✓/ | ✓/ | | | | | |
+| Operar cocina | | | ✓ | | | | | | |
+| Inventario: ver / insumos / movimientos / ajustes | ✓/✓// | | ✓/// | | | ✓/✓/✓/✓ | | | |
+| Reportar agotado | | | ✓ | | | | | | |
+| Proveedores: ver / gestionar | ✓/✓ | | | | | ✓/ | | | |
+| Órdenes de compra | ✓ | | | | | ✓ | | | |
+| Portal del proveedor (solo lo propio) | | | | | ✓ | | | | |
+| Facturación: ver / cobrar / cerrar caja | ✓// | | | ✓/✓/✓ | | | | | |
+| Autorizar descuentos, anular comprobantes | ✓ | | | | | | | | |
+| Usuarios, roles, parámetros, auditoría | | | | | | | ✓ | | |
 
 **Anfitrión (v2 · HU-043).** Recibe a los grupos: ve el mapa del salón y la lista de espera, sienta grupos con su mesero (uniendo mesas si hace falta) y marca mesas limpias. No crea ni edita mesas (403, es del Administrador), no toma pedidos ni cobra (acceso no permitido). La lista de meseros la consulta pedidos-service en `GET /api/usuarios/internos/meseros`, que solo acepta tokens de servicio, devuelve solo usuario y nombre y está bloqueada en el gateway.
+
+**Domiciliario (v2 · HU-051, RN-15).** Ve en «Mis entregas» solo los domicilios ASIGNADOS o EN_CAMINO a su nombre, con dirección, teléfono, valor a cobrar y el QR de la ruta; los marca en camino, cobra y entrega, o registra que no se entregó. Si consulta un domicilio de otro domiciliario recibe 403 (domicilios-service compara el `sub` del JWT con el domiciliario asignado). No entra a caja, inventario, pedidos de mesa ni a la gestión de domicilios. El cobro lo registra domicilios-service en facturación con token de servicio (`POST /api/facturas/domicilios`, bloqueado en el gateway) y el comprobante queda a nombre del cajero que registró el domicilio.
+
+**Datos personales del cliente del domicilio (Ley 1581 de 2012).** Nombre, teléfono y dirección viven solo en `wok_domicilios`. No se escriben en los registros ni en la auditoría central (los eventos `ESTADO_DOMICILIO` llevan número, estados y motivo). A la API externa del QR (goQR.me) solo viaja la URL de Google Maps con la dirección, sin nombre ni teléfono, y se puede apagar con `WOK_QR_HABILITADO=false` (ADR-005).
 
 El **Administrador** opera el restaurante y el **Administrador de plataforma** administra accesos.
 Se mantuvieron separados para no mezclar la operación con la gestión de usuarios.

@@ -12,7 +12,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 PREFIJO = sys.argv[1] if len(sys.argv) > 1 else "wokcontrol-exito"
 SERVICIOS = ["config", "eureka", "usuarios", "menu", "pedidos", "inventario", "proveedores", "facturacion",
-             "reportes", "gateway"]
+             "reportes", "domicilios", "gateway"]
 
 
 def despertar(nombre, limite=300):

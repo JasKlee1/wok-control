@@ -97,9 +97,22 @@ public class ClienteInterno {
             case NOT_FOUND -> new RecursoNoEncontradoException(detalle);
             case CONFLICT -> new ConflictoException(detalle);
             case FORBIDDEN -> new OperacionNoPermitidaException(detalle);
-            case BAD_REQUEST, UNPROCESSABLE_CONTENT -> new ReglaNegocioException(detalle);
+            // v2 · CR-001: conserva el código de negocio (p. ej. PAGO_INSUFICIENTE) que manda el otro servicio
+            case BAD_REQUEST, UNPROCESSABLE_CONTENT -> new ReglaNegocioException(codigo(ex), detalle);
             default -> new ServicioRemotoException(servicio, servicio + ": " + detalle, ex);
         };
+    }
+
+    private static String codigo(HttpClientErrorException ex) {
+        try {
+            ProblemDetail pd = ex.getResponseBodyAs(ProblemDetail.class);
+            if (pd != null && pd.getProperties() != null && pd.getProperties().get("codigo") instanceof String c) {
+                return c;
+            }
+        } catch (RuntimeException ignorada) {
+            // cuerpo no es ProblemDetail
+        }
+        return null;
     }
 
     private static String detalle(HttpClientErrorException ex) {

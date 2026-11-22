@@ -32,7 +32,7 @@
               <tr th:each="f : ${facturas}">
                 <td><a th:href="@{/caja/comprobantes/{id}(id=${f.id})}" class="wok-mono fw-semibold" th:text="${f.numero}">TIQ</a></td>
                 <td class="small" th:text="${@fmt.fechaHora(f.emitidaEn)}">f</td>
-                <td th:text="${f.mesaNumero}">1</td>
+                <td th:text="${f.esDomicilio()} ? ${f.domicilio.numero} : ${f.mesaNumero}">1</td>
                 <td class="wok-mono small" th:text="${f.cajero}">c</td>
                 <td class="small"><span th:each="p : ${f.pagos}" class="wok-badge neutro me-1" th:text="${p.metodo.etiqueta()}">m</span></td>
                 <td class="text-end" th:text="${@fmt.dinero(f.total)}">$</td>

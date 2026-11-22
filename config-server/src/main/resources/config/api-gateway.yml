@@ -37,6 +37,10 @@ spring:
               uri: lb://reportes-service
               predicates:
                 - Path=/api/reportes/**
+            - id: domicilios-api
+              uri: lb://domicilios-service
+              predicates:
+                - Path=/api/domicilios/**
 
             # ---------- Documentación OpenAPI de cada servicio ----------
             - id: docs-usuarios
@@ -81,6 +85,12 @@ spring:
                 - Path=/docs/reportes/**
               filters:
                 - RewritePath=/docs/reportes/(?<resto>.*), /$\{resto}
+            - id: docs-domicilios
+              uri: lb://domicilios-service
+              predicates:
+                - Path=/docs/domicilios/**
+              filters:
+                - RewritePath=/docs/domicilios/(?<resto>.*), /$\{resto}
 
             # ---------- Interfaz web (Thymeleaf servida por cada dominio) ----------
             - id: usuarios-web
@@ -111,6 +121,10 @@ spring:
               uri: lb://reportes-service
               predicates:
                 - Path=/,/dashboard,/reportes/**
+            - id: domicilios-web
+              uri: lb://domicilios-service
+              predicates:
+                - Path=/domicilios/**,/mis-entregas/**
 
 wok:
   cors:
@@ -140,3 +154,5 @@ springdoc:
         url: /docs/facturacion/v3/api-docs
       - name: reportes-service
         url: /docs/reportes/v3/api-docs
+      - name: domicilios-service
+        url: /docs/domicilios/v3/api-docs

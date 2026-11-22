@@ -47,7 +47,7 @@
               <thead><tr><th>Número</th><th>Hora</th><th>Mesa</th><th class="text-end">Total</th><th>Estado</th></tr></thead>
               <tbody><tr th:each="f : ${comprobantes}">
                 <td><a th:href="@{/caja/comprobantes/{id}(id=${f.id})}" class="wok-mono" th:text="${f.numero}">T</a></td>
-                <td class="small" th:text="${@fmt.hora(f.emitidaEn)}">h</td><td th:text="${f.mesaNumero}">1</td>
+                <td class="small" th:text="${@fmt.hora(f.emitidaEn)}">h</td><td th:text="${f.esDomicilio()} ? ${f.domicilio.numero} : ${f.mesaNumero}">1</td>
                 <td class="text-end" th:text="${@fmt.dinero(f.total)}">$</td><td class="small" th:text="${f.estado}">E</td></tr></tbody>
             </table></div>
           </div>

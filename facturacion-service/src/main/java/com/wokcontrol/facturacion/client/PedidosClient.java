@@ -36,6 +36,12 @@ public class PedidosClient {
         }
     }
 
+    /** v2 · HU-050: pedido de cocina de un domicilio, con sus precios copiados de la carta. */
+    public Pedido pedido(String pedidoId) {
+        return cliente.llamar(SERVICIO, true, () -> cliente.para(SERVICIO).get().uri("/api/pedidos/{id}", pedidoId)
+                .headers(cliente.comoServicio()).retrieve().body(Pedido.class));
+    }
+
     public List<Pedido> facturables(String mesaId) {
         return cliente.llamar(SERVICIO, true, () -> cliente.para(SERVICIO).get()
                 .uri(u -> u.path("/api/pedidos/facturables").queryParam("mesaId", mesaId).build())

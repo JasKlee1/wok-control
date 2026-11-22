@@ -28,6 +28,9 @@ public final class Roles {
     /** v2 · HU-043: recibe a los grupos en la puerta; ve el salón y cambia la ocupación, sin crear mesas, pedir ni cobrar. */
     public static final String ANFITRION = "ANFITRION";
 
+    /** v2 · HU-051 (CR-001): reparte los domicilios; solo ve los que tiene asignados, sin caja ni inventario. */
+    public static final String DOMICILIARIO = "DOMICILIARIO";
+
     /** Roles que existen solo como sesión temporal y nunca se asignan a usuarios del personal. */
     public static final Set<String> SOLO_SESION = Set.of(CLIENTE);
 
@@ -42,7 +45,8 @@ public final class Roles {
                 "Administrador operativo del restaurante: carta, ventas, costos, inventario y proveedores",
                 Set.of(DASHBOARD_VER, REPORTES_VER, MENU_VER, MENU_GESTIONAR, MESAS_VER, MESAS_GESTIONAR,
                         PEDIDOS_VER, INVENTARIO_VER, INVENTARIO_GESTIONAR, PROVEEDORES_VER, PROVEEDORES_GESTIONAR,
-                        COMPRAS_GESTIONAR, FACTURACION_VER, DESCUENTOS_AUTORIZAR, FACTURAS_ANULAR, SALON_OPERAR)));
+                        COMPRAS_GESTIONAR, FACTURACION_VER, DESCUENTOS_AUTORIZAR, FACTURAS_ANULAR, SALON_OPERAR,
+                        DOMICILIOS_GESTIONAR)));
         r.put(MESERO, new DefinicionRol(MESERO, "Mesero",
                 "Atiende mesas, registra pedidos y consulta el estado de las comandas",
                 Set.of(DASHBOARD_VER, MENU_VER, MESAS_VER, PEDIDOS_VER, PEDIDOS_GESTIONAR)));
@@ -51,7 +55,8 @@ public final class Roles {
                 Set.of(DASHBOARD_VER, MENU_VER, PEDIDOS_VER, COCINA_OPERAR, INVENTARIO_VER, INSUMOS_REPORTAR_AGOTADO)));
         r.put(CAJERO, new DefinicionRol(CAJERO, "Cajero",
                 "Cobra cuentas, aplica descuentos autorizados, emite comprobantes y cierra caja",
-                Set.of(DASHBOARD_VER, MENU_VER, MESAS_VER, PEDIDOS_VER, FACTURACION_VER, FACTURACION_COBRAR, CAJA_CERRAR)));
+                Set.of(DASHBOARD_VER, MENU_VER, MESAS_VER, PEDIDOS_VER, FACTURACION_VER, FACTURACION_COBRAR, CAJA_CERRAR,
+                        DOMICILIOS_GESTIONAR)));
         r.put(PROVEEDOR, new DefinicionRol(PROVEEDOR, "Proveedor",
                 "Proveedor externo: consulta su perfil, sus órdenes de compra y registra entregas",
                 Set.of(DASHBOARD_VER, PORTAL_PROVEEDOR)));
@@ -65,6 +70,9 @@ public final class Roles {
         r.put(ANFITRION, new DefinicionRol(ANFITRION, "Anfitrión",
                 "Recibe a los grupos en la puerta: ve el mapa del salón, maneja la lista de espera, sienta grupos con su mesero y marca mesas limpias. No crea ni edita mesas, no toma pedidos ni cobra",
                 Set.of(DASHBOARD_VER, SALON_OPERAR)));
+        r.put(DOMICILIARIO, new DefinicionRol(DOMICILIARIO, "Domiciliario",
+                "Reparte los pedidos a domicilio: ve solo los que tiene asignados con dirección y valor a cobrar, los marca en camino, cobra contra entrega y registra si no se entregaron. No abre caja, inventario ni otros pedidos",
+                Set.of(DASHBOARD_VER, DOMICILIOS_REPARTIR)));
         r.put(CLIENTE, new DefinicionRol(CLIENTE, "Cliente (sesión de mesa)",
                 "Cliente en el salón: entra con el QR de su mesa, sin usuario ni contraseña; solo ve la carta y el pedido de su mesa",
                 Set.of(CARTA_CLIENTE)));

@@ -31,6 +31,9 @@ public final class Navegacion {
                     new Item("Mesas", "bi-grid-3x3-gap", "/mesas", new String[] { MESAS_VER }),
                     new Item("Pedidos", "bi-receipt", "/pedidos", new String[] { PEDIDOS_VER }),
                     new Item("Cocina", "bi-fire", "/cocina", new String[] { COCINA_OPERAR }))),
+            new Seccion("Domicilios", List.of(
+                    new Item("Domicilios", "bi-bicycle", "/domicilios", new String[] { DOMICILIOS_GESTIONAR }),
+                    new Item("Mis entregas", "bi-geo-alt", "/mis-entregas", new String[] { DOMICILIOS_REPARTIR }))),
             new Seccion("Carta", List.of(
                     new Item("Platos", "bi-egg-fried", "/menu/platos", new String[] { MENU_VER }),
                     new Item("Categorías", "bi-tags", "/menu/categorias", new String[] { MENU_GESTIONAR }),

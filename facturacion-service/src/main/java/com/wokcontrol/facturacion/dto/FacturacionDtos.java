@@ -74,15 +74,32 @@ public final class FacturacionDtos {
             List<String> pedidoIds, List<Factura.Linea> lineas, BigDecimal subtotal, Factura.Descuento descuento,
             BigDecimal baseGravable, BigDecimal impuestoPorcentaje, BigDecimal impuestoValor, BigDecimal total,
             List<Factura.Pago> pagos, BigDecimal totalRecibido, BigDecimal cambio, Factura.Estado estado, String cajero,
-            Instant emitidaEn, Factura.Anulacion anulacion, Factura.Sincronizacion sincronizacion, String cierreId) {
+            Instant emitidaEn, Factura.Anulacion anulacion, Factura.Sincronizacion sincronizacion, String cierreId,
+            Factura.DatosDomicilio domicilio) {
 
         public static FacturaResponse de(Factura f) {
             return new FacturaResponse(f.getId(), f.getNumero(), "COMPROBANTE_INTERNO_DE_VENTA", f.getMesaId(),
                     f.getMesaNumero(), f.getPedidoIds(), f.getLineas(), f.getSubtotal(), f.getDescuento(),
                     f.getBaseGravable(), f.getImpuestoPorcentaje(), f.getImpuestoValor(), f.getTotal(), f.getPagos(),
                     f.getTotalRecibido(), f.getCambio(), f.getEstado(), f.getCajero(), f.getEmitidaEn(), f.getAnulacion(),
-                    f.getSincronizacion(), f.getCierreId());
+                    f.getSincronizacion(), f.getCierreId(), f.getDomicilio());
         }
+    }
+
+    /**
+     * v2 · HU-050 (CR-001): cobro contra entrega de un domicilio. Lo envía domicilios-service con token
+     * de servicio; el actor del token es el domiciliario que cobró.
+     */
+    public record CobroDomicilioRequest(
+            @NotBlank String domicilioId,
+            @NotBlank String domicilioNumero,
+            @NotBlank String pedidoId,
+            @NotNull @DecimalMin(value = "0", message = "El valor del domicilio no puede ser negativo") BigDecimal valorDomicilio,
+            @NotBlank String cajero,
+            String cajeroNombre,
+            @NotBlank String domiciliario,
+            String domiciliarioNombre,
+            @NotEmpty(message = "Registre el pago") @Valid List<PagoRequest> pagos) {
     }
 
     // ---------- Descuentos ----------

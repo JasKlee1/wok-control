@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Domicilio ' + ${d.numero})}"></head>
+<body>
+<!--/* v2 · HU-047/048/053: detalle del domicilio para el cajero, con el QR de la ruta (API externa) y el historial de estados. */-->
+<div class="wok-app">
+  <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+  <div class="wok-main">
+    <header th:replace="~{fragments/layout :: topbar('Domicilio ' + ${d.numero}, 'Pedido de cocina ' + ${d.pedidoNumero} + ' · registrado por ' + (${d.registradoPorNombre} ?: ${d.registradoPor}))}"></header>
+    <main class="wok-content">
+      <div th:replace="~{fragments/layout :: mensajes}"></div>
+
+      <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+        <span class="wok-badge fs-6" th:classappend="${d.estado.claseCss()}" th:text="${d.estado.etiqueta()}">E</span>
+        <span class="small text-suave" th:if="${d.domiciliarioNombre}"><i class="bi bi-person-badge"></i> <span th:text="${d.domiciliarioNombre}">L</span></span>
+        <a th:if="${d.estado.antesDelDespacho()}" th:href="@{/domicilios/{id}/editar(id=${d.id})}" class="btn btn-sm btn-wok-outline ms-auto"><i class="bi bi-pencil"></i> Editar</a>
+        <a th:href="@{/domicilios/{id}/rotulo(id=${d.id})}" class="btn btn-sm btn-dorado" th:classappend="${!d.estado.antesDelDespacho()} ? 'ms-auto'" target="_blank"><i class="bi bi-printer"></i> Rótulo con QR</a>
+        <button th:if="${d.estado.antesDelDespacho()}" type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="collapse" data-bs-target="#cancelar"><i class="bi bi-x-circle"></i> Cancelar</button>
+      </div>
+
+      <div class="collapse mb-3" id="cancelar" th:if="${d.estado.antesDelDespacho()}">
+        <form th:action="@{/domicilios/{id}/cancelar(id=${d.id})}" method="post" class="wok-card wok-card-body d-flex gap-2 flex-wrap align-items-end"
+              data-wok-confirmar="Se cancelará el domicilio y su pedido de cocina. ¿Confirmar?">
+          <div class="flex-grow-1"><label class="form-label small" for="motivoCancelar">Motivo</label>
+            <input id="motivoCancelar" name="motivo" class="form-control" minlength="5" maxlength="200" required placeholder="El cliente llamó a cancelar"></div>
+          <button class="btn btn-danger" type="submit">Cancelar domicilio</button>
+        </form>
+      </div>
+
+      <div class="row g-3">
+        <div class="col-lg-7">
+          <div class="wok-card mb-3" th:if="${domiciliarios != null and (d.estado.name() == 'LISTO' or d.estado.name() == 'ASIGNADO')}">
+            <div class="wok-card-header"><i class="bi bi-bicycle text-wok"></i><h2 th:text="${d.estado.name() == 'LISTO'} ? 'Asignar domiciliario' : 'Cambiar domiciliario'">Asignar</h2></div>
+            <form th:action="@{/domicilios/{id}/asignar(id=${d.id})}" method="post" class="wok-card-body d-flex gap-2 flex-wrap">
+              <select name="domiciliario" class="form-select" style="max-width: 320px" aria-label="Domiciliario" required>
+                <option value="">Elegir domiciliario…</option>
+                <option th:each="x : ${domiciliarios}" th:value="${x.username}" th:disabled="${!x.disponible}" th:selected="${x.username == d.domiciliario}"
+                        th:text="${x.nombre} + (${x.disponible} ? ' · disponible' : ' · en camino')">L</option>
+              </select>
+              <button class="btn btn-wok" type="submit"><i class="bi bi-check2"></i> Asignar</button>
+            </form>
+          </div>
+          <div class="wok-card mb-3" th:if="${d.estado.name() == 'RECIBIDO' or d.estado.name() == 'EN_PREPARACION'}">
+            <div class="wok-card-body small"><i class="bi bi-fire text-wok"></i> El pedido está en cocina. Se podrá asignar cuando cocina lo marque <strong>listo</strong>.
+              <a th:href="@{/domicilios/{id}(id=${d.id})}" class="ms-1">Actualizar</a></div>
+          </div>
+
+          <div class="wok-card mb-3">
+            <div class="wok-card-header"><h2>Pedido</h2></div>
+            <div class="wok-card-body">
+              <div class="d-flex justify-content-between" th:each="l : ${d.lineas}">
+                <span th:text="${l.cantidad} + ' × ' + ${l.nombre}">1 x</span><span th:text="${@fmt.dinero(l.subtotal)}">$</span>
+              </div>
+              <hr>
+              <div class="d-flex justify-content-between small"><span>Platos</span><span th:text="${@fmt.dinero(d.subtotalPlatos)}">$</span></div>
+              <div class="d-flex justify-content-between small"><span th:text="'Impuesto al consumo ' + ${@fmt.numero(d.impuestoPorcentaje)} + '%'">INC</span><span th:text="${@fmt.dinero(d.impuestoValor)}">$</span></div>
+              <div class="d-flex justify-content-between small"><span>Valor del domicilio</span><span th:text="${@fmt.dinero(d.valorDomicilio)}">$</span></div>
+              <div class="d-flex justify-content-between h5 mt-2 mb-0"><span>A cobrar</span><span th:text="${@fmt.dinero(d.total)}">$</span></div>
+              <div class="small text-suave mt-2" th:if="${d.observaciones}"><i class="bi bi-chat-left-text"></i> <span th:text="${d.observaciones}">obs</span></div>
+            </div>
+          </div>
+
+          <div class="wok-card mb-3" th:if="${d.cobro}">
+            <div class="wok-card-header"><i class="bi bi-cash-coin text-wok"></i><h2>Cobro contra entrega</h2></div>
+            <div class="wok-card-body small">
+              <div class="d-flex justify-content-between"><span>Método</span><span th:text="${d.cobro.metodo}">EFECTIVO</span></div>
+              <div class="d-flex justify-content-between"><span>Recibido</span><span th:text="${@fmt.dinero(d.cobro.recibido)}">$</span></div>
+              <div class="d-flex justify-content-between"><span>Cambio</span><span th:text="${@fmt.dinero(d.cobro.cambio)}">$</span></div>
+              <div class="d-flex justify-content-between"><span>Comprobante</span>
+                <a th:if="${usuarioActual.tiene('FACTURACION_VER')}" th:href="@{/caja/comprobantes/{f}(f=${d.cobro.facturaId})}" class="wok-mono" th:text="${d.cobro.facturaNumero}">TIQ</a>
+                <span th:unless="${usuarioActual.tiene('FACTURACION_VER')}" class="wok-mono" th:text="${d.cobro.facturaNumero}">TIQ</span></div>
+            </div>
+          </div>
+          <div class="alert alert-warning wok-alerta" th:if="${d.motivoNoEntrega}"><i class="bi bi-house-x"></i><div>No entregado: <span th:text="${d.motivoNoEntrega}">m</span></div></div>
+          <div class="alert alert-danger wok-alerta" th:if="${d.motivoCancelacion}"><i class="bi bi-x-octagon"></i><div>Cancelado: <span th:text="${d.motivoCancelacion}">m</span></div></div>
+
+          <div class="wok-card">
+            <div class="wok-card-header"><i class="bi bi-journal-text text-wok"></i><h2>Historial de estados</h2><span class="small text-suave ms-auto">AC-053.2 · hora local y UTC</span></div>
+            <div class="table-responsive">
+              <table class="table table-wok table-sm mb-0">
+                <thead><tr><th>Fecha</th><th>Usuario</th><th>Cambio</th><th>Detalle</th></tr></thead>
+                <tbody>
+                  <tr th:each="h : ${d.historial}">
+                    <td class="small text-nowrap"><span th:text="${@fmt.fechaHora(h.fecha)}">f</span><div class="text-suave wok-mono" th:text="${h.fecha}">utc</div></td>
+                    <td class="small" th:text="${h.usuario}">u</td>
+                    <td class="small text-nowrap"><span th:text="${h.anterior?.name()} ?: '—'">A</span> → <strong th:text="${h.nuevo.name()}">N</strong></td>
+                    <td class="small" th:text="${h.detalle}">d</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-5">
+          <div class="wok-card mb-3">
+            <div class="wok-card-header"><i class="bi bi-person-lines-fill text-wok"></i><h2>Cliente</h2></div>
+            <div class="wok-card-body">
+              <div class="fw-semibold" th:text="${d.cliente.nombre}">c</div>
+              <div><i class="bi bi-telephone"></i> <a th:href="'tel:' + ${d.cliente.telefono}" th:text="${d.cliente.telefono}">t</a></div>
+              <div><i class="bi bi-geo-alt"></i> <span th:text="${d.cliente.direccion}">dir</span></div>
+              <div class="small text-suave" th:text="${d.cliente.referencia}">ref</div>
+            </div>
+          </div>
+          <div class="wok-card">
+            <div class="wok-card-header"><i class="bi bi-qr-code text-wok"></i><h2>Ruta para el domiciliario</h2></div>
+            <div class="wok-card-body text-center">
+              <img th:src="@{/domicilios/{id}/qr-ruta.png(id=${d.id})}" width="220" height="220" alt="Código QR con la ruta en Google Maps"
+                   class="border rounded p-1 bg-white" data-wok-qr>
+              <div class="alert alert-warning small mt-2 d-none" data-wok-qr-falla>El servicio externo de QR no respondió; use el enlace.</div>
+              <p class="small text-suave mt-2 mb-1">Escanéelo con el celular: abre Google Maps con la ruta.</p>
+              <a th:href="${urlRuta}" target="_blank" rel="noopener" class="btn btn-sm btn-wok-outline"><i class="bi bi-map"></i> Abrir ruta</a>
+              <details class="text-start small mt-3">
+                <summary>API externa usada</summary>
+                <div class="mt-1">El servidor genera el QR con <strong th:text="${qrProveedor}">api.qrserver.com</strong> (goQR.me), una API pública y gratuita:</div>
+                <code class="d-block text-break mt-1" th:text="${qrApi}">url</code>
+              </details>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+  </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<script>
+  // Si la API externa no responde, el servidor devuelve 503 y se muestra el enlace en lugar del QR.
+  document.querySelectorAll('[data-wok-qr]').forEach(function (img) {
+    img.addEventListener('error', function () {
+      img.classList.add('d-none');
+      var aviso = img.parentElement.querySelector('[data-wok-qr-falla]');
+      if (aviso) aviso.classList.remove('d-none');
+    });
+  });
+</script>
+</body>
+</html>

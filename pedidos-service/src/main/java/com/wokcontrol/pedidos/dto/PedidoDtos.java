@@ -88,6 +88,18 @@ public final class PedidoDtos {
     public record PagoPedidoRequest(@NotBlank String facturaId) {
     }
 
+    /** v2 · HU-047 (CR-001): pedido de un domicilio; llega de domicilios-service con token de servicio. */
+    public record PedidoDomicilioRequest(
+            @NotBlank String domicilioId,
+            @NotBlank String domicilioNumero,
+            @NotEmpty(message = "El pedido debe tener al menos un producto") @Valid List<ItemRequest> items,
+            @Size(max = 300) String observaciones) {
+    }
+
+    /** v2 · HU-047/052: motivo de la cancelación o de la anulación de un domicilio. */
+    public record MotivoRequest(@NotBlank(message = "Indique el motivo") @Size(max = 200) String motivo) {
+    }
+
     public record ItemResponse(String id, ItemPedido.Tipo tipo, String productoId, String nombre, BigDecimal precioUnitario,
             int cantidad, BigDecimal subtotal, int nivelPicante, String notas, Set<String> alergenos,
             ItemPedido.Estado estado) {
@@ -102,14 +114,16 @@ public final class PedidoDtos {
             String meseroNombre, EstadoPedido estado, List<ItemResponse> items, BigDecimal total, String observaciones,
             Set<String> alergias, Pedido.EstadoConsumo consumoInventario, String facturaId, String canceladoPor,
             String motivoCancelacion, Instant creadoEn, Instant enviadoEn, Instant listoEn, Instant entregadoEn,
-            Instant pagadoEn, List<Pedido.CambioEstado> historial, String origen, String motivoRechazo) {
+            Instant pagadoEn, List<Pedido.CambioEstado> historial, String origen, String motivoRechazo,
+            String domicilioId, String domicilioNumero) {
 
         public static PedidoResponse de(Pedido p) {
             return new PedidoResponse(p.getId(), p.getNumero(), p.getMesaId(), p.getMesaNumero(), p.getMesero(),
                     p.getMeseroNombre(), p.getEstado(), p.getItems().stream().map(ItemResponse::de).toList(), p.getTotal(),
                     p.getObservaciones(), p.getAlergias(), p.getConsumoInventario(), p.getFacturaId(), p.getCanceladoPor(),
                     p.getMotivoCancelacion(), p.getCreadoEn(), p.getEnviadoEn(), p.getListoEn(), p.getEntregadoEn(),
-                    p.getPagadoEn(), p.getHistorial(), p.getOrigen(), p.getMotivoRechazo());
+                    p.getPagadoEn(), p.getHistorial(), p.getOrigen(), p.getMotivoRechazo(), p.getDomicilioId(),
+                    p.getDomicilioNumero());
         }
     }
 

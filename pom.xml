@@ -33,6 +33,7 @@
 		<module>proveedores-service</module>
 		<module>facturacion-service</module>
 		<module>reportes-service</module>
+		<module>domicilios-service</module>
 	</modules>
 
 	<properties>

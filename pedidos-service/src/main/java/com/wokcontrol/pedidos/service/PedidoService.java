@@ -295,7 +295,7 @@ public class PedidoService {
         p.setRechazadoEn(Instant.now());
         p.registrar(EstadoPedido.RECHAZADO.name(), usuario, m);
         Pedido g = repo.save(p);
-        mesas.actualizarOcupacion(p.getMesaId());
+        ocupacion(p);
         auditoria.registrar("RECHAZAR_QR", "Pedido", g.getNumero(), m);
         return g;
     }
@@ -307,7 +307,7 @@ public class PedidoService {
         List<InventarioClient.LineaConsumo> lineas = lineasConsumo(p);
         if (!lineas.isEmpty()) {
             // idempotente: si esta llamada se reintenta, inventario no descuenta dos veces
-            inventario.consumir(p.referenciaInventario(), "Pedido " + p.getNumero() + " · mesa " + p.getMesaNumero(), lineas);
+            inventario.consumir(p.referenciaInventario(), "Pedido " + p.getNumero() + " · " + p.getDestino().toLowerCase(), lineas);
             p.setConsumoInventario(Pedido.EstadoConsumo.APLICADO);
         }
         p.setEstado(EstadoPedido.ENVIADO);
@@ -337,6 +337,9 @@ public class PedidoService {
             throw new ReglaNegocioException("El pedido está " + p.getEstado().etiqueta().toLowerCase()
                     + ": ya no se puede cancelar");
         }
+        if (p.esDomicilio() && !UsuarioActual.opcional().map(UsuarioActual::servicio).orElse(false)) {
+            throw new ReglaNegocioException("El pedido " + p.getNumero() + " es un domicilio: se cancela desde Domicilios");
+        }
         if (motivo == null || motivo.trim().length() < 5) {
             throw new ReglaNegocioException("Indique el motivo de la cancelación (mínimo 5 caracteres)");
         }
@@ -355,7 +358,7 @@ public class PedidoService {
         p.setMotivoCancelacion(motivo.trim());
         p.registrar(EstadoPedido.CANCELADO.name(), usuario, motivo.trim());
         Pedido g = repo.save(p);
-        mesas.actualizarOcupacion(p.getMesaId());
+        ocupacion(p);
         auditoria.registrar("CANCELAR", "Pedido", g.getNumero(), motivo.trim());
         return g;
     }
@@ -376,6 +379,9 @@ public class PedidoService {
         }
         if (destino == ItemPedido.Estado.ENTREGADO && !u.tiene(Permisos.PEDIDOS_GESTIONAR)) {
             throw new OperacionNoPermitidaException("Solo el mesero registra la entrega en la mesa");
+        }
+        if (destino == ItemPedido.Estado.ENTREGADO && p.esDomicilio()) {
+            throw new ReglaNegocioException("El pedido " + p.getNumero() + " es un domicilio: lo entrega el domiciliario");
         }
         ItemPedido item = p.getItems().stream().filter(i -> i.getId().equals(itemId)).findFirst()
                 .orElseThrow(() -> new RecursoNoEncontradoException("Ítem", itemId));
@@ -409,6 +415,128 @@ public class PedidoService {
         return resultado;
     }
 
+    // ------------------------------------------------------------------ v2 · domicilios (CR-001)
+
+    /**
+     * v2 · HU-047 (AC-047.1): pedido de un domicilio. Lo registra domicilios-service con el token de
+     * servicio (actor = cajero) y va directo a cocina, con el mismo descuento de inventario que un pedido
+     * de mesa. Es idempotente por domicilio: si se repite la llamada, devuelve el mismo pedido. Si falta
+     * stock, el pedido no llega a cocina, queda cancelado y el error vuelve al cajero.
+     */
+    public Pedido crearDomicilio(PedidoDtos.PedidoDomicilioRequest req) {
+        Pedido previo = repo.findFirstByDomicilioIdAndEstadoNot(req.domicilioId(), EstadoPedido.CANCELADO).orElse(null);
+        if (previo != null) {
+            return previo;
+        }
+        String responsable = UsuarioActual.responsableActual();
+        Pedido p = new Pedido();
+        p.setNumero(secuencias.siguienteFormateado("pedidos", "P-"));
+        p.setOrigen(Pedido.ORIGEN_DOMICILIO);
+        p.setDomicilioId(req.domicilioId());
+        p.setDomicilioNumero(req.domicilioNumero());
+        p.setMesero(responsable);
+        p.setItems(construirItems(req.items()));
+        p.setObservaciones(limpiar(req.observaciones()));
+        p.setEstado(EstadoPedido.ABIERTO);
+        p.registrar(EstadoPedido.ABIERTO.name(), responsable, "Domicilio " + req.domicilioNumero() + " registrado por teléfono");
+        Pedido g = repo.save(p);
+        auditoria.registrar("CREAR_DOMICILIO", "Pedido", g.getNumero(), "Domicilio " + req.domicilioNumero()
+                + " · " + g.getUnidades() + " productos");
+        try {
+            return despachar(g, "ENVIAR_COCINA", "Domicilio " + req.domicilioNumero());
+        } catch (RuntimeException ex) {
+            g.setEstado(EstadoPedido.CANCELADO);
+            g.setCanceladoEn(Instant.now());
+            g.setCanceladoPor(responsable);
+            g.setMotivoCancelacion("No se envió a cocina: " + ex.getMessage());
+            g.registrar(EstadoPedido.CANCELADO.name(), responsable, g.getMotivoCancelacion());
+            repo.save(g);
+            throw ex;
+        }
+    }
+
+    /** v2 · HU-049: estado en cocina de los pedidos de varios domicilios (id del pedido → estado). */
+    public Map<String, EstadoPedido> estados(List<String> ids) {
+        Map<String, EstadoPedido> r = new LinkedHashMap<>();
+        if (ids != null && !ids.isEmpty()) {
+            repo.findAllById(ids).forEach(p -> r.put(p.getId(), p.getEstado()));
+        }
+        return r;
+    }
+
+    /**
+     * v2 · HU-050: el domiciliario entregó y cobró. Los productos listos pasan a ENTREGADO para que
+     * facturación pueda cobrar el pedido. Idempotente: si ya estaba entregado o pagado, no cambia nada.
+     */
+    public Pedido entregarDomicilio(String id) {
+        Pedido p = obtenerDomicilio(id);
+        if (p.getEstado() == EstadoPedido.ENTREGADO || p.getEstado() == EstadoPedido.PAGADO) {
+            return p;
+        }
+        if (p.getEstado() != EstadoPedido.LISTO) {
+            throw new ReglaNegocioException("PEDIDO_NO_LISTO", "PEDIDO_NO_LISTO: el pedido " + p.getNumero()
+                    + " no está listo (estado: " + p.getEstado().etiqueta() + ")");
+        }
+        Instant ahora = Instant.now();
+        p.getItems().forEach(i -> {
+            i.setEstado(ItemPedido.Estado.ENTREGADO);
+            i.setActualizadoEn(ahora);
+        });
+        p.recalcularEstado();
+        p.registrar(EstadoPedido.ENTREGADO.name(), UsuarioActual.responsableActual(),
+                "Entregado por el domiciliario · " + p.getDestino());
+        Pedido g = repo.save(p);
+        auditoria.registrar("ENTREGAR_DOMICILIO", "Pedido", g.getNumero(), p.getDestino());
+        return g;
+    }
+
+    /**
+     * v2 · HU-047 y HU-052: cancela o anula el pedido de un domicilio. Si cocina no ha empezado, es una
+     * cancelación normal y el inventario se restituye. Si ya se preparó (o el cliente no estaba), el pedido
+     * se anula sin factura: la comida preparada no vuelve al inventario. Idempotente.
+     */
+    public Pedido anularDomicilio(String id, String motivo) {
+        Pedido p = obtenerDomicilio(id);
+        if (p.getEstado() == EstadoPedido.CANCELADO) {
+            return p;
+        }
+        if (p.getEstado() == EstadoPedido.PAGADO) {
+            throw new ConflictoException("El pedido " + p.getNumero() + " ya fue pagado; anule primero el comprobante");
+        }
+        boolean cocinaSinEmpezar = p.getEstado() == EstadoPedido.ABIERTO || (p.getEstado() == EstadoPedido.ENVIADO
+                && p.getItems().stream().allMatch(i -> i.getEstado() == ItemPedido.Estado.PENDIENTE));
+        if (cocinaSinEmpezar) {
+            return cancelar(id, motivo);
+        }
+        if (motivo == null || motivo.trim().length() < 5) {
+            throw new ReglaNegocioException("Indique el motivo de la anulación (mínimo 5 caracteres)");
+        }
+        String usuario = UsuarioActual.responsableActual();
+        p.setEstado(EstadoPedido.CANCELADO);
+        p.setCanceladoEn(Instant.now());
+        p.setCanceladoPor(usuario);
+        p.setMotivoCancelacion(motivo.trim());
+        p.registrar(EstadoPedido.CANCELADO.name(), usuario, "Anulado sin factura: " + motivo.trim());
+        Pedido g = repo.save(p);
+        auditoria.registrar("ANULAR_DOMICILIO", "Pedido", g.getNumero(), p.getDestino() + " · " + motivo.trim());
+        return g;
+    }
+
+    private Pedido obtenerDomicilio(String id) {
+        Pedido p = obtener(id);
+        if (!p.esDomicilio()) {
+            throw new ReglaNegocioException("El pedido " + p.getNumero() + " no es un domicilio");
+        }
+        return p;
+    }
+
+    /** Los pedidos a domicilio no tienen mesa: solo los de mesa cambian su ocupación. */
+    private void ocupacion(Pedido p) {
+        if (p.getMesaId() != null) {
+            mesas.actualizarOcupacion(p.getMesaId());
+        }
+    }
+
     /** Llamado por facturacion-service al emitir el comprobante. Idempotente para la misma factura. */
     public Pedido marcarPagado(String id, String facturaId) {
         Pedido p = obtener(id);
@@ -427,7 +555,9 @@ public class PedidoService {
         p.registrar(EstadoPedido.PAGADO.name(), UsuarioActual.responsableActual(), "Comprobante " + facturaId);
         Pedido g = repo.save(p);
         // v2 · HU-044: si era la última cuenta, la mesa (y su unión) pasa a POR_LIMPIAR y vencen las sesiones QR
-        mesas.alCobrar(p.getMesaId());
+        if (p.getMesaId() != null) {
+            mesas.alCobrar(p.getMesaId());
+        }
         return g;
     }
 
@@ -445,7 +575,7 @@ public class PedidoService {
         p.setFacturaId(null);
         p.registrar("PAGO_ANULADO", UsuarioActual.responsableActual(), "Comprobante " + facturaId + " anulado");
         Pedido g = repo.save(p);
-        mesas.actualizarOcupacion(p.getMesaId());
+        ocupacion(p);
         return g;
     }
 

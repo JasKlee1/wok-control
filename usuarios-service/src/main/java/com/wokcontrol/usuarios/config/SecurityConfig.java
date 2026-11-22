@@ -36,6 +36,8 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.PUT, "/api/usuarios/yo/password").authenticated()
                 // v2 · HU-042: solo usuario y nombre de los meseros activos, para pedidos-service (bloqueado en el gateway)
                 .requestMatchers(HttpMethod.GET, "/api/usuarios/internos/meseros").hasAuthority(SISTEMA)
+                // v2 · HU-048: lo mismo para los domiciliarios, para domicilios-service
+                .requestMatchers(HttpMethod.GET, "/api/usuarios/internos/domiciliarios").hasAuthority(SISTEMA)
                 .requestMatchers("/api/usuarios/**").hasAuthority(USUARIOS_GESTIONAR)
                 .requestMatchers(HttpMethod.GET, "/api/roles/**", "/api/permisos/**").hasAnyAuthority(USUARIOS_GESTIONAR, ROLES_GESTIONAR)
                 .requestMatchers("/api/roles/**").hasAuthority(ROLES_GESTIONAR)

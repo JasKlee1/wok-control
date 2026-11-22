@@ -21,6 +21,7 @@ MongoDB Atlas, Thymeleaf y API REST documentadas con OpenAPI.
 | proveedores-service | 8085 | `wok_proveedores` | Proveedores, órdenes de compra, recepción, portal del proveedor |
 | facturacion-service | 8086 | `wok_facturacion` | Cuentas, cobros, comprobantes, descuentos autorizados, cierres de caja |
 | reportes-service | 8087 | — | Panel por rol y reportes (agrega datos de los demás vía REST) |
+| domicilios-service | 8088 | `wok_domicilios` | v2 · Domicilios: registro telefónico, asignación al domiciliario, cobro contra entrega y QR de la ruta (API externa goQR.me) |
 | wok-common | — | — | Librería compartida: seguridad, errores, cliente interno, layout, CSS/JS |
 
 Cada servicio sigue la estructura `controller/api` (`@RestController`, `/api/**`, JSON) y

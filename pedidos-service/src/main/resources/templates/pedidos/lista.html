@@ -62,7 +62,7 @@
             <tbody>
               <tr th:each="p : ${pedidos}">
                 <td><a th:href="@{/pedidos/{id}(id=${p.id})}" class="fw-semibold wok-mono" th:text="${p.numero}">P</a></td>
-                <td th:text="${p.mesaNumero}">1</td>
+                <td th:text="${p.esDomicilio()} ? ${p.destino} : ${p.mesaNumero}">1</td>
                 <td class="small" th:text="${p.meseroNombre}">m</td>
                 <td class="small" th:text="${@fmt.hora(p.creadoEn)}">h</td>
                 <td class="text-center" th:text="${p.unidades}">0</td>

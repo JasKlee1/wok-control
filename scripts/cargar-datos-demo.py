@@ -243,6 +243,8 @@ USUARIOS = [  # usuario, nombre, rol
     ("cocinero1", "Li Zhang", "COCINERO"),
     ("caja1", "Diana Ortiz", "CAJERO"),
     ("bodega1", "Camilo Suárez", "INVENTARIO"),
+    ("domiciliario1", "Luis Pabón", "DOMICILIARIO"),
+    ("domiciliario2", "Marta Cárdenas", "DOMICILIARIO"),
 ]
 
 

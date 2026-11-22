@@ -5,7 +5,7 @@
 <div class="wok-app">
   <aside th:replace="~{fragments/layout :: sidebar}"></aside>
   <div class="wok-main">
-    <header th:replace="~{fragments/layout :: topbar('Pedido ' + ${pedido.numero}, 'Mesa ' + ${pedido.mesaNumero} + ' · ' + (${pedido.meseroNombre} ?: 'Pedido por QR'))}"></header>
+    <header th:replace="~{fragments/layout :: topbar('Pedido ' + ${pedido.numero}, ${pedido.destino} + ' · ' + (${pedido.esDomicilio()} ? 'Pedido a domicilio' : (${pedido.meseroNombre} ?: 'Pedido por QR')))}"></header>
     <main class="wok-content">
       <div th:replace="~{fragments/layout :: mensajes}"></div>
       <th:block th:with="gestiona=${usuarioActual.tiene('PEDIDOS_GESTIONAR')}">
@@ -32,11 +32,11 @@
           <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="collapse" data-bs-target="#rechazar">
             <i class="bi bi-x-octagon"></i> Rechazar</button>
         </th:block>
-        <form th:if="${gestiona and pedido.estado.name() == 'LISTO'}" th:action="@{/pedidos/{id}/items/entregar-todos(id=${pedido.id})}" method="post">
+        <form th:if="${gestiona and pedido.estado.name() == 'LISTO' and !pedido.esDomicilio()}" th:action="@{/pedidos/{id}/items/entregar-todos(id=${pedido.id})}" method="post">
           <button class="btn btn-success btn-sm" type="submit"><i class="bi bi-check2-all"></i> Entregar todo lo listo</button>
         </form>
-        <a th:if="${pedido.estado.name() == 'ENTREGADO' and usuarioActual.tiene('FACTURACION_COBRAR')}" th:href="@{/caja/cuentas/{m}(m=${pedido.mesaId})}" class="btn btn-dorado btn-sm"><i class="bi bi-cash-coin"></i> Cobrar</a>
-        <button th:if="${gestiona and pedido.estado.permiteCancelar()}" type="button" class="btn btn-outline-danger btn-sm ms-auto"
+        <a th:if="${pedido.estado.name() == 'ENTREGADO' and usuarioActual.tiene('FACTURACION_COBRAR') and !pedido.esDomicilio()}" th:href="@{/caja/cuentas/{m}(m=${pedido.mesaId})}" class="btn btn-dorado btn-sm"><i class="bi bi-cash-coin"></i> Cobrar</a>
+        <button th:if="${gestiona and pedido.estado.permiteCancelar() and !pedido.esDomicilio()}" type="button" class="btn btn-outline-danger btn-sm ms-auto"
                 data-bs-toggle="collapse" data-bs-target="#cancelar"><i class="bi bi-x-circle"></i> Cancelar pedido</button>
       </div>
       <div class="collapse mb-3" id="rechazar" th:if="${gestiona and pedido.estado.name() == 'POR_CONFIRMAR'}">
@@ -49,7 +49,7 @@
       <div class="alert alert-danger wok-alerta" th:if="${pedido.estado.name() == 'RECHAZADO'}">
         <i class="bi bi-x-octagon"></i><div>Rechazado por <strong th:text="${pedido.rechazadoPor}">u</strong>: <span th:text="${pedido.motivoRechazo}">m</span></div>
       </div>
-      <div class="collapse mb-3" id="cancelar" th:if="${gestiona and pedido.estado.permiteCancelar()}">
+      <div class="collapse mb-3" id="cancelar" th:if="${gestiona and pedido.estado.permiteCancelar() and !pedido.esDomicilio()}">
         <form th:action="@{/pedidos/{id}/cancelar(id=${pedido.id})}" method="post" class="wok-card wok-card-body d-flex gap-2 flex-wrap align-items-end"
               data-wok-confirmar="Se cancelará el pedido. Si ya estaba en cocina sin prepararse, se restituye el inventario. ¿Confirmar?">
           <div class="flex-grow-1"><label class="form-label" for="motivo">Motivo de la cancelación</label>
@@ -84,7 +84,7 @@
                     <td class="text-end" th:text="${@fmt.dinero(i.subtotal)}">$</td>
                     <td><span class="wok-badge info" th:text="${i.estado.etiqueta()}">E</span></td>
                     <td class="text-end">
-                      <form th:if="${gestiona and i.estado.name() == 'LISTO'}" th:action="@{/pedidos/{p}/items/{i}/estado(p=${pedido.id},i=${i.id})}" method="post">
+                      <form th:if="${gestiona and i.estado.name() == 'LISTO' and !pedido.esDomicilio()}" th:action="@{/pedidos/{p}/items/{i}/estado(p=${pedido.id},i=${i.id})}" method="post">
                         <input type="hidden" name="estado" value="ENTREGADO">
                         <button class="btn btn-sm btn-outline-success" type="submit">Entregado</button>
                       </form>

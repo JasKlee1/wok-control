@@ -21,6 +21,8 @@ public class SecurityConfig {
     SecurityFilterChain apiChain(HttpSecurity http, JwtDecoder decoder) throws Exception {
         WokSecurity.api(http, decoder).authorizeHttpRequests(a -> a
                 .requestMatchers(HttpMethod.POST, "/api/pedidos/*/pago", "/api/pedidos/*/reversion-pago").hasAuthority(SISTEMA)
+                // v2 · CR-001: el pedido de cocina de un domicilio solo lo opera domicilios-service
+                .requestMatchers("/api/pedidos/internos/**").hasAuthority(SISTEMA)
                 // v2 · HU-043/044: el anfitrión opera el salón; el mesero también puede marcar una mesa limpia
                 .requestMatchers(HttpMethod.PATCH, "/api/salon/mesas/*/limpia").hasAnyAuthority(SALON_OPERAR, PEDIDOS_GESTIONAR)
                 .requestMatchers("/api/salon/**").hasAuthority(SALON_OPERAR)

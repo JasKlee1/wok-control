@@ -1,8 +1,8 @@
 # Despliegue en Render
 
-Wok Control se despliega como **10 servicios web independientes**, uno por microservicio. Todos se
+Wok Control se despliega como **11 servicios web independientes**, uno por microservicio. Todos se
 construyen con el mismo `Dockerfile`, y la variable `MODULO` indica qué módulo compila cada uno.
-El archivo [`render.yaml`](../render.yaml), que Render llama *Blueprint*, crea los 10 servicios de una
+El archivo [`render.yaml`](../render.yaml), que Render llama *Blueprint*, crea los 11 servicios de una
 sola vez.
 
 La base de datos sigue siendo **MongoDB Atlas**, la misma que se usa en local. Por eso la carta, las
@@ -14,7 +14,7 @@ fotos, los usuarios y los pedidos aparecen igual en Render.
 |---|---|---|
 | `wokcontrol-exito-config` | config-server | Configuración centralizada (protegida con usuario y contraseña) |
 | `wokcontrol-exito-eureka` | discovery-service | Registro de servicios (protegido con usuario y contraseña) |
-| `wokcontrol-exito-usuarios` … `-reportes` | 7 servicios de negocio | Cada uno con su base de datos en Atlas |
+| `wokcontrol-exito-usuarios` … `-reportes`, `-domicilios` | 8 servicios de negocio | Cada uno con su base de datos en Atlas (domicilios desde el Sprint 3: `wok_domicilios`) |
 | `wokcontrol-exito-gateway` | api-gateway | **Entrada de la aplicación**: `https://wokcontrol-exito-gateway.onrender.com` |
 
 El plan gratuito de Render no tiene red privada entre servicios. Por eso cada microservicio se registra
@@ -47,11 +47,11 @@ Los secretos no van en el repositorio. En el panel de Render:
 
 3. Pulsa **Create Environment Group**.
 
-### 3. Crear los 10 servicios con el Blueprint
+### 3. Crear los 11 servicios con el Blueprint
 
 1. En Render pulsa **New** y luego **Blueprint**.
 2. Conecta GitHub, si aún no lo has hecho, y elige el repositorio `wok-control`.
-3. Render lee `render.yaml` y muestra los 10 servicios. Pulsa **Apply** (o **Deploy Blueprint**).
+3. Render lee `render.yaml` y muestra los 11 servicios. Pulsa **Apply** (o **Deploy Blueprint**).
 4. Espera a que los 10 queden en estado **Live**. En el plan gratuito cada uno tarda varios minutos
    en compilar, y el conjunto puede tardar entre 20 y 40 minutos. Los servicios de negocio esperan
    solos a que el config-server responda antes de arrancar.
@@ -83,9 +83,9 @@ Lo más cómodo es editar los valores en `render.yaml` y subir el cambio a GitHu
   python scripts\despertar-render.py
   ```
 
-  El script despierta los 10 servicios a la vez y avisa cuando todos responden.
+  El script despierta los 11 servicios a la vez y avisa cuando todos responden.
 - **Horas limitadas.** Render da 750 horas gratuitas al mes para toda la cuenta, y solo se gastan
-  mientras los servicios están despiertos. Con 10 servicios equivalen a unas 75 horas de uso del sistema completo al mes.
+  mientras los servicios están despiertos. Con 11 servicios equivalen a unas 68 horas de uso del sistema completo al mes.
 - **Poca CPU.** Cada servicio tiene 0,1 CPU y 512 MB. Medido con las mismas opciones de Java del
   `Dockerfile`, un servicio ocupa unos 230 MB al arrancar. La primera carga de cada pantalla puede ser lenta.
 - **Compilaciones selectivas.** Cada `git push` a `main` solo recompila los servicios cuyos archivos
@@ -103,3 +103,11 @@ de Render (**Settings → Instance Type**). No hace falta cambiar código.
 - **Cookie de sesión**: con el perfil `render` la cookie se marca como `Secure`, porque Render siempre usa HTTPS.
 - **Microservicios con URL pública**: cada microservicio queda accesible directamente, sin pasar por el
   gateway, pero todos validan el JWT por su cuenta. Los endpoints internos además exigen el permiso `SISTEMA`.
+
+## Domicilios (Sprint 3)
+
+`render.yaml` declara `wokcontrol-exito-domicilios` (`MODULO=domicilios-service`, `DOMICILIOS_PORT=10000`,
+grupo `wok-secretos`). No hace falta ninguna clave nueva: la API de goQR.me es pública. Variables opcionales:
+`WOK_QR_HABILITADO` (por defecto `true`), `WOK_QR_URL` y `WOK_DOMICILIOS_CIUDAD` (por defecto
+«Girón, Santander, Colombia»). El servicio se crea cuando la rama `sprint-3/epica-9-domicilios` se une a
+`main` y se sincroniza el Blueprint; mientras tanto la rama está solo en GitHub, sin desplegar.

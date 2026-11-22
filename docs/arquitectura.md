@@ -5,9 +5,11 @@ Navegador / Swagger / Postman
             │  :8080
        api-gateway ── valida JWT en /api/**, bloquea endpoints internos, CORS, X-Correlation-Id
             │  lb://<servicio>  (Eureka :8761)       config-server :8888 → configuración de todos
- ┌──────────┼──────────┬───────────┬─────────────┬──────────────┬──────────────┐
-usuarios   menu     pedidos    inventario   proveedores   facturacion   reportes
-wok_usuarios wok_menu wok_pedidos wok_inventario wok_proveedores wok_facturacion (sin BD)
+ ┌──────────┼──────────┬───────────┬─────────────┬──────────────┬──────────────┬──────────────┐
+usuarios   menu     pedidos    inventario   proveedores   facturacion   reportes      domicilios (v2)
+wok_usuarios wok_menu wok_pedidos wok_inventario wok_proveedores wok_facturacion (sin BD) wok_domicilios
+                                                                                            │ HTTPS
+                                                                              API externa goQR.me (QR de la ruta)
 ```
 
 - **Una base lógica por servicio** en el mismo clúster de Atlas. Ningún servicio lee colecciones de
@@ -51,3 +53,23 @@ Thymeleaf 3.1 · Bootstrap 5.3.8 y Bootstrap Icons servidos como webjars locales
 
 Se eligió Boot 4.0.x y no 4.1.x porque, a la fecha, Spring Cloud no tiene una versión GA compatible
 con Boot 4.1 (la línea 2026.0 está en hitos).
+
+## Domicilios (v2 · épica 9 · ADR-004 y ADR-005)
+
+domicilios-service es el dueño del domicilio (cliente, estados, asignación, cobro e historial) y orquesta
+a los demás con el token de servicio:
+
+1. **Registrar:** crea el pedido sin mesa en pedidos-service (`POST /api/pedidos/internos/domicilios`,
+   idempotente por domicilio). pedidos-service lo cotiza en menu-service, descuenta inventario y lo envía a
+   cocina. Si el domicilio no se puede guardar, se anula ese pedido (compensación).
+2. **Avance de cocina:** una consulta por lote (`.../estados`) trae el estado de los pedidos en cocina al
+   abrir las pantallas o al asignar.
+3. **Entregar:** valida el pago, pasa el pedido a ENTREGADO y pide el comprobante a facturacion-service
+   (`POST /api/facturas/domicilios`, idempotente con la clave `DOM-{id}`). El total usa la misma
+   `CalculadoraCuenta` del salón más el valor del domicilio sin impuesto.
+4. **No entregado o cancelado:** anula el pedido; si cocina no había empezado, se revierte el inventario.
+
+**API externa.** `QrRutaClient` llama desde el servidor a `https://api.qrserver.com/v1/create-qr-code/`
+(goQR.me, pública y sin clave) con la URL de la ruta en Google Maps. Conexión 3 s, lectura 5 s, caché de
+200 imágenes, validación de la firma PNG y respaldo con el enlace si falla. Cada llamada deja una línea
+`API externa api.qrserver.com: QR de la ruta del domicilio D-0001 generado (… bytes, … ms)` en el registro.

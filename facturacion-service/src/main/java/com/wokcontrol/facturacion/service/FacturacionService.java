@@ -33,6 +33,7 @@ import com.wokcontrol.common.security.Permisos;
 import com.wokcontrol.common.security.UsuarioActual;
 import com.wokcontrol.facturacion.client.ParametrosClient;
 import com.wokcontrol.facturacion.client.PedidosClient;
+import com.wokcontrol.facturacion.dto.FacturacionDtos.CobroDomicilioRequest;
 import com.wokcontrol.facturacion.dto.FacturacionDtos.CobroRequest;
 import com.wokcontrol.facturacion.dto.FacturacionDtos.CuentaMesa;
 import com.wokcontrol.facturacion.dto.FacturacionDtos.DescuentoRequest;
@@ -236,6 +237,88 @@ public class FacturacionService {
             }
             throw ex;
         }
+    }
+
+    /** Clave de idempotencia de un domicilio: se cobra una sola vez. */
+    public static String claveDomicilio(String domicilioId) {
+        return "DOM-" + domicilioId;
+    }
+
+    /**
+     * v2 · HU-050 (REQ-WOK-050): cobro contra entrega de un domicilio.
+     * <ul>
+     * <li>Total = platos + impuesto al consumo sobre los platos + valor del domicilio (sin impuesto).</li>
+     * <li>Si lo recibido no cubre el total, se rechaza con PAGO_INSUFICIENTE (AC-050.2).</li>
+     * <li>El comprobante queda a nombre del cajero que registró el domicilio, para que aparezca en su
+     * cierre de caja, y guarda quién lo cobró.</li>
+     * <li>Idempotente por domicilio: repetir la solicitud devuelve el mismo comprobante.</li>
+     * </ul>
+     */
+    public Factura cobrarDomicilio(CobroDomicilioRequest req) {
+        String clave = claveDomicilio(req.domicilioId());
+        Factura previa = repo.findByClaveIdempotencia(clave).orElse(null);
+        if (previa != null) {
+            return previa;
+        }
+        PedidosClient.Pedido pedido = pedidos.pedido(req.pedidoId());
+        if (!"ENTREGADO".equals(pedido.estado())) {
+            throw new ReglaNegocioException("El pedido " + pedido.numero() + " del domicilio no está entregado (estado: "
+                    + pedido.estado() + ")");
+        }
+        List<LineaCuenta> lineas = lineas(List.of(pedido));
+        BigDecimal subtotal = lineas.stream().map(LineaCuenta::subtotal).reduce(BigDecimal.ZERO, BigDecimal::add);
+        ParametrosClient.Parametros params = parametros.obtener();
+        CalculadoraCuenta.Totales t = CalculadoraCuenta.calcular(subtotal, BigDecimal.ZERO, params.impuestoConsumoPorcentaje());
+        BigDecimal valorDomicilio = CalculadoraCuenta.pesos(req.valorDomicilio());
+        BigDecimal total = t.total().add(valorDomicilio);
+        BigDecimal recibido = req.pagos().stream().map(p -> CalculadoraCuenta.pesos(p.monto())).reduce(BigDecimal.ZERO, BigDecimal::add);
+        if (recibido.compareTo(total) < 0) {
+            throw new ReglaNegocioException("PAGO_INSUFICIENTE", "PAGO_INSUFICIENTE: el pago ($" + recibido.toPlainString()
+                    + ") no cubre el total del domicilio ($" + total.toPlainString() + ")");
+        }
+        CalculadoraCuenta.ResultadoPagos rp = CalculadoraCuenta.validarPagos(req.pagos(), total);
+
+        Factura f = new Factura();
+        f.setNumero(secuencias.siguienteFormateado("comprobantes", "TIQ-"));
+        f.setClaveIdempotencia(clave);
+        f.setPedidoIds(new ArrayList<>(List.of(pedido.id())));
+        List<Factura.Linea> lf = new ArrayList<>(lineas.stream().map(l -> new Factura.Linea(l.pedidoId(), l.pedidoNumero(),
+                l.productoId(), l.descripcion(), l.cantidad(), l.precioUnitario(), l.subtotal())).toList());
+        f.setLineas(lf);
+        f.setSubtotal(t.subtotal());
+        f.setBaseGravable(t.base());
+        f.setImpuestoPorcentaje(params.impuestoConsumoPorcentaje());
+        f.setImpuestoValor(t.impuesto());
+        f.setTotal(total);
+        f.setPagos(req.pagos().stream().map(p -> new Factura.Pago(p.metodo(), CalculadoraCuenta.pesos(p.monto()),
+                p.referencia() == null || p.referencia().isBlank() ? null : p.referencia().trim(), "APROBADO")).toList());
+        f.setTotalRecibido(rp.recibido());
+        f.setCambio(rp.cambio());
+        f.setEstado(Factura.Estado.EMITIDA);
+        f.setCajero(req.cajero());
+        f.setCajeroNombre(req.cajeroNombre() == null || req.cajeroNombre().isBlank() ? req.cajero() : req.cajeroNombre());
+        f.setEmitidaEn(Instant.now());
+        f.setEmisor(new Factura.DatosEmisor(params.nombreRestaurante(), params.nit(), params.direccion(),
+                params.telefono(), params.mensajeComprobante()));
+        f.setDomicilio(new Factura.DatosDomicilio(req.domicilioId(), req.domicilioNumero(), valorDomicilio,
+                req.domiciliario(), req.domiciliarioNombre()));
+        f.setSincronizacion(Factura.Sincronizacion.PENDIENTE);
+
+        bloquearPedidos(f);
+        Factura g;
+        try {
+            g = repo.save(f);
+        } catch (DuplicateKeyException ex) {
+            liberarPedidos(f.getPedidoIds());
+            Factura repetida = repo.findByClaveIdempotencia(clave).orElse(null);
+            if (repetida != null) {
+                return repetida;
+            }
+            throw new ConflictoException("No se pudo emitir el comprobante del domicilio; intente de nuevo");
+        }
+        auditoria.registrar("COBRAR_DOMICILIO", "Comprobante", g.getNumero(), "Domicilio " + req.domicilioNumero()
+                + " · $" + g.getTotal() + " · cobró " + req.domiciliario());
+        return sincronizarPagos(g);
     }
 
     public Factura anular(String id, String motivo) {

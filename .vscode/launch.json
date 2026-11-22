@@ -14,12 +14,13 @@
     { "type": "java", "name": "proveedores-service", "request": "launch", "mainClass": "com.wokcontrol.proveedores.ProveedoresServiceApplication", "projectName": "proveedores-service", "cwd": "${workspaceFolder}" },
     { "type": "java", "name": "facturacion-service", "request": "launch", "mainClass": "com.wokcontrol.facturacion.FacturacionServiceApplication", "projectName": "facturacion-service", "cwd": "${workspaceFolder}" },
     { "type": "java", "name": "reportes-service", "request": "launch", "mainClass": "com.wokcontrol.reportes.ReportesServiceApplication", "projectName": "reportes-service", "cwd": "${workspaceFolder}" },
+    { "type": "java", "name": "domicilios-service", "request": "launch", "mainClass": "com.wokcontrol.domicilios.DomiciliosServiceApplication", "projectName": "domicilios-service", "cwd": "${workspaceFolder}" },
     { "type": "java", "name": "9. api-gateway", "request": "launch", "mainClass": "com.wokcontrol.gateway.ApiGatewayApplication", "projectName": "api-gateway", "cwd": "${workspaceFolder}" }
   ],
   "compounds": [
     {
       "name": "Servicios de negocio",
-      "configurations": ["usuarios-service", "menu-service", "pedidos-service", "inventario-service", "proveedores-service", "facturacion-service", "reportes-service"]
+      "configurations": ["usuarios-service", "menu-service", "pedidos-service", "inventario-service", "proveedores-service", "facturacion-service", "reportes-service", "domicilios-service"]
     }
   ]
 }

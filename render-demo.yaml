@@ -3,7 +3,7 @@
 # Render sin chocar con los nombres (y URL) de la cuenta original. En Render: New > Blueprint >
 # repositorio wok-control > "Blueprint Path" = render-demo.yaml.
 #
-# Blueprint de Render: despliega Wok Control como 10 servicios web independientes,
+# Blueprint de Render: despliega Wok Control como 11 servicios web independientes,
 # uno por microservicio, todos construidos con el mismo Dockerfile (variable MODULO).
 #
 # Antes de usarlo, cree en Render el grupo de variables "wok-secretos" con:
@@ -286,6 +286,38 @@ services:
       - key: SPRING_PROFILES_ACTIVE
         value: "render"
       - key: REPORTES_PORT
+        value: "10000"
+      - key: WOK_INFRA_USER
+        value: "wok"
+      - key: CONFIG_SERVER_URL
+        value: "https://wokcontrol-s1-config-lu10.onrender.com"
+      - key: EUREKA_HOST
+        value: "wokcontrol-s1-eureka-lu10.onrender.com"
+      - fromGroup: wok-secretos
+
+  - type: web
+    name: wokcontrol-s1-domicilios
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /actuator/health
+    autoDeployTrigger: commit
+    buildFilter:
+      paths:
+        - domicilios-service/**
+        - wok-common/**
+        - pom.xml
+        - Dockerfile
+        - .mvn/**
+        - mvnw
+    envVars:
+      - key: MODULO
+        value: "domicilios-service"
+      - key: SPRING_PROFILES_ACTIVE
+        value: "render"
+      - key: DOMICILIOS_PORT
         value: "10000"
       - key: WOK_INFRA_USER
         value: "wok"

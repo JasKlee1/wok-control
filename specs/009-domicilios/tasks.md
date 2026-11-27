@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versión | 1.0 (borrador para la Puerta 3) |
+| Versión | 1.1 (cerrada en la revisión del Sprint 3, 27/11/2026) |
 | Spec · Plan | [spec.md](spec.md) · [plan.md](plan.md) |
 | Redacta | Yuly Marcela Gómez Rico (según el documento) |
 | Aprueba (Puerta 3) | Javier Steven Becerra Mantilla (PO) |
@@ -14,27 +14,27 @@ Marcas del taller:
 
 Por la constitución 2, cada historia tiene primero su tarea de pruebas y después la de implementación. Cada línea es una tarjeta T### del tablero del Sprint 3; nacieron al aprobar la Puerta del delta (PBI-19).
 
-`[x]` significa que el código y las pruebas están en la rama `sprint-3/epica-9-domicilios`. La tarea pasa a **Hecho** solo cuando la revisión de la otra persona del equipo la aprueba (DoD).
+`[x]` significa que el código y las pruebas están en la rama `sprint-3/epica-9-domicilios`. La tarea pasa a **Hecho** solo cuando la revisión de la otra persona del equipo la aprueba (DoD). Las 15 tareas quedaron en **Hecho** en la revisión del Sprint 3 del 27/11/2026.
 
 ## Tareas
 
 | Tarea | Responsable | Revisa | Estado |
 |---|---|---|---|
-| [x] T001 [HU-053] Pruebas de HU-053 antes del código (AC-053.1, AC-053.2, AC-053.3) | Yuly | Javier | En revisión |
-| [x] T002 [HU-053] Nuevo domicilios-service: módulo, base `wok_domicilios`, config centralizada, gateway, scripts, compose y render.yaml (REQ-WOK-053, NFR-WOK-006) | Yuly | Javier | En revisión |
-| [x] T003 [P] [HU-051] Pruebas de HU-051 antes del código (AC-051.1, AC-051.2) | Javier | Yuly | En revisión |
-| [x] T004 [HU-051] Rol DOMICILIARIO, permisos DOMICILIOS_GESTIONAR / DOMICILIOS_REPARTIR, menú y seguridad (REQ-WOK-051, NFR-WOK-003) | Javier | Yuly | En revisión |
-| [x] T005 [P] [HU-047] Pruebas de HU-047 antes del código (AC-047.1, AC-047.2, AC-047.3) | Javier | Yuly | En revisión |
-| [x] T006 [HU-047] domicilios-service → pedidos-service · registrar, consultar, editar y cancelar; pedido sin mesa a cocina (REQ-WOK-047) | Javier | Yuly | En revisión |
-| [x] T007 [P] [HU-048] Pruebas de HU-048 antes del código (AC-048.1, AC-048.2, RN-14) | Yuly | Javier | En revisión |
-| [x] T008 [HU-048] domicilios-service → usuarios-service · domiciliarios disponibles y asignación (REQ-WOK-048) | Yuly | Javier | En revisión |
-| [x] T009 [P] [HU-049] Pruebas de HU-049 antes del código (AC-049.1, AC-049.2, NFR-WOK-007) | Javier | Yuly | En revisión |
-| [x] T010 [HU-049] «Mis entregas», en camino, QR de la ruta con la API externa goQR.me y rótulo (REQ-WOK-049, ADR-005) | Javier | Yuly | En revisión |
-| [x] T011 [P] [HU-050] Pruebas de HU-050 antes del código (AC-050.1, AC-050.2) | Yuly | Javier | En revisión |
-| [x] T012 [HU-050] domicilios-service → facturacion-service · cobro contra entrega, comprobante y cierre de caja (REQ-WOK-050) | Yuly | Javier | En revisión |
-| [x] T013 [P] [HU-052] Pruebas de HU-052 antes del código (AC-052.1, AC-052.2) | Javier | Yuly | En revisión |
-| [x] T014 [HU-052] No entregado con motivo y anulación sin factura (REQ-WOK-052) | Javier | Yuly | En revisión |
-| [x] T015 Matriz de trazabilidad de la épica, docs/ de endpoints y seguridad, y guion de la demo | Yuly | Javier | En revisión |
+| [x] T001 [HU-053] Pruebas de HU-053 antes del código (AC-053.1, AC-053.2, AC-053.3) | Yuly | Javier | Hecho |
+| [x] T002 [HU-053] Nuevo domicilios-service: módulo, base `wok_domicilios`, config centralizada, gateway, scripts, compose y render.yaml (REQ-WOK-053, NFR-WOK-006) | Yuly | Javier | Hecho |
+| [x] T003 [P] [HU-051] Pruebas de HU-051 antes del código (AC-051.1, AC-051.2) | Javier | Yuly | Hecho |
+| [x] T004 [HU-051] Rol DOMICILIARIO, permisos DOMICILIOS_GESTIONAR / DOMICILIOS_REPARTIR, menú y seguridad (REQ-WOK-051, NFR-WOK-003) | Javier | Yuly | Hecho |
+| [x] T005 [P] [HU-047] Pruebas de HU-047 antes del código (AC-047.1, AC-047.2, AC-047.3) | Javier | Yuly | Hecho |
+| [x] T006 [HU-047] domicilios-service → pedidos-service · registrar, consultar, editar y cancelar; pedido sin mesa a cocina (REQ-WOK-047) | Javier | Yuly | Hecho |
+| [x] T007 [P] [HU-048] Pruebas de HU-048 antes del código (AC-048.1, AC-048.2, RN-14) | Yuly | Javier | Hecho |
+| [x] T008 [HU-048] domicilios-service → usuarios-service · domiciliarios disponibles y asignación (REQ-WOK-048) | Yuly | Javier | Hecho |
+| [x] T009 [P] [HU-049] Pruebas de HU-049 antes del código (AC-049.1, AC-049.2, NFR-WOK-007) | Javier | Yuly | Hecho |
+| [x] T010 [HU-049] «Mis entregas», en camino, QR de la ruta con la API externa goQR.me y rótulo (REQ-WOK-049, ADR-005) | Javier | Yuly | Hecho |
+| [x] T011 [P] [HU-050] Pruebas de HU-050 antes del código (AC-050.1, AC-050.2) | Yuly | Javier | Hecho |
+| [x] T012 [HU-050] domicilios-service → facturacion-service · cobro contra entrega, comprobante y cierre de caja (REQ-WOK-050) | Yuly | Javier | Hecho |
+| [x] T013 [P] [HU-052] Pruebas de HU-052 antes del código (AC-052.1, AC-052.2) | Javier | Yuly | Hecho |
+| [x] T014 [HU-052] No entregado con motivo y anulación sin factura (REQ-WOK-052) | Javier | Yuly | Hecho |
+| [x] T015 Matriz de trazabilidad de la épica, docs/ de endpoints y seguridad, y guion de la demo | Yuly | Javier | Hecho |
 
 [SUPUESTO] El responsable de cada T es el de su historia en la Pila de Producto (PBI-20 a PBI-26). T015 cierra el PBI-19, que está a cargo de Yuly.
 
@@ -57,7 +57,7 @@ Por la constitución 2, cada historia tiene primero su tarea de pruebas y despu�
 
 Resultado del 22/11/2026: `mvnw install` pasó con 257 pruebas (44 nuevas), 0 fallos y 4 omitidas (las mismas de Mongo, que requieren `WOK_TEST_MONGODB_URI`).
 
-**T015:** la demo local con los 11 servicios y MongoDB Atlas sigue el guion `Guion_Demo_Sprint3_27-11.md`. El código está en la rama `sprint-3/epica-9-domicilios` en GitHub, **sin desplegar**: Render despliega solo desde `main` y la rama se une después de la revisión.
+**T015:** la demo local con los 11 servicios y MongoDB Atlas sigue el guion `Guion_Demo_Sprint3_27-11.md`. El código de la rama `sprint-3/epica-9-domicilios` se unió a `main` (commit `d17ddfc`) y Render lo desplegó el 23/11/2026.
 
 ## Matriz de trazabilidad de la épica 9
 
@@ -71,7 +71,7 @@ Resultado del 22/11/2026: `mvnw install` pasó con 257 pruebas (44 nuevas), 0 fa
 | HU-052 | REQ-WOK-052 | AC-052.1, AC-052.2 | `DomicilioService.noEntregado`, `PedidoService.anularDomicilio`, `entregas/lista.html` | `DomicilioServiceTest.ac052_*`; `PedidoDomicilioTest.ac052_1_*` |
 | HU-053 | REQ-WOK-053, NFR-WOK-006 | AC-053.1, AC-053.2, AC-053.3 | `domicilios-service`, `ValidacionArranque`, `Domicilio.historial`, `DomicilioService.auditar`, `api-gateway.yml`, `render.yaml` | `DomiciliosSecurityTest.ac053_1_*`; `DomicilioServiceTest.ac053_2_*`; `ValidacionArranqueTest` |
 
-## Pendientes
+## Pendientes cerrados
 
-- **Despliegue en Render:** el servicio `wokcontrol-exito-domicilios` queda declarado en `render.yaml`, pero no se crea hasta unir la rama a `main` y sincronizar el Blueprint (decisión del equipo: no desplegar en este sprint sin revisión).
-- **Hallazgo CSRF:** sigue para el análisis estático de la PBI-29 (Sprint 4). Las pantallas nuevas usan formularios Thymeleaf con token CSRF.
+- **Despliegue en Render:** el servicio `wokcontrol-exito-domicilios` se creó al sincronizar el Blueprint después de unir la rama a `main` (`d17ddfc`, 23/11/2026).
+- **Hallazgo CSRF:** corregido en el Sprint 4 por la PBI-29 (ADR-006 en `specs/010-cierre-v2/plan.md`); un POST con sesión y sin token se rechaza.

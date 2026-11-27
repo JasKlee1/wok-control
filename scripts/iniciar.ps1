@@ -46,7 +46,7 @@ New-Item -ItemType Directory -Force '.run', 'logs' | Out-Null
 $pids = @()
 
 function Iniciar-Servicio([string]$modulo) {
-    $jar = Join-Path $raiz "$modulo\target\$modulo-1.0.0-SNAPSHOT.jar"
+    $jar = Join-Path $raiz "$modulo\target\$modulo-2.0.0.jar"
     if (-not (Test-Path $jar)) { throw "No existe $jar. Ejecute primero: .\mvnw.cmd package -DskipTests (o use -Compilar)." }
     $destino = Join-Path $raiz ".run\$modulo.jar"
     Copy-Item $jar $destino -Force

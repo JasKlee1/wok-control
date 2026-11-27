@@ -98,6 +98,8 @@ class CartaLivianaTest {
         }
         java.util.Arrays.sort(tiempos);
         long p95 = tiempos[(int) Math.ceil(tiempos.length * 0.95) - 1];
+        guardarEvidencia("carta-p95.txt", "Carta del cliente (40 platos), 50 cargas en el servidor: p95 = " + p95
+                + " ms, máximo = " + tiempos[tiempos.length - 1] + " ms, límite = 3000 ms (AC-039.1, NFR-WOK-001)");
 
         assertThat(p95).as("p95 del servidor en ms").isLessThan(3000);
         assertThat(html.split("class=\"c-card plato\"", -1).length - 1).isEqualTo(40);
@@ -127,5 +129,17 @@ class CartaLivianaTest {
 
         assertThat(html).doesNotContain("bootstrap.min.css");
         assertThat(html).contains("name=\"viewport\"").contains("min-height: 44px");
+    }
+
+    /** v2 · Sprint 4 · PBI-28: deja la medición en target/evidencias-rendimiento para la Review. */
+    static void guardarEvidencia(String archivo, String texto) {
+        try {
+            java.nio.file.Path dir = java.nio.file.Path.of("target", "evidencias-rendimiento");
+            java.nio.file.Files.createDirectories(dir);
+            java.nio.file.Files.writeString(dir.resolve(archivo), texto + System.lineSeparator());
+        } catch (java.io.IOException ex) {
+            throw new java.io.UncheckedIOException(ex);
+        }
+        System.out.println("[PBI-28] " + texto);
     }
 }

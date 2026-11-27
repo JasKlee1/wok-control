@@ -1,5 +1,10 @@
 # Wok Control
 
+**Versión 2.0.0** (04/12/2026). Novedades, cifras y cambios de operación en [docs/notas-version-v2.0.md](docs/notas-version-v2.0.md).
+Calidad de la versión: [matriz de trazabilidad](docs/matriz-trazabilidad-v2.md), [rendimiento](docs/rendimiento.md),
+[seguridad](docs/seguridad.md), [UAT](docs/uat-v2.md), [plan de retroceso](docs/plan-retroceso.md) y
+[DoD y decisión de release](docs/dod-release-v2.0.md).
+
 Plataforma de microservicios para gestionar un restaurante de comida china: carta, mesas, pedidos,
 cocina, inventario, proveedores, caja y reportes. Java 21, Spring Boot 4.0.8, Spring Cloud 2025.1.3,
 MongoDB Atlas, Thymeleaf y API REST documentadas con OpenAPI.

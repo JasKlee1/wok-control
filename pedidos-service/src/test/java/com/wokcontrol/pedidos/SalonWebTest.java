@@ -251,6 +251,30 @@ class SalonWebTest {
         assertThat(contar(fragmento, "class=\"salon-mesa ")).isEqualTo(12);
     }
 
+    /**
+     * v2 · Sprint 4 · PBI-28 (NFR-WOK-004): el peor caso para que una tablet vea un cambio es un intervalo
+     * completo de sondeo más la consulta de la huella y la descarga del mapa. Con 50 repeticiones, el
+     * intervalo más el p95 de esas dos consultas debe quedar en 5 s o menos.
+     */
+    @Test
+    void pbi28_laActualizacionDelMapaDeMesasLlegaEnCincoSegundosOMenos() throws Exception {
+        Cookie lina = web("lina", Roles.ANFITRION);
+        long[] tiempos = new long[50];
+        for (int i = 0; i < tiempos.length; i++) {
+            long t0 = System.nanoTime();
+            mvc.perform(get("/salon/estado").cookie(lina)).andExpect(status().isOk());
+            mvc.perform(get("/salon/vivo").cookie(lina)).andExpect(status().isOk());
+            tiempos[i] = (System.nanoTime() - t0) / 1_000_000;
+        }
+        java.util.Arrays.sort(tiempos);
+        long p95 = tiempos[(int) Math.ceil(tiempos.length * 0.95) - 1];
+        long peorCaso = SalonWebController.INTERVALO_MS + p95;
+        CartaLivianaTest.guardarEvidencia("mesas-actualizacion.txt", "Mapa del salón (12 mesas), 50 ciclos huella + mapa: p95 = "
+                + p95 + " ms; peor caso = intervalo " + SalonWebController.INTERVALO_MS + " ms + p95 = " + peorCaso
+                + " ms, límite = 5000 ms (AC-046.1, NFR-WOK-004)");
+        assertThat(peorCaso).isLessThanOrEqualTo(5000);
+    }
+
     @Test
     void ac046_2_enUnaTabletDe768pxElMapaDe12MesasSeVeSinDesplazamientoHorizontal() throws Exception {
         String html = mvc.perform(get("/salon").cookie(web("lina", Roles.ANFITRION))).andReturn().getResponse()

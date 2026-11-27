@@ -155,4 +155,27 @@ class DomiciliosSecurityTest {
         mvc.perform(get("/mis-entregas").cookie(cajero)).andExpect(redirectedUrl("/acceso-denegado"));
         mvc.perform(post("/mis-entregas/d1/en-camino").with(csrf()).cookie(cajero)).andExpect(redirectedUrl("/acceso-denegado"));
     }
+
+    /**
+     * v2 · Sprint 4 · PBI-29 (hallazgo CSRF de la v1): con la cookie de sesión válida, un POST sin token CSRF
+     * se rechaza y no llega al servicio; con el token, sí.
+     */
+    @Test
+    void pbi29_unPostWebConCookiePeroSinTokenCsrfSeRechaza() throws Exception {
+        Cookie domiciliario = cookie(Roles.DOMICILIARIO);
+        mvc.perform(post("/mis-entregas/d1/en-camino").cookie(domiciliario)).andExpect(redirectedUrl("/acceso-denegado"));
+        verify(servicio, never()).enCamino(any(), any());
+
+        when(servicio.enCamino(eq("d1"), any())).thenReturn(domicilio());
+        mvc.perform(post("/mis-entregas/d1/en-camino").with(csrf()).cookie(domiciliario)).andExpect(redirectedUrl("/mis-entregas"));
+        verify(servicio).enCamino(eq("d1"), any());
+    }
+
+    /** v2 · Sprint 4 · PBI-29: un token CSRF falso tampoco pasa. */
+    @Test
+    void pbi29_unTokenCsrfInvalidoSeRechaza() throws Exception {
+        mvc.perform(post("/mis-entregas/d1/en-camino").with(csrf().useInvalidToken()).cookie(cookie(Roles.DOMICILIARIO)))
+                .andExpect(redirectedUrl("/acceso-denegado"));
+        verify(servicio, never()).enCamino(any(), any());
+    }
 }

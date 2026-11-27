@@ -22,6 +22,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.mockito.ArgumentCaptor;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -52,6 +55,7 @@ import com.wokcontrol.domicilios.service.CampoInvalidoException;
 import com.wokcontrol.domicilios.service.DomicilioService;
 
 /** v2 · Sprint 3 · Épica 9: criterios de aceptación de HU-047 a HU-053 sobre el servicio, con dependencias simuladas. */
+@ExtendWith(OutputCaptureExtension.class)
 class DomicilioServiceTest {
 
     private final Map<String, Domicilio> datos = new LinkedHashMap<>();
@@ -346,5 +350,25 @@ class DomicilioServiceTest {
     void telefonoSeNormalizaADiezDigitos() {
         assertThat(DomicilioService.normalizarTelefono("+57 300-123-4567")).isEqualTo("3001234567");
         assertThat(DomicilioService.normalizarTelefono("300.123.45")).isNull();
+    }
+
+    /**
+     * v2 · Sprint 4 · PBI-29 (Ley 1581 de 2012, constitución 6): en todo el ciclo del domicilio, incluidos el
+     * cobro con diferencia, la caída de cocina y el no entregado, los registros no llevan el nombre, el teléfono
+     * ni la dirección del cliente.
+     */
+    @Test
+    void pbi29_losRegistrosNoLlevanDatosPersonalesDelCliente(CapturedOutput salida) {
+        Domicilio d = enCamino();
+        servicio.entregar(d.getId(), new CobroRequest(MetodoCobro.EFECTIVO, new BigDecimal("50000"), null), UsuarioActual.requerido());
+
+        autenticar(Roles.CAJERO, "caja1");
+        Domicilio otro = registrado();
+        when(pedidos.estados(anyList())).thenThrow(new com.wokcontrol.common.exception.ServicioRemotoException(
+                "pedidos-service", "no responde", null));
+        servicio.sincronizarCocina(List.of(datos.get(otro.getId())));
+
+        assertThat(salida.getAll()).doesNotContain("3001234567", "300 123 4567", "Calle 45", "13-20", "Ana Pérez",
+                "Torre 2 apto 501");
     }
 }

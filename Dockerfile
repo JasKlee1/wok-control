@@ -23,7 +23,7 @@ RUN apk add --no-cache curl && addgroup -S wok && adduser -S wok -G wok
 
 WORKDIR /app
 
-COPY --from=build /workspace/${MODULO}/target/${MODULO}-1.0.0-SNAPSHOT.jar /app/app.jar
+COPY --from=build /workspace/${MODULO}/target/${MODULO}-2.0.0.jar /app/app.jar
 
 USER wok
 

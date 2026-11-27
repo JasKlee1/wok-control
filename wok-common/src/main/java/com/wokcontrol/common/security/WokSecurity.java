@@ -7,6 +7,7 @@ import java.time.Instant;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.config.ObjectPostProcessor;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -15,6 +16,7 @@ import org.springframework.security.oauth2.server.resource.web.DefaultBearerToke
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfFilter;
 import org.springframework.security.web.savedrequest.NullRequestCache;
 
 import jakarta.servlet.http.Cookie;
@@ -90,7 +92,7 @@ public final class WokSecurity {
         CookieCsrfTokenRepository csrfRepo = CookieCsrfTokenRepository.withHttpOnlyFalse();
         csrfRepo.setCookieCustomizer(c -> c.path("/").sameSite("Lax").secure(props.cookieSecure()));
         return http
-                .csrf(c -> c.csrfTokenRepository(csrfRepo))
+                .csrf(c -> c.csrfTokenRepository(csrfRepo).withObjectPostProcessor(exigirCsrfConCookie()))
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .requestCache(c -> c.requestCache(new NullRequestCache()))
                 .formLogin(AbstractHttpConfigurer::disable)
@@ -103,6 +105,24 @@ public final class WokSecurity {
                         .accessDeniedHandler(denied)
                         .jwt(j -> j.decoder(decoder).jwtAuthenticationConverter(new WokJwtAuthenticationConverter())))
                 .exceptionHandling(e -> e.authenticationEntryPoint(entryPoint).accessDeniedHandler(denied));
+    }
+
+    /**
+     * v2 · PBI-29 (hallazgo CSRF heredado de la v1). El servidor de recursos OAuth2 le pide al filtro
+     * CSRF que ignore toda petición en la que su {@code BearerTokenResolver} encuentra un token, porque
+     * supone que viaja en una cabecera. En la web el token viaja en la cookie {@code WOK_TOKEN}, que el
+     * navegador envía solo, así que esa excepción dejaba los POST con sesión sin exigir el token CSRF.
+     * Aquí se restablece la regla por defecto: todo método que no sea GET, HEAD, TRACE u OPTIONS exige
+     * el token, tenga o no la cookie de sesión.
+     */
+    static ObjectPostProcessor<CsrfFilter> exigirCsrfConCookie() {
+        return new ObjectPostProcessor<>() {
+            @Override
+            public <O extends CsrfFilter> O postProcess(O filtro) {
+                filtro.setRequireCsrfProtectionMatcher(CsrfFilter.DEFAULT_CSRF_MATCHER);
+                return filtro;
+            }
+        };
     }
 
     public static Cookie cookieToken(String nombre, String valor, int maxAgeSegundos, boolean secure) {

@@ -14,6 +14,9 @@ import java.nio.charset.StandardCharsets;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
@@ -21,6 +24,7 @@ import org.springframework.web.client.RestClient;
 
 
 /** v2 · ADR-005: integración con la API externa goQR.me (api.qrserver.com), simulada con MockRestServiceServer. */
+@ExtendWith(OutputCaptureExtension.class)
 class QrRutaClientTest {
 
     private static final String API = "https://api.qrserver.com/v1/create-qr-code/";
@@ -77,5 +81,13 @@ class QrRutaClientTest {
         QrRutaClient apagado = new QrRutaClient(RestClient.builder(), API, false, "Girón");
         assertThat(apagado.qrRuta("D-0004", "Calle 1")).isEmpty();
         assertThat(apagado.habilitado()).isFalse();
+    }
+
+    /** v2 · Sprint 4 · PBI-29 (Ley 1581): si la API externa falla, el registro nombra el domicilio, no la dirección. */
+    @Test
+    void pbi29_elRegistroDeUnFalloNoIncluyeLaDireccion(CapturedOutput salida) {
+        servidor.expect(once(), requestTo(Matchers.startsWith(API))).andRespond(withServerError());
+        assertThat(cliente.qrRuta("D-0009", "Carrera 27 # 30-10")).isEmpty();
+        assertThat(salida.getAll()).contains("D-0009").doesNotContain("Carrera 27", "30-10", "Carrera+27", "Carrera%2027");
     }
 }

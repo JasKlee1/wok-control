@@ -22,7 +22,7 @@ $destino = Join-Path $raiz ".run\$Servicio.jar"
 Get-CimInstance Win32_Process -Filter "name='java.exe'" | Where-Object { $_.CommandLine -match [regex]::Escape($destino) } |
     ForEach-Object { Stop-Process -Id $_.ProcessId -Force -Confirm:$false }
 Start-Sleep -Seconds 2
-Copy-Item "$Servicio\target\$Servicio-1.0.0-SNAPSHOT.jar" $destino -Force
+Copy-Item "$Servicio\target\$Servicio-2.0.0.jar" $destino -Force
 $java = Join-Path $env:JAVA_HOME 'bin\java.exe'
 $p = Start-Process -FilePath $java -ArgumentList @('-jar', "`"$destino`"") -WorkingDirectory $raiz -WindowStyle Hidden `
     -RedirectStandardOutput "logs\$Servicio.log" -RedirectStandardError "logs\$Servicio.err.log" -PassThru

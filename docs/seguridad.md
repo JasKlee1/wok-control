@@ -6,7 +6,7 @@
 - **API (`/api/**`):** sin estado, con `Authorization: Bearer`. No usa cookies, por eso no necesita CSRF. Los errores se devuelven en JSON (ProblemDetail).
 - **Web:**
   - el JWT viaja en la cookie `WOK_TOKEN` (HttpOnly, SameSite=Lax, `Secure` configurable);
-  - CSRF con cookie de doble envío en todos los formularios;
+  - CSRF con cookie de doble envío en todos los formularios, **también cuando la petición trae la cookie de sesión** (v2.0 · ADR-006);
   - no se usan sesiones HTTP: los mensajes flash viajan en una cookie de vida corta;
   - se impiden las redirecciones abiertas tras el login.
 - **Gateway:**
@@ -71,3 +71,39 @@ permiso es `CARTA_CLIENTE`, pertenece a `Roles.SOLO_SESION` y por eso no se pued
 - **Alcance:** `CARTA_CLIENTE` solo abre `/cliente/**` (pedidos-service) y `GET /menu/imagenes/*`
   (menu-service). Todo lo demás responde 403 en la API y redirige a `/acceso-denegado` en la web.
 - **Auditoría:** `GENERAR_QR`, `ABRIR_SESION_QR` y `CERRAR_SESION_QR`.
+
+## Verificación de la v2.0 (Sprint 4 · PBI-29)
+
+### Hallazgos corregidos
+
+| Hallazgo | Origen | Corrección | Prueba |
+|---|---|---|---|
+| POST web con la cookie `WOK_TOKEN` y sin token CSRF aceptado | v1 (anotado en los Sprints 1 a 3) | El servidor de recursos OAuth2 de Spring Security hace que el filtro CSRF ignore las peticiones en las que encuentra un token, pensando en la cabecera `Authorization`. En la web el token viaja en una cookie, así que `WokSecurity.exigirCsrfConCookie()` vuelve a poner la regla por defecto: todo POST, PUT, PATCH y DELETE exige el token (ADR-006). | `DomiciliosSecurityTest.pbi29_*` (sin token y con token falso → `/acceso-denegado`, el servicio no se llama) |
+| `HRS_REQUEST_PARAMETER_TO_HTTP_HEADER` (SpotBugs, rango 7) | v1 | `CorrelationIdFilter` solo copia a la respuesta y al MDC un `X-Correlation-Id` de 1 a 64 caracteres `[A-Za-z0-9._-]`; si no, genera un UUID. Evita la división de respuestas HTTP y la inyección de líneas en los registros. | `CorrelationIdFilterTest` |
+| `BX_UNBOXING_IMMEDIATELY_REBOXED` (SpotBugs, rendimiento) | v1 | `JwtProperties` usa `Long.valueOf` y `Boolean.TRUE.equals`. | Compilación y pruebas de JWT |
+
+### Análisis estático
+
+SpotBugs 4.9.8 (plugin de Maven ejecutado desde la línea de comandos, sin agregarlo al proyecto), esfuerzo máximo, 12 módulos:
+
+| Prioridad | Antes | Después | Decisión |
+|---|---|---|---|
+| Alta (crítica o alta) | 0 | **0** | Cumple AC-C03.1 |
+| Media · seguridad | 1 | **0** | Corregido |
+| Media · `EI_EXPOSE_REP` / `EI_EXPOSE_REP2` (rango 18) | 312 | 312 | Aceptado: son documentos de Mongo, DTO y beans de Spring que exponen listas o fechas mutables. Ningún dato sale del servicio sin pasar por los DTO y la autorización por permiso. |
+
+Búsqueda de secretos en los archivos versionados (`git ls-files`): sin cadenas de MongoDB con contraseña, `JWT_SECRET`, llaves privadas ni llaves de AWS. `.env`, `.run/` y `logs/` siguen en `.gitignore`.
+
+### 403 de los roles nuevos (AC-C03.2)
+
+| Rol | Recurso ajeno | Resultado esperado | Pruebas |
+|---|---|---|---|
+| CLIENTE (sesión de mesa) | Pedido o mesa de otra mesa; API de pedidos, mesas, carta interna | 403 | `ClienteMesaWebTest.ac036_1_*`, `ClientePedidoWebTest.ac036_1_*`, `PedidoClienteServiceTest.ac036_1_*`, `MenuClienteQrSecurityTest`, `RolClienteTest` |
+| ANFITRION | Crear o editar mesas; pedidos; caja | 403 en la API, acceso no permitido en la web | `SalonWebTest.ac043_*`, `CajaAnfitrionTest`, `RolAnfitrionTest` |
+| DOMICILIARIO | Domicilio de otro domiciliario; caja; inventario; gestión de domicilios | 403 en la API, acceso no permitido en la web | `DomiciliosSecurityTest`, `CajaDomiciliarioTest`, `InventarioDomiciliarioTest`, `RolDomiciliarioTest` |
+
+### Ley 1581 de 2012 en los registros (AC-C03.3)
+
+- `DomicilioServiceTest.pbi29_losRegistrosNoLlevanDatosPersonalesDelCliente`: captura la salida de todo el ciclo (registro, cocina, asignación, en camino, cobro con cambio) y de una caída de pedidos-service, y comprueba que no aparecen el nombre, el teléfono (con y sin espacios), la dirección ni el complemento.
+- `QrRutaClientTest.pbi29_elRegistroDeUnFalloNoIncluyeLaDireccion`: si goQR.me falla, el registro nombra el domicilio (`D-0009`) y no la dirección, ni en claro ni codificada.
+- `DomicilioServiceTest.ac053_2_*` (Sprint 3): los eventos de la auditoría central no llevan datos personales.
